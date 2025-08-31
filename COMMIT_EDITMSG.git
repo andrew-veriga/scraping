@@ -1,0 +1,27 @@
+refactoring
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch master
+# Your branch is up to date with 'origin/master'.
+#
+# Changes to be committed:
+new file:   .vscode/launch.json
+modified:   app/services/gemini_service.py
+modified:   configs/config.yaml
+new file:   data/discord_messages.xlsx
+#
+# Changes not staged for commit:
+#	modified:   Dockerfile
+#	modified:   app/__pycache__/main.cpython-310.pyc
+#	modified:   app/services/__pycache__/gemini_service.cpython-310.pyc
+#	modified:   app/services/__pycache__/thread_processor.cpython-310.pyc
+#
+# Untracked files:
+conftest.py
+#	test_data_loader.py
+#	test_gemini_service.py
+#	test_main.py
+#	test_thread_processor.py
+#	venv/
+#

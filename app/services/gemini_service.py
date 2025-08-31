@@ -1,14 +1,12 @@
 import os
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 from app.models.pydantic_models import RawThreadList, ModifiedRawThreadList, ThreadList, TechnicalTopics, RevisedList
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-client = genai.Client(
-    api_key=GEMINI_API_KEY
-)
-model_name = "gemini-1.5-flash"
+genai.configure(api_key=GEMINI_API_KEY)
+model_name = "gemini-2.5-flash"
+model = genai.GenerativeModel(model_name)
 
 system_prompt = """
 You are an experienced technical support specialist. Your goal is to select solutions from the support chat logs for the FAQ section of your portal dedicated to the Qui blockchain.
@@ -85,55 +83,39 @@ If the new version of the problem statement is significantly different from the 
 If both of the problem statement and the solution have not got significant changes in the new version, label them as \"persisted\".
 """
 
-config_step1 = types.GenerateContentConfig(
+generation_config = genai.GenerationConfig(
     temperature=1.0,
-    thinking_config = types.ThinkingConfig(
-        thinking_budget=2000,
-    ),
-    response_mime_type="application/json",
-    response_schema= RawThreadList
-    )
-
-config_addition_step1 = types.GenerateContentConfig(
-    temperature=1.0,
-    thinking_config = types.ThinkingConfig(
-        thinking_budget=2000,
-    ),
-    response_mime_type="application/json",
-    response_schema= ModifiedRawThreadList
 )
 
-config_step2 = types.GenerateContentConfig(
-    temperature=1.0,
-    thinking_config = types.ThinkingConfig(
-        thinking_budget=1000,
-    ),
-    response_mime_type="application/json",
-    response_schema= TechnicalTopics
-)
+class _MockParsedResponse:
+    """A helper class to mimic the `response.parsed` attribute from the old SDK."""
+    def __init__(self, parsed_data):
+        self.parsed = parsed_data
 
-solution_config = types.GenerateContentConfig(
-    temperature=1.0,
-    thinking_config = types.ThinkingConfig(
-        thinking_budget=2000,
-    ),
-    response_mime_type="application/json",
-    response_schema=ThreadList
-)
+def generate_content(contents, schema, config):
+    """
+    Generates content using the Gemini API with function calling for structured output.
 
-revision_config = types.GenerateContentConfig(
-    temperature=1.0,
-    thinking_config = types.ThinkingConfig(
-        thinking_budget=2000,
-    ),
-    response_mime_type="application/json",
-    response_schema=RevisedList
-)
+    This function adapts the new google-generativeai SDK to the calling convention
+    of the older SDK, expecting a schema and returning an object with a `.parsed` attribute.
+    """
+    try:
+        response = model.generate_content(
+            contents=contents,
+            generation_config=config,
+            tools=[schema]  # Use the Pydantic model for function calling
+        )
 
-def generate_content(contents, config):
-    response = client.models.generate_content(
-        model=model_name,
-        contents=contents,
-        config=config
-    )
-    return response
+        # The SDK automatically adds a `from_function_call` method to Pydantic models
+        # when they are used as tools.
+        tool_call = response.candidates[0].content.parts[0].function_call
+        parsed_data = schema.from_function_call(tool_call)
+        return _MockParsedResponse(parsed_data)
+    except (IndexError, AttributeError, KeyError) as e:
+        # Handle cases where the model doesn't return the expected function call
+        print(f"Error parsing model response: {e}")
+        print(f"Full response: {response}")
+        # To prevent a crash, return a mock response with an empty schema instance.
+        # This is crucial for list-based fields to avoid TypeErrors in calling code.
+        empty_data = {field: [] for field, field_info in schema.model_fields.items() if 'List' in str(field_info.annotation)}
+        return _MockParsedResponse(schema.model_validate(empty_data))
