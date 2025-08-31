@@ -1,0 +1,7 @@
+.env
+configs/config.yaml
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

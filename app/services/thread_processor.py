@@ -157,4 +157,4 @@ def next_thread_gathering(next_bach_df, solutions_dict, lookback_date, next_star
     cnt_modified = len([t for t in added_threads if t.status=='modified'])
     cnt_new = len([t for t in added_threads if t.status=='new'])
 
-    print(f"Added {cnt_new} new threads. Modified {cnt_modified} threads created before {next_start_date.strftime("%Y-%m-%d_%H-%M-%S")}.
+    print(f"Added {cnt_new} new threads. Modified {cnt_modified} threads created before {next_start_date.strftime('%Y-%m-%d_%H-%M-%S')}.")
