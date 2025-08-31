@@ -23,16 +23,18 @@ def add_new_solutions_to_dict(solutions_dict, new_solutions_list):
 
 def save_solutions_dict(solutions_dict, filename, save_path):
     """Saves the solutions dictionary to a JSON file."""
-    def convert_datetime_to_str(obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        raise TypeError("Type not serializable")
-
     full_path = os.path.join(save_path,filename)
     with open(full_path, 'w') as f:
         json.dump(solutions_dict, f, indent=2, default=convert_datetime_to_str)
     print(f"Solutions dictionary saved to {filename}")
     return full_path
+
+def convert_datetime_to_str(obj):
+    """JSON serializer for objects not serializable by default json code, like datetime."""
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    raise TypeError(f"Type {type(obj)} not serializable")
+
 
 def load_solutions_dict(filename, save_path, from_date=None):
     """Loads the solutions dictionary from a JSON file with datetime conversion and optional date filtering."""

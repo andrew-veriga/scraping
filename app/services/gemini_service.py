@@ -53,12 +53,6 @@ Your task is group all messages into threads following the Gatheing Logic:
 Output the information in the list of JSON objects.
 """
 
-
-# For each thread in the begin of resulted message text insert numered participant of conversation <Author ID> as 'User <N>:' to every user who presents it the thread. 
-# If the field 'Referenced Message ID' is presented, add to start of message 'Reply to User <N>:' with the corresponding user number <N>.
-# Tagged user <@Author ID> also should be replaced to text 'ask User <N>:' with the corresponding user number <N>.
-# Output the information in the list of JSON objects.""
-
 prompt_step_2 = """
 Define a list of keywords and phrases that are typical for technical issues in the context of the Sui blockchain. The list should include:
 error, fail, issue, problem, bug, can't, doesn't work, transaction, wallet, rpc, node, gas, smart contract, bridge, stake, unstake, SDK, API, swap, zklogin.

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import os
 import pandas as pd
 from app.services import gemini_service
-from app.utils.file_utils import save_solutions_dict, load_solutions_dict, create_dict_from_list, add_or_update_solution, add_new_solutions_to_dict
+from app.utils.file_utils import save_solutions_dict, load_solutions_dict, create_dict_from_list, add_new_solutions_to_dict, convert_datetime_to_str
 
 def first_thread_gathering(logs_df, save_path):
     """
@@ -20,11 +20,6 @@ def first_thread_gathering(logs_df, save_path):
     )
     output_filename = f'first_group_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.json'
 
-    def convert_datetime_to_str(obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        raise TypeError("Type not serializable")
-
     threads_list_dict = [thread.model_dump() for thread in response.parsed.threads]
 
     full_path = os.path.join(save_path, output_filename)
@@ -33,6 +28,26 @@ def first_thread_gathering(logs_df, save_path):
     print(f"Start step 1. Processed {len(logs_df)} messages")
     print(f"Successfully saved {len(response.parsed.threads)} grouped threads to {output_filename}")
     return full_path
+
+def illustrated_threads(threads_json_data, messages_df):
+    """
+    Enriches thread data with full message content for better analysis by the LLM.
+    """
+    messages_dict = messages_df.set_index('Message ID')['DatedMessage'].to_dict()
+    authors_dict = messages_df.set_index('Message ID')['Author ID'].to_dict()
+
+    for thread in threads_json_data:
+        thread['Whole_thread_formatted'] = []
+        for msg_id in thread['Whole_thread']:
+            message_content = messages_dict.get(str(msg_id), "Message content not found")
+            author_id = authors_dict.get(str(msg_id), "Author not found")
+            thread['Whole_thread_formatted'].append({
+                "Message_ID": str(msg_id),
+                "Author_ID": str(author_id),
+                "Content": message_content
+            })
+    return threads_json_data
+
 
 def filter_technical_topics(filename, startnext: str, messages_df, save_path):
     """
@@ -85,16 +100,6 @@ def generalization_solution(filename,startnext: str, save_path):
     print(f"{startnext} step 3. Generalization of {len(response_solutions.parsed.threads)} technical threads")
     solutions_list = [thread.model_dump() for thread in response_solutions.parsed.threads]
 
-    def convert_datetime_to_str(obj):
-        """
-        convert datetime objects to strings
-        """
-
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        raise TypeError("Type not serializable")
-
-
     output_filename = f'{startnext}_solutions_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.json'
     full_path = os.path.join(save_path,output_filename)
     with open(full_path, 'w') as f:
@@ -103,39 +108,6 @@ def generalization_solution(filename,startnext: str, save_path):
     return full_path
 
 def next_thread_gathering(next_bach_df, solutions_dict, lookback_date, next_start_date, save_path, messages_df):
-    added_threads = {}
-    previous_threads_json =[]
-
-    def debug_print_modified(): #for debugging purposes
-        existing_solutions = previous_threads_json
-
-        flat_list = []
-        for t in existing_solutions:
-            flat_list.extend(t['Whole_thread_formatted'])
-
-        exisiting_messages = [t['Message_ID'] for t in flat_list]
-
-        list_last_topics = [ t['Topic_ID'] for t in existing_solutions]
-        replies = [t.Topic_ID for t in added_threads if t.Topic_ID in list_last_topics ]
-
-        existing_dict = {t['Topic_ID']: t for t in existing_solutions}
-
-        new_dict = { t['Topic_ID']: t for t in illustrated_threads([tt.model_dump() for tt  in added_threads], messages_df)}
-        print('replies:')
-        for id in replies:
-            ex_mes = [t['Message_ID'] for t in existing_dict[id]['Whole_thread_formatted']]
-            new_mes = [t['Message_ID'] for t in new_dict[id]['Whole_thread_formatted']]
-            print(id, ":",new_dict[id]['status'], [m for m in ex_mes if m not in new_mes], [m for m in new_mes if m not in ex_mes])
-
-    def convert_datetime_to_str(obj):
-        """
-        convert datetime objects to strings
-        """
-
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        raise TypeError("Type not serializable")
-
     next_bach_csv = next_bach_df.to_csv(index=False)
 
     technical_threads_json = [t for t in solutions_dict.values() if pd.Timestamp(t['Actual_Date']) > lookback_date.tz_localize(timezone.utc)]

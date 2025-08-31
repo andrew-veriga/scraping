@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from app.services import data_loader, thread_processor
-from app.utils.file_utils import load_solutions_dict, save_solutions_dict, get_end_date_from_solutions
+from app.utils.file_utils import load_solutions_dict, save_solutions_dict, get_end_date_from_solutions, create_dict_from_list
 import pandas as pd
 import yaml
 from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
@@ -12,21 +12,17 @@ app = FastAPI()
 with open("configs/config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
 
+MESSAGES_FILE_PATH = config['MESSAGES_FILE_PATH']
 SAVE_PATH = config['SAVE_PATH']
 INTERVAL_FIRST = config['INTERVAL_FIRST']
 INTERVAL_NEXT = config['INTERVAL_NEXT']
 INTERVAL_BACK = config['INTERVAL_BACK']
-
-def create_dict_from_list(solutions_list):
-    solutions_dict = {}
-    for solution in solutions_list:
-        solutions_dict[solution['solution_id']] = solution
-    return solutions_dict
+SOLUTIONS_DICT_FILENAME = 'solutions_dict.json'
 
 @app.post("/process-first-batch")
 def process_first_batch():
     try:
-        messages_df = data_loader.load_and_preprocess_data("c:\\Users\\LiveComp\\Documents\\Лекции в Peeranha\\Discord messages\\discord_messages.xlsx")
+        messages_df = data_loader.load_and_preprocess_data(MESSAGES_FILE_PATH)
         start_date = messages_df['DateTime'].min().normalize()
         end_date = start_date + pd.Timedelta(days=INTERVAL_FIRST)
         first_some_days_df = messages_df[messages_df['DateTime'] < end_date].copy()
@@ -35,7 +31,7 @@ def process_first_batch():
         first_solutions_filename = thread_processor.generalization_solution(first_technical_filename, "first", SAVE_PATH)
         solutions_list = json.load(open(first_solutions_filename, 'r'))
         solutions_dict = create_dict_from_list(solutions_list)
-        save_solutions_dict(solutions_dict, 'solutions_dict.json', SAVE_PATH)
+        save_solutions_dict(solutions_dict, SOLUTIONS_DICT_FILENAME, SAVE_PATH)
         return {"message": "First batch processed successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -45,13 +41,13 @@ def process_batch(next_day_df, solutions_dict, lookback_date, next_start_date, n
     next_step1_output_filename = thread_processor.next_thread_gathering(next_day_df, solutions_dict, lookback_date, next_start_date, SAVE_PATH, messages_df)
     next_technical_filename = thread_processor.filter_technical_topics(next_step1_output_filename, "next", messages_df, SAVE_PATH)
     next_solutions_filename = thread_processor.generalization_solution(next_technical_filename, "next", SAVE_PATH)
-    thread_processor.new_solutions_revision_and_add(next_solutions_filename,next_technical_filename, SAVE_PATH, lookback_date)
+    thread_processor.new_solutions_revision_and_add(next_solutions_filename, next_step1_output_filename, SOLUTIONS_DICT_FILENAME, SAVE_PATH)
 
 @app.post("/process-next-batch")
 def process_next_batch():
     try:
-        messages_df = data_loader.load_and_preprocess_data("c:\\Users\\LiveComp\\Documents\\Лекции в Peeranha\\Discord messages\\discord_messages.xlsx")
-        solutions_dict = load_solutions_dict('solutions_dict.json', SAVE_PATH)
+        messages_df = data_loader.load_and_preprocess_data(MESSAGES_FILE_PATH)
+        solutions_dict = load_solutions_dict(SOLUTIONS_DICT_FILENAME, SAVE_PATH)
         latest_solution_date = get_end_date_from_solutions(solutions_dict)
 
         if latest_solution_date:
