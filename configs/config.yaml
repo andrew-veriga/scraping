@@ -1,0 +1,5 @@
+SAVE_PATH: 'c:\Users\LiveComp\Documents\Лекции в Peeranha\Discord messages\results'
+INTERVAL_FIRST: 2
+INTERVAL_NEXT: 1
+INTERVAL_BACK: 2
+GEMINI_API_KEY: 'YOUR_API_KEY'

@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pandas
+openpyxl
+google-generativeai
+pydantic
+python-dotenv
+tenacity
+PyYAML
