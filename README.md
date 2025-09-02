@@ -45,7 +45,8 @@ py -m pytest
 *   `POST /process-first-batch`: Kicks off the initial processing of the entire message log.
 *   `POST /process-next-batch`: Processes new messages since the last run.
 *   `GET /solutions`: Retrieves the processed solutions as a JSON object.
-
+*   `GET /markdown-report`: Generates a markdown report from the solutions dictionary and returns it in the response.
+        It also saves the report to a file.
 ## Configuration
 
 Application settings like file paths and processing intervals can be modified in `configs/config.yaml`.
