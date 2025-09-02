@@ -1,0 +1,67 @@
+def new_solutions_revision_and_add(next_solutions_filename,next_technical_filename, solutions_dict, lookback_date):
+    """
+    Check improvement of solutions for topics file using LLM
+    args:
+    next_solutions_filename - file name of saved new solutions
+    next_technical_filename - file name of adding raw threads with 'new' and 'modified' status
+    """
+    with open(next_solutions_filename, 'r') as f:
+        next_solutions_list = json.load(f)
+
+    # dictionaries for a all previous solutions  and new batch of solutions
+    prev_solution_dict = load_solutions_dict('solutions_dict.json',lookback_date)
+    new_solution_dict = create_dict_from_list(next_solutions_list)
+    # list of modified thread IDs
+    adding_threads = json.loads(open(next_technical_filename, 'r').read())
+
+    modified_threads = [t['Topic_ID'] for t in adding_threads if t['status']=='modified']
+
+    new_threads = [t['Topic_ID'] for t in adding_threads if t['status']=='new']
+    if len(modified_threads) > 0:
+        # pairs of old and modified sloutions
+        print(f"{len(modified_threads)} comparising")
+        modified_pairs = {m: {'prev': prev_solution_dict[m],'new':new_solution_dict[m]} for m in modified_threads}
+        pairs_in_text = []
+        for key, p in modified_pairs.items():
+            pairs_in_text.append(f"""
+Topic_ID: {key}
+Previous version:
+    statement: {p['prev']['Header']}
+    solution: {p['prev']['Solution']}
+    status: {p['prev']['Label']}
+New version:
+    statement: {p['new']['Header']}
+    solution: {p['new']['Solution']}
+    status: {p['new']['Label']}
+"""
+        )
+        # print("pairs:", pairs_in_text)
+
+        response_solutions = gemini_service.generate_content(
+            model=gemini_service.model_name,
+            contents=[
+                gemini_service.system_prompt,
+                gemini_service.revision_prompt.format(pairs='\n'.join(pairs_in_text))
+                ],
+            config=gemini_service.revision_config
+            )
+
+        revised_solutions=response_solutions.parsed.comparisions
+
+        for s in revised_solutions:
+            if  s.Label=='improved': #thread has significant improved solution, should be replaced in the main dictionary
+                add_or_update_solution(solutions_dict, new_solution_dict[s.Topic_ID])
+                print(f'Topic{s.Topic_ID} improved')
+            elif s.Label=='persisted': #thread persists the header and solution text, but should change the message list
+                solutions_dict[s.Topic_ID]['Whole_thread'] = new_solution_dict[s.Topic_ID]['Whole_thread']
+                print(f'Topic{s.Topic_ID} get {len(new_solution_dict[s.Topic_ID]['Whole_thread']) - len(solutions_dict[s.Topic_ID]['Whole_thread'])} new messages')
+            else:
+                # s.Label=='changed': thread persists has changes in header and solution text.Should be checked in RAG
+                #TODO check in RAG the header and solution of this new_solution_dict[s.Topic_ID]
+                pass
+
+
+    new_solutions_for_add = {key: s for key, s in new_solution_dict.items() if key in new_threads}
+    add_new_solutions_to_dict(solutions_dict, list(new_solutions_for_add.values()))
+    #TODO check in RAG the header and solution of this new_solutions_for_add
+    save_solutions_dict(solutions_dict, f'solutions_dict.json', save_path=SAVE_PATH)

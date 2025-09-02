@@ -1,12 +1,24 @@
 import os
-import google.generativeai as genai
+
+from google import genai
+from google.genai import types #import GenerationConfig, ThinkingConfig
 from app.models.pydantic_models import RawThreadList, ModifiedRawThreadList, ThreadList, TechnicalTopics, RevisedList
+import logging
+
+#load_dotenv(dotenv_path)
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    # Use logging.critical for errors that prevent the app from starting.
+    logging.critical("GEMINI_API_KEY environment variable is not set.")
+    raise EnvironmentError("GEMINI_API_KEY environment variable is not set.")
 
-genai.configure(api_key=GEMINI_API_KEY)
+
+gemini_client = genai.Client(
+    api_key=GEMINI_API_KEY
+)
 model_name = "gemini-2.5-flash"
-model = genai.GenerativeModel(model_name)
+
 
 system_prompt = """
 You are an experienced technical support specialist. Your goal is to select solutions from the support chat logs for the FAQ section of your portal dedicated to the Qui blockchain.
@@ -83,39 +95,69 @@ If the new version of the problem statement is significantly different from the 
 If both of the problem statement and the solution have not got significant changes in the new version, label them as \"persisted\".
 """
 
-generation_config = genai.GenerationConfig(
-    temperature=1.0,
+# The `response_schema` parameter is not valid for GenerationConfig.
+# For JSON mode with a schema, the schema should be passed as a `tool`.
+# The `response_mime_type` should be in the GenerationConfig.
+common_config_params = {
+    "temperature": 1.0,
+    "response_mime_type": "application/json",
+}
+
+config_step1 = types.GenerateContentConfig(
+    **common_config_params,
+    thinking_config=types.ThinkingConfig(thinking_budget=2000),
+    response_schema=RawThreadList
+)
+config_addition_step1 = types.GenerateContentConfig(
+    **common_config_params,
+    thinking_config=types.ThinkingConfig(thinking_budget=2000),
+    response_schema=ModifiedRawThreadList
 )
 
-class _MockParsedResponse:
-    """A helper class to mimic the `response.parsed` attribute from the old SDK."""
-    def __init__(self, parsed_data):
-        self.parsed = parsed_data
+config_step2 = types.GenerateContentConfig(
+    **common_config_params,
+    thinking_config=types.ThinkingConfig(thinking_budget=1000),
+    response_schema=TechnicalTopics
+)
+solution_config = types.GenerateContentConfig(
+    **common_config_params,
+    thinking_config=types.ThinkingConfig(thinking_budget=2000),
+    response_schema=ThreadList
+)
 
-def generate_content(contents, schema, config):
+revision_config = types.GenerateContentConfig(
+    **common_config_params,
+    thinking_config=types.ThinkingConfig(thinking_budget=2000),
+    response_schema=RevisedList
+)
+
+
+
+
+def generate_content(contents, config: types.GenerateContentConfig):
     """
     Generates content using the Gemini API with function calling for structured output.
 
     This function adapts the new google-generativeai SDK to the calling convention
     of the older SDK, expecting a schema and returning an object with a `.parsed` attribute.
     """
+
     try:
-        response = model.generate_content(
+        response = gemini_client.models.generate_content(
+            model=model_name,
             contents=contents,
-            generation_config=config,
-            tools=[schema]  # Use the Pydantic model for function calling
+            config=config,
         )
 
         # The SDK automatically adds a `from_function_call` method to Pydantic models
         # when they are used as tools.
-        tool_call = response.candidates[0].content.parts[0].function_call
-        parsed_data = schema.from_function_call(tool_call)
-        return _MockParsedResponse(parsed_data)
+        parsed_data = response.parsed
+        return parsed_data
     except (IndexError, AttributeError, KeyError) as e:
         # Handle cases where the model doesn't return the expected function call
-        print(f"Error parsing model response: {e}")
-        print(f"Full response: {response}")
+        logging.error(f"Error parsing model response: {str(e)}")
+        # logging.error(f"Full response: {response}") # Be careful logging full response, it can be large.
         # To prevent a crash, return a mock response with an empty schema instance.
         # This is crucial for list-based fields to avoid TypeErrors in calling code.
-        empty_data = {field: [] for field, field_info in schema.model_fields.items() if 'List' in str(field_info.annotation)}
-        return _MockParsedResponse(schema.model_validate(empty_data))
+        empty_data = {field: [] for field, field_info in config.response_schema.__class__.model_fields.items() if 'List' in str(field_info.annotation)}
+        return config.response_schema.model_validate(empty_data)

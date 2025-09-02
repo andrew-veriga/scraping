@@ -2,8 +2,11 @@ fastapi
 uvicorn
 pandas
 openpyxl
-google-generativeai
+google
+google-api-core
+google-genai
 pydantic
 python-dotenv
 tenacity
 PyYAML
+markdown-it-py

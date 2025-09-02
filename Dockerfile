@@ -17,7 +17,7 @@ COPY . /app
 EXPOSE 8000
 
 # Define environment variable
-ENV GEMINI_API_KEY YOUR_API_KEY
+# ENV GEMINI_API_KEY YOUR_API_KEY
 
 # Run uvicorn when the container launches
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

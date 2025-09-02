@@ -1,4 +1,4 @@
-SAVE_PATH: 'C:\VSCode\discord-sui-analyzer\results'
+SAVE_PATH: '..\results'
 INTERVAL_FIRST: 2
 INTERVAL_NEXT: 1
 INTERVAL_BACK: 2
