@@ -23,7 +23,7 @@ This project is a FastAPI application that analyzes Discord chat logs to identif
     ```
 
 4.  **Set up your Gemini API Key:**
-    Create a file named `.env` inside the `app/services/` directory and add your API key:
+    Create a file named `.env` in the root directory and add your API key:
     ```
     GEMINI_API_KEY="your_actual_api_key"
     ```
@@ -45,8 +45,7 @@ py -m pytest
 *   `POST /process-first-batch`: Kicks off the initial processing of the entire message log.
 *   `POST /process-next-batch`: Processes new messages since the last run.
 *   `GET /solutions`: Retrieves the processed solutions as a JSON object.
-*   `GET /markdown-report`: Generates a markdown report from the solutions dictionary and returns it in the response.
-        It also saves the report to a file.
+*   `GET /markdown-report`: Generates a Markdown report based on the solution dictionary and returns it in the response, and saves the report to file named `solutions_report.md` at the `SAVE_PATH` variable specified in config.yaml.
 ## Configuration
 
 Application settings like file paths and processing intervals can be modified in `configs/config.yaml`.
