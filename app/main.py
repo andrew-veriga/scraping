@@ -15,20 +15,29 @@ import os
 import logging
 from markdown_it import MarkdownIt
 from app.utils.file_utils import illustrated_message, illustrated_threads #, save_solutions_dict, load_solutions_dict, create_dict_from_list, add_new_solutions_to_dict, add_or_update_solution, convert_datetime_to_str
-# Configure logging to ensure logs are output to the console
+
+with open("configs/config.yaml", 'r') as stream:
+    config = yaml.safe_load(stream)
+
+SAVE_PATH = config['SAVE_PATH']
+os.makedirs(SAVE_PATH, exist_ok=True)
+LOG_FILE = os.path.join(SAVE_PATH, 'app.log')
+
+# Configure logging to output to console and file
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    force=True  # In case uvicorn tries to configure logging as well
+    force=True,  # In case uvicorn tries to configure logging as well
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler()
+    ]
 )
 
 app = FastAPI()
 
-with open("configs/config.yaml", 'r') as stream:
-    config = yaml.safe_load(stream)
 logging.info(f"Config loaded: {config}")
 MESSAGES_FILE_PATH = config['MESSAGES_FILE_PATH']
-SAVE_PATH = config['SAVE_PATH']
 INTERVAL_FIRST = config['INTERVAL_FIRST']
 INTERVAL_NEXT = config['INTERVAL_NEXT']
 INTERVAL_BACK = config['INTERVAL_BACK']
