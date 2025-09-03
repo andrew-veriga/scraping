@@ -1,5 +1,6 @@
-SAVE_PATH: '..\results'
+SAVE_PATH: '.\results'
 INTERVAL_FIRST: 2
 INTERVAL_NEXT: 1
 INTERVAL_BACK: 2
 MESSAGES_FILE_PATH: 'data\discord_messages.xlsx'
+SOLUTIONS_DICT_FILENAME: 'solutions_dict.json'

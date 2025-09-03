@@ -6,6 +6,7 @@ google
 google-api-core
 google-genai
 pydantic
+rapidfuzz
 python-dotenv
 tenacity
 PyYAML

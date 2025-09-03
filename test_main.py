@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 import pandas as pd
 import json
 
-from app.main import app, ServiceUnavailable
+from app.main import app
 from app.main import process_batch
 
 client = TestClient(app)
@@ -80,36 +80,6 @@ def test_process_next_batch_exception(mock_services):
     response = client.post("/process-next-batch")
     assert response.status_code == 500
     assert response.json() == {"detail": "Test Error"}
-
-def test_process_batch_retry(monkeypatch):
-    """Tests the tenacity retry decorator on the process_batch function."""
-    # 1. Setup
-    mock_next_thread_gathering = MagicMock(
-        side_effect=[ServiceUnavailable("API down"), "step1.json"]
-    )
-    mock_filter_technical_topics = MagicMock(return_value="tech.json")
-    mock_generalization_solution = MagicMock(return_value="solutions.json")
-    mock_new_solutions_revision = MagicMock()
-
-    monkeypatch.setattr("app.services.thread_processor.next_thread_gathering", mock_next_thread_gathering)
-    monkeypatch.setattr("app.services.thread_processor.filter_technical_topics", mock_filter_technical_topics)
-    monkeypatch.setattr("app.services.thread_processor.generalization_solution", mock_generalization_solution)
-    monkeypatch.setattr("app.services.thread_processor.new_solutions_revision_and_add", mock_new_solutions_revision)
-
-    # Dummy args for process_batch
-    dummy_df = pd.DataFrame()
-    dummy_dict = {}
-    dummy_date = pd.Timestamp.now()
-
-    # 2. Execute
-    process_batch(dummy_df, dummy_dict, dummy_date, dummy_date, dummy_date, dummy_df)
-
-    # 3. Assert
-    # It should be called twice due to retry on ServiceUnavailable
-    assert mock_next_thread_gathering.call_count == 2
-    mock_filter_technical_topics.assert_called_once()
-    mock_generalization_solution.assert_called_once()
-    mock_new_solutions_revision.assert_called_once()
 
 def test_process_next_batch_no_existing_solutions(mock_services, monkeypatch):
     """Tests processing the next batch when no solutions file exists yet."""

@@ -5,25 +5,29 @@ import os
 import pandas as pd
 import logging
 
-from app.services import gemini_service
-from app.models import pydantic_models
+from app.services import gemini_service, prompts
 from app.utils.file_utils import * # illustrated_message, illustrated_threads, save_solutions_dict, load_solutions_dict, create_dict_from_list, add_new_solutions_to_dict, add_or_update_solution, convert_datetime_to_str
 
-def first_thread_gathering(logs_df, save_path):
+
+def first_thread_gathering(logs_df, prefix, save_path):
     """
     Group messages into threads using LLM from DataFrame provided flat message list
     """
     logs_csv = logs_df.to_csv(index=False)
+    valid_ids_set = set(logs_df['Message ID'].unique())
     response = gemini_service.generate_content(
         contents=[
             logs_csv,
-            gemini_service.system_prompt,
-            gemini_service.prompt_start_step_1
+            prompts.system_prompt,
+            prompts.prompt_start_step_1
             ],
         config=gemini_service.config_step1,
+        valid_ids_set=valid_ids_set,
+        log_prefix="First thread gathering:"
     )
-    output_filename = f'first_group_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.json'
+    output_filename = f'{prefix}_gathering.json'
 
+    # The response is now the parsed and validated Pydantic object
     threads_list_dict = [thread.model_dump() for thread in response.threads]
 
     full_path = os.path.join(save_path, output_filename)
@@ -35,7 +39,7 @@ def first_thread_gathering(logs_df, save_path):
 
 
 
-def filter_technical_topics(filename, startnext: str, messages_df, save_path):
+def filter_technical_topics(filename, prefix: str, messages_df, save_path):
     """
     Extract technical topics from JSON file using LLM with DataFrame logs provided full texts of messages
     return only technical threads
@@ -48,16 +52,16 @@ def filter_technical_topics(filename, startnext: str, messages_df, save_path):
     response = gemini_service.generate_content(
         contents=[
             json.dumps(processed_threads, indent=4),
-            gemini_service.system_prompt,
-            gemini_service.prompt_step_2
+            prompts.system_prompt,
+            prompts.prompt_step_2
             ],
         config=gemini_service.config_step2,
     )
 
     technical_threads = [thread for thread in processed_threads if thread['Topic_ID'] in response.technical_topics]
-    logging.info(f"{startnext} step 2. Selected {len(response.technical_topics)} technical topics from {len(processed_threads)} threads")
+    logging.info(f"{prefix} step 2. Selected {len(response.technical_topics)} technical topics from {len(processed_threads)} threads")
 
-    output_filename = f'{startnext}_technical_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.json'
+    output_filename = f'{prefix}_technical.json'
     full_path = os.path.join(save_path,output_filename)
     with open(full_path, 'w') as f:
         f.write(json.dumps(technical_threads,  indent=2))
@@ -65,26 +69,31 @@ def filter_technical_topics(filename, startnext: str, messages_df, save_path):
     logging.info(f"Successfully saved {len(technical_threads)} filtered threads to {output_filename}")
     return full_path
 
-def generalization_solution(filename,startnext: str, save_path):
+def generalization_solution(filename,prefix: str, save_path):
     """
     Generalize technical topics from JSON file using LLM
     Create "Header" and "Solution" fields
     """
     with open(filename, 'r') as f:
         technical_threads = json.load(f)
-
-    response_solutions = gemini_service.generate_content(
+    valid_ids_set = set()
+    for t in technical_threads: 
+        valid_ids_set = valid_ids_set.union(set(t['Whole_thread']))
+    response_solutions = gemini_service.generate_content( 
         contents=[
             json.dumps(technical_threads, indent=2),
-            gemini_service.system_prompt,
-            gemini_service.prompt_step_3
+            prompts.system_prompt,
+            prompts.prompt_step_3
             ],
         config=gemini_service.solution_config,
+        valid_ids_set=valid_ids_set,
+        log_prefix=f"{prefix} generalization solution:"
     )
-    logging.info(f"{startnext} step 3. Generalization of {len(response_solutions.threads)} technical threads")
+
+    logging.info(f"{prefix} step 3. Generalization of {len(response_solutions.threads)} technical threads")
     solutions_list = [thread.model_dump() for thread in response_solutions.threads]
 
-    output_filename = f'{startnext}_solutions_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.json'
+    output_filename = f'{prefix}_solutions.json'
     full_path = os.path.join(save_path,output_filename)
     with open(full_path, 'w') as f:
         json.dump(solutions_list, f, indent=2, default=convert_datetime_to_str)
@@ -105,27 +114,28 @@ def generalization_solution(filename,startnext: str, save_path):
 #     "Solution": "Please reach out to the Suidollar.io support team directly for issues with deposits not appearing in their dapp.",
 #     "Topic": "2025-08-10 16:39:32 User 752613342467588167: Good afternoon, is there any problem with the suidollar.io dapp? Yesterday I made an approximate deposit of 2700 USDC in the \"Delta Neutral USDC Vault\", and the deposit does not appear. I have reviewed the transaction in Suivision.xyz and everything seems correct. Could you help me? Thank you!"
 #   }
-def next_thread_gathering(next_batch_df, solutions_dict, lookback_date, next_start_date, save_path, messages_df):
+def next_thread_gathering(next_batch_df, lookback_threads, str_interval, save_path, messages_df):
     """
-    Gather next batch of threads for processing
+    Gather next batch of messages into raw threads for processing
     """
     df_indexed = messages_df.copy()
-    author_ids = messages_df['Author ID'].unique().tolist()
     df_indexed.set_index('Message ID', inplace=True)
     
     next_batch_csv = next_batch_df.to_csv(index=False)
 
-    technical_threads_json = [t for t in solutions_dict.values() if pd.Timestamp(t['Actual_Date']) > lookback_date]
+    
     # previous_threads_json = illustrated_threads(technical_threads_json, messages_df)
     previous_threads_text = []
-    for thread in technical_threads_json:
+    valid_ids_set = set(next_batch_df['Message ID'].unique())
+    # valid_ids_set = set(df_indexed.index)
+    for thread in lookback_threads:
         whole_thread_ids = thread.get('Whole_thread', [])
         if whole_thread_ids:
+            valid_ids_set = valid_ids_set.union(set(whole_thread_ids))
             messages=[]
             for message_id in whole_thread_ids:
                 # Ensure message_id is a string for lookup
                 # Assuming formatted_message function is defined and accessible
-                message = df_indexed.loc[message_id]
                 message_content =illustrated_message(message_id, df_indexed)
                 if message_id == thread.get('Topic_ID', 'N/A'):
                     messages.append(f"""- ({message_id}) - **Topic started** :{message_content} """)
@@ -134,28 +144,32 @@ def next_thread_gathering(next_batch_df, solutions_dict, lookback_date, next_sta
 
         previous_threads_text.append(f"Topic: {thread.get('Topic_ID', 'N/A')} - {thread.get('Actual_Date', 'N/A')} \\n" + "\n".join(messages))
 
-    prmpt = gemini_service.prompt_addition_step1.format(JSON_prev="\n".join(previous_threads_text))
+    prmpt = prompts.prompt_addition_step1.format(JSON_prev="\n".join(previous_threads_text))
 
     logging.info(f"Next step 1. Processing next {len(next_batch_df)} raw messages...")
     response = gemini_service.generate_content(
         contents=[
-            gemini_service.system_prompt,
+            prompts.system_prompt,
             next_batch_csv,
             prmpt
             ],
         config=gemini_service.config_addition_step1,
+        valid_ids_set=valid_ids_set,
+        log_prefix="Next thread gathering:"
     )
+
+    # The response is now the parsed and validated Pydantic object
     added_threads_pydantic = [t for t in response.threads if t.status !='persisted']
     added_threads = [t.model_dump() for t in added_threads_pydantic]
     cnt_modified = len([t for t in added_threads if t['status']=='modified'])
     cnt_new = len([t for t in added_threads if t['status']=='new'])
 
-    logging.info(f"Added {cnt_new} new threads. Modified {cnt_modified} threads created before {next_start_date.strftime('%Y-%m-%d_%H-%M-%S')}.")
-
-    output_filename = f'next_group_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.json'
+    logging.info(f"Added {cnt_new} new threads. Modified {cnt_modified} threads created before {str_interval}.")
+    # str_interval = f"{next_start_date.date()}-{next_end_date.date()}"
+    output_filename = f'next_{str_interval}_group.json'
     full_path = os.path.join(save_path, output_filename)
     with open(full_path, 'w') as f:
-        json.dump(added_threads, f, indent=4, default=convert_datetime_to_str)
+        json.dump(added_threads, f, indent=2, default=convert_datetime_to_str)
     logging.info(f"Successfully saved {len(added_threads)} new/modified threads to {output_filename}")
     return full_path
 
@@ -169,7 +183,7 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
     with open(next_solutions_filename, 'r') as f:
         next_solutions_list = json.load(f)
 
-    # dictionaries for a all previous solutions  and new batch of solutions
+    # dictionaries for a all previous solutions from lookback_date and new batch of solutions
     prev_solution_dict = {
         topic_id: solution
         for topic_id, solution in solutions_dict.items()
@@ -186,7 +200,15 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
     if len(modified_threads) > 0:
         # pairs of old and modified sloutions
         logging.info(f"{len(modified_threads)} comparising")
-        modified_pairs = {m: {'prev': prev_solution_dict[m],'new':new_solution_dict[m]} for m in modified_threads}
+        modified_pairs = {}
+        for m in modified_threads:
+            if m not in prev_solution_dict:
+                logging.warning(f"Topic {m} marked as modified but not found in previous solutions")
+                continue
+            if m not in new_solution_dict:
+                logging.warning(f"Topic {m} marked as modified but not found in new solutions")
+                continue
+            modified_pairs[m] = {'prev': prev_solution_dict[m],'new':new_solution_dict[m]}
         pairs_in_text = []
         for key, p in modified_pairs.items():
             pairs_in_text.append(f"""
@@ -205,8 +227,8 @@ New version:
 
         response_solutions = gemini_service.generate_content(
             contents=[
-                gemini_service.system_prompt,
-                gemini_service.revision_prompt.format(pairs='\n'.join(pairs_in_text))
+                prompts.system_prompt,
+                prompts.revision_prompt.format(pairs='\n'.join(pairs_in_text))
                 ],
             config=gemini_service.revision_config,
         )
@@ -218,8 +240,11 @@ New version:
                 add_or_update_solution(solutions_dict, new_solution_dict[s.Topic_ID])
                 logging.info(f'Topic {s.Topic_ID} improved')
             elif s.Label=='persisted': #thread persists the header and solution text, but should change the message list
-                solutions_dict[s.Topic_ID]['Whole_thread'] = new_solution_dict[s.Topic_ID]['Whole_thread']
                 logging.info(f"Topic {s.Topic_ID} get {len(new_solution_dict[s.Topic_ID]['Whole_thread']) - len(solutions_dict[s.Topic_ID]['Whole_thread'])} new messages")
+                solutions_dict[s.Topic_ID]['Whole_thread'] = new_solution_dict[s.Topic_ID]['Whole_thread']
+                solutions_dict[s.Topic_ID]['Actual_Date'] = new_solution_dict[s.Topic_ID]['Actual_Date']
+                solutions_dict[s.Topic_ID]['Answer_ID'] = new_solution_dict[s.Topic_ID]['Answer_ID']
+                solutions_dict[s.Topic_ID]['Label'] = new_solution_dict[s.Topic_ID]['Label']
             else:
                 # s.Label=='changed': thread has changes in header and solution text. Should be checked in RAG
                 new_threads.append(s.Topic_ID) #just replacing old thread if its Header and Solution texts are changed. It may be wrong but ok for mvp

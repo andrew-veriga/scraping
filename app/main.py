@@ -8,8 +8,6 @@ from app.services import data_loader, thread_processor
 from app.utils.file_utils import load_solutions_dict, save_solutions_dict, get_end_date_from_solutions, create_dict_from_list
 import pandas as pd
 import yaml
-from tenacity import retry, stop_after_attempt, wait_fixed, retry_if_exception_type
-from google.api_core.exceptions import ServiceUnavailable
 import json
 import os
 import logging
@@ -41,7 +39,31 @@ MESSAGES_FILE_PATH = config['MESSAGES_FILE_PATH']
 INTERVAL_FIRST = config['INTERVAL_FIRST']
 INTERVAL_NEXT = config['INTERVAL_NEXT']
 INTERVAL_BACK = config['INTERVAL_BACK']
-SOLUTIONS_DICT_FILENAME = 'solutions_dict.json'
+SOLUTIONS_DICT_FILENAME = config['SOLUTIONS_DICT_FILENAME']
+
+
+@app.post("/full-process")
+def full_process():
+    """
+    Runs the full data processing pipeline:
+    1. Processes the initial batch of messages to create a baseline solutions file.
+    2. Processes all subsequent batches of messages until up-to-date.
+    """
+    try:
+        logging.info("Starting full process...")
+        # The called functions will return a dict on success and raise HTTPException on failure.
+        # We are calling them as procedures and ignoring the return value.
+        logging.info("Starting process_first_batch...")
+        process_first_batch()
+        logging.info("process_first_batch complete.")
+        logging.info("Starting process_next_batch...")
+        process_next_batch()
+        logging.info("process_next_batch complete.")
+        logging.info("Full process finished successfully.")
+        return {"message": "Full process completed successfully."}
+    except Exception as e:
+        logging.error("An error occurred during the full process.", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"An error occurred during the full process: {getattr(e, 'detail', str(e))}")
 
 @app.post("/process-first-batch")
 def process_first_batch():
@@ -50,10 +72,11 @@ def process_first_batch():
         messages_df = data_loader.load_and_preprocess_data(MESSAGES_FILE_PATH)
         start_date = messages_df['DateTime'].min().normalize()
         end_date = start_date + pd.Timedelta(days=INTERVAL_FIRST)
+        str_interval = f"{start_date.date()}-{end_date.date()}"
         first_some_days_df = messages_df[messages_df['DateTime'] < end_date].copy()
-        step1_output_filename = thread_processor.first_thread_gathering(first_some_days_df, SAVE_PATH)
-        first_technical_filename = thread_processor.filter_technical_topics(step1_output_filename, "first", messages_df, SAVE_PATH)
-        first_solutions_filename = thread_processor.generalization_solution(first_technical_filename, "first", SAVE_PATH)
+        step1_output_filename = thread_processor.first_thread_gathering(first_some_days_df,  f"first_{str_interval}", SAVE_PATH)
+        first_technical_filename = thread_processor.filter_technical_topics(step1_output_filename, f"first_{str_interval}", messages_df, SAVE_PATH) # messages_df is needed for illustrated_threads
+        first_solutions_filename = thread_processor.generalization_solution(first_technical_filename,  f"first_{str_interval}", SAVE_PATH)
         solutions_list = json.load(open(first_solutions_filename, 'r'))
         solutions_dict = create_dict_from_list(solutions_list)
         save_solutions_dict(solutions_dict, SOLUTIONS_DICT_FILENAME, SAVE_PATH)
@@ -62,13 +85,19 @@ def process_first_batch():
         logging.error("Error processing first batch", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@retry(stop=stop_after_attempt(5), wait=wait_fixed(60), retry=retry_if_exception_type(ServiceUnavailable))
-def process_batch(next_day_df, solutions_dict, lookback_date, next_start_date, next_end_date, messages_df):
-    next_step1_output_filename = thread_processor.next_thread_gathering(next_day_df, solutions_dict, lookback_date, next_start_date, SAVE_PATH, messages_df)
-    next_technical_filename = thread_processor.filter_technical_topics(next_step1_output_filename, "next", messages_df, SAVE_PATH)
-    next_solutions_filename = thread_processor.generalization_solution(next_technical_filename, "next", SAVE_PATH)
+def process_batch(solutions_dict, lookback_date:pd.Timestamp, next_start_date: pd.Timestamp, next_end_date: pd.Timestamp, messages_df):
+    str_interval = f"{next_start_date.date()}-{next_end_date.date()}"
+    next_batch_df = messages_df[(next_start_date <= messages_df['DateTime']) & (messages_df['DateTime'] < next_end_date)].copy()
+    if next_batch_df.empty:
+        logging.info(f"No messages found in the interval {str_interval}. Skipping this batch.")
+        return False
+    prev_threads = [t for t in solutions_dict.values() if pd.Timestamp(t['Actual_Date']) > lookback_date]
+    next_step1_output_filename = thread_processor.next_thread_gathering(next_batch_df, prev_threads, str_interval, SAVE_PATH, messages_df)
+    next_technical_filename = thread_processor.filter_technical_topics(next_step1_output_filename, f"next_{str_interval}", messages_df, SAVE_PATH)
+    next_solutions_filename = thread_processor.generalization_solution(next_technical_filename, f"next_{str_interval}", SAVE_PATH)
     solutions_dict = thread_processor.new_solutions_revision_and_add(next_solutions_filename, next_technical_filename, solutions_dict, lookback_date)
     save_solutions_dict(solutions_dict, SOLUTIONS_DICT_FILENAME, save_path=SAVE_PATH)
+    return True
 
 @app.post("/process-next-batch")
 def process_next_batch():
@@ -93,10 +122,7 @@ def process_next_batch():
 
             logging.info("-" * 60)
             logging.info(f"Processing batch. Lookback: {lookback_date}, Start: {next_start_date}, End: {next_end_date}")
-            next_day_df = messages_df[(next_start_date <= messages_df['DateTime']) & (messages_df['DateTime'] < next_end_date)].copy()
-            if not next_day_df.empty:
-                process_batch(next_day_df, solutions_dict, lookback_date, next_start_date, next_end_date, messages_df)
-            else:
+            if not process_batch(solutions_dict, lookback_date, next_start_date, next_end_date, messages_df):
                 logging.info(f"No messages in the interval: {next_start_date} to {next_end_date}")
         return {"message": "Next batch processed successfully"}
     except Exception as e:
@@ -183,32 +209,32 @@ def generate_markdown_report():
 
         # Embed the HTML in a full page with some basic styling for a "pretty" look
         html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <title>Solutions Report</title>
-            <style>
-                body {{
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-                    line-height: 1.5;
-                    color: #24292e;
-                    background-color: #fff;
-                    padding: 20px 45px;
-                    max-width: 800px;
-                    margin: 0 auto;
-                }}
-                h1, h2, h3, h4 {{ border-bottom: 1px solid #eaecef; padding-bottom: .3em; }}
-                code {{ background-color: rgba(27,31,35,.05); border-radius: 3px; padding: .2em .4em; }}
-                ul {{ padding-left: 2em; }}
-            </style>
-        </head>
-        <body>
-            <h1>Solutions Report</h1>
-            {html_body}
-        </body>
-        </html>
-        """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Solutions Report</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            line-height: 1.5;
+            color: #24292e;
+            background-color: #fff;
+            padding: 20px 45px;
+            max-width: 800px;
+            margin: 0 auto;
+        }}
+        h1, h2, h3, h4 {{ border-bottom: 1px solid #eaecef; padding-bottom: .3em; }}
+        code {{ background-color: rgba(27,31,35,.05); border-radius: 3px; padding: .2em .4em; }}
+        ul {{ padding-left: 2em; }}
+    </style>
+</head>
+<body>
+    <h1>Solutions Report</h1>
+    {html_body}
+</body>
+</html>
+"""
         return HTMLResponse(content=html_content)
     except Exception as e:
         logging.error(f"Error generating markdown report: {e}", exc_info=True)

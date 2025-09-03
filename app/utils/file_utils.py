@@ -74,7 +74,7 @@ def get_end_date_from_solutions(solutions_dict):
     """Extracts the latest Actual_Date from the solutions dictionary."""
     if not solutions_dict:
         return None
-    latest_date = max([pd.Timestamp(s['Actual_Date']) for s in solutions_dict.values()]).normalize() + pd.Timedelta(days=2)
+    latest_date = max([pd.Timestamp(s['Actual_Date']) for s in solutions_dict.values()]).normalize() + pd.Timedelta(days=1)
     return latest_date#.tz_convert( tz=None)#.tz_localize(timezone.utc)
 
 def is_admin(message_ID):
@@ -119,7 +119,7 @@ def illustrated_message(message_ID, df_indexed):
 
     # Ensure message_content is a string before using re.sub
     if pd.isna(message_content):
-        message_content = ""
+        message_content = "<empty>"
     else:
         message_content = str(message_content)
 

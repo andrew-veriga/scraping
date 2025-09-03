@@ -42,7 +42,7 @@ py -m pytest
 
 ## API Endpoints
 
-*   `POST /process-first-batch`: Kicks off the initial processing of the entire message log.
+*   `POST /full-process`: Kicks off the initial processing of the entire message log.
 *   `POST /process-next-batch`: Processes new messages since the last run.
 *   `GET /solutions`: Retrieves the processed solutions as a JSON object.
 *   `GET /markdown-report`: Generates a Markdown report based on the solution dictionary and returns it in the response, and saves the report to file named `solutions_report.md` at the `SAVE_PATH` variable specified in config.yaml.

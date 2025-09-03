@@ -9,7 +9,7 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
         next_solutions_list = json.load(f)
 
     # dictionaries for a all previous solutions  and new batch of solutions
-    prev_solution_dict = load_solutions_dict('solutions_dict.json',lookback_date)
+    prev_solution_dict = load_solutions_dict(SOLUTIONS_DICT_FILENAME,lookback_date)
     new_solution_dict = create_dict_from_list(next_solutions_list)
     # list of modified thread IDs
     adding_threads = json.loads(open(next_technical_filename, 'r').read())
@@ -40,10 +40,10 @@ New version:
         response_solutions = gemini_service.generate_content(
             model=gemini_service.model_name,
             contents=[
-                gemini_service.system_prompt,
-                gemini_service.revision_prompt.format(pairs='\n'.join(pairs_in_text))
+                prompts.system_prompt,
+                prompts.revision_prompt.format(pairs='\n'.join(pairs_in_text))
                 ],
-            config=gemini_service.revision_config
+            config=prompts.revision_config
             )
 
         revised_solutions=response_solutions.parsed.comparisions
@@ -64,4 +64,4 @@ New version:
     new_solutions_for_add = {key: s for key, s in new_solution_dict.items() if key in new_threads}
     add_new_solutions_to_dict(solutions_dict, list(new_solutions_for_add.values()))
     #TODO check in RAG the header and solution of this new_solutions_for_add
-    save_solutions_dict(solutions_dict, f'solutions_dict.json', save_path=SAVE_PATH)
+    save_solutions_dict(solutions_dict, fSOLUTIONS_DICT_FILENAME, save_path=SAVE_PATH)
