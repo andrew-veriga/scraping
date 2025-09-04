@@ -30,7 +30,7 @@ This project is a FastAPI application that analyzes Discord chat logs to identif
 
 ### Running the Application
 
-The application will be available at `http://127.0.0.1:8000`. You can access the interactive API documentation at `http://127.0.0.1:8000/docs`.
+The application will be available at `http://127.0.0.1:8000`
 
 ## API Endpoints
 
