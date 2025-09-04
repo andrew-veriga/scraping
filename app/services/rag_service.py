@@ -9,7 +9,7 @@ import hashlib
 import json
 
 try:
-    import google.generativeai as genai
+    from google import genai
 except ImportError:
     # Fallback for development/testing
     genai = None
@@ -53,8 +53,7 @@ class RAGService:
             if not gemini_api_key:
                 raise ValueError("GEMINI_API_KEY environment variable is not set")
             
-            genai.configure(api_key=gemini_api_key)
-            self.gemini_client = genai
+            self.gemini_client = genai.Client(api_key=gemini_api_key)
             self.logger.info("Gemini client initialized for RAG service")
         except Exception as e:
             self.logger.error(f"Failed to initialize Gemini client: {e}")
@@ -74,14 +73,14 @@ class RAGService:
             # Clean and prepare text
             cleaned_text = text.strip().replace('\n', ' ').replace('\r', ' ')
             
-            # Generate embedding using Google Generative AI
-            result = self.gemini_client.embed_content(
+            # Generate embedding using Google GenAI SDK
+            result = self.gemini_client.models.embed_content(
                 model=self.embedding_model,
-                content=cleaned_text
+                contents=[cleaned_text]
             )
             
-            if result and 'embedding' in result:
-                embedding = result['embedding']
+            if result and hasattr(result, 'embeddings') and result.embeddings:
+                embedding = result.embeddings[0].values
                 self.logger.debug(f"Generated embedding with dimension: {len(embedding)}")
                 return embedding
             else:
