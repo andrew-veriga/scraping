@@ -1,0 +1,109 @@
+2025-09-03 20:39:06,360 - app.services.database - ERROR - Failed to create tables: (psycopg2.errors.UndefinedObject) type "vector" does not exist
+LINE 5:  embedding VECTOR(768) NOT NULL, 
+                   ^
+
+[SQL: 
+CREATE TABLE solution_embeddings (
+	id SERIAL NOT NULL, 
+	solution_id INTEGER NOT NULL, 
+	embedding VECTOR(768) NOT NULL, 
+	embedding_model VARCHAR(100) NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	UNIQUE (solution_id), 
+	FOREIGN KEY(solution_id) REFERENCES solutions (id)
+)
+
+]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-09-03 20:39:06,360 - app.services.database - ERROR - Failed to initialize database: (psycopg2.errors.UndefinedObject) type "vector" does not exist
+LINE 5:  embedding VECTOR(768) NOT NULL, 
+                   ^
+
+[SQL: 
+CREATE TABLE solution_embeddings (
+	id SERIAL NOT NULL, 
+	solution_id INTEGER NOT NULL, 
+	embedding VECTOR(768) NOT NULL, 
+	embedding_model VARCHAR(100) NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	UNIQUE (solution_id), 
+	FOREIGN KEY(solution_id) REFERENCES solutions (id)
+)
+
+]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-09-03 20:39:06,370 - __main__ - ERROR - Migration failed: (psycopg2.errors.UndefinedObject) type "vector" does not exist
+LINE 5:  embedding VECTOR(768) NOT NULL, 
+                   ^
+
+[SQL: 
+CREATE TABLE solution_embeddings (
+	id SERIAL NOT NULL, 
+	solution_id INTEGER NOT NULL, 
+	embedding VECTOR(768) NOT NULL, 
+	embedding_model VARCHAR(100) NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	UNIQUE (solution_id), 
+	FOREIGN KEY(solution_id) REFERENCES solutions (id)
+)
+
+]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-09-03 20:43:55,387 - app.services.database - INFO - pgvector extension enabled successfully
+2025-09-03 20:43:56,799 - app.services.database - INFO - Database tables created successfully
+2025-09-03 20:43:56,799 - app.services.database - INFO - Database initialized successfully
+2025-09-03 20:43:56,800 - app.services.rag_service - ERROR - Failed to initialize Gemini client: GEMINI_API_KEY environment variable is not set
+2025-09-03 20:43:56,800 - __main__ - ERROR - Migration failed: GEMINI_API_KEY environment variable is not set
+2025-09-03 20:45:59,597 - app.services.database - INFO - pgvector extension enabled successfully
+2025-09-03 20:45:59,881 - app.services.database - INFO - Database tables created successfully
+2025-09-03 20:45:59,882 - app.services.database - INFO - Database initialized successfully
+2025-09-03 20:46:00,431 - app.services.rag_service - INFO - Gemini client initialized for RAG service
+2025-09-03 20:46:00,433 - __main__ - INFO - Starting complete data migration...
+2025-09-03 20:46:00,433 - __main__ - INFO - Migrating messages from Excel file...
+2025-09-03 20:46:00,731 - root - INFO - 2217 rows of data loaded and preprocessed successfully.
+2025-09-03 20:46:00,731 - __main__ - INFO - Loaded 2217 messages from Excel
+2025-09-03 20:46:00,813 - app.services.database - ERROR - Database session error: Could not determine join condition between parent/child tables on relationship Solution.similarities - there are multiple foreign key paths linking the tables.  Specify the 'foreign_keys' argument, providing a list of those columns which should be counted as containing a foreign key reference to the parent table.
+2025-09-03 20:46:00,814 - __main__ - ERROR - Failed to migrate messages: Could not determine join condition between parent/child tables on relationship Solution.similarities - there are multiple foreign key paths linking the tables.  Specify the 'foreign_keys' argument, providing a list of those columns which should be counted as containing a foreign key reference to the parent table.
+2025-09-03 20:46:00,814 - __main__ - ERROR - Data migration failed: Could not determine join condition between parent/child tables on relationship Solution.similarities - there are multiple foreign key paths linking the tables.  Specify the 'foreign_keys' argument, providing a list of those columns which should be counted as containing a foreign key reference to the parent table.
+2025-09-03 20:46:00,814 - __main__ - ERROR - Migration failed: Could not determine join condition between parent/child tables on relationship Solution.similarities - there are multiple foreign key paths linking the tables.  Specify the 'foreign_keys' argument, providing a list of those columns which should be counted as containing a foreign key reference to the parent table.
+2025-09-03 20:48:24,965 - __main__ - ERROR - Migration failed: EOF when reading a line
+2025-09-03 20:49:01,091 - app.services.database - ERROR - Failed to initialize database: No module named 'psycopg2'
+2025-09-03 20:49:01,091 - __main__ - ERROR - Migration failed: No module named 'psycopg2'
+2025-09-03 20:49:10,315 - app.services.database - INFO - pgvector extension enabled successfully
+2025-09-03 20:49:10,573 - app.services.database - INFO - Database tables created successfully
+2025-09-03 20:49:10,573 - app.services.database - INFO - Database initialized successfully
+2025-09-03 20:49:10,575 - app.services.rag_service - WARNING - Google Gemini not available, embeddings will be disabled
+2025-09-03 20:49:10,576 - __main__ - INFO - Starting complete data migration...
+2025-09-03 20:49:10,576 - __main__ - INFO - Migrating messages from Excel file...
+2025-09-03 20:49:10,857 - root - INFO - 2217 rows of data loaded and preprocessed successfully.
+2025-09-03 20:49:10,857 - __main__ - INFO - Loaded 2217 messages from Excel
+2025-09-03 20:51:26,175 - app.services.database - INFO - Created 2217 new messages
+2025-09-03 20:51:26,175 - __main__ - INFO - Successfully migrated 2217 messages
+2025-09-03 20:51:26,176 - __main__ - INFO - No solutions_dict.json found, skipping solution migration
+2025-09-03 20:51:26,176 - __main__ - INFO - Generating embeddings for solutions...
+2025-09-03 20:51:26,237 - __main__ - INFO - No solutions need embeddings
+2025-09-03 20:51:26,265 - __main__ - INFO - Creating processing history records...
+2025-09-03 20:51:26,481 - __main__ - INFO - Created processing history record
+2025-09-03 20:51:26,481 - __main__ - INFO - 
+==================================================
+2025-09-03 20:51:26,482 - __main__ - INFO - MIGRATION STATISTICS
+2025-09-03 20:51:26,482 - __main__ - INFO - ==================================================
+2025-09-03 20:51:26,482 - __main__ - INFO - Messages migrated: 2217
+2025-09-03 20:51:26,482 - __main__ - INFO - Threads migrated: 0
+2025-09-03 20:51:26,482 - __main__ - INFO - Solutions migrated: 0
+2025-09-03 20:51:26,482 - __main__ - INFO - Embeddings generated: 0
+2025-09-03 20:51:26,482 - __main__ - INFO - 
+No errors encountered!
+2025-09-03 20:51:26,482 - __main__ - INFO - ==================================================
+2025-09-03 20:51:26,482 - __main__ - INFO - Data migration completed successfully!
+2025-09-03 20:51:26,710 - __main__ - INFO - 
+Database verification:
+2025-09-03 20:51:26,710 - __main__ - INFO - Messages in database: 2217
+2025-09-03 20:51:26,710 - __main__ - INFO - Threads in database: 0
+2025-09-03 20:51:26,710 - __main__ - INFO - Solutions in database: 0
+2025-09-03 20:51:26,711 - __main__ - INFO - Technical threads: 0
+2025-09-03 20:51:26,711 - __main__ - INFO - Database verification passed!
+2025-09-03 20:51:26,711 - __main__ - INFO - Migration completed successfully!

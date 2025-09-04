@@ -4,3 +4,24 @@ INTERVAL_NEXT: 1
 INTERVAL_BACK: 2
 MESSAGES_FILE_PATH: 'data\discord_messages.xlsx'
 SOLUTIONS_DICT_FILENAME: 'solutions_dict.json'
+
+# Database configuration
+database:
+  url: "${DATABASE_URL}"  # Set this in your .env file
+  pool_size: 5
+  max_overflow: 10
+  pool_timeout: 30
+  pool_recycle: 3600
+
+# RAG configuration
+rag:
+  similarity_threshold: 0.85
+  embedding_model: "text-embedding-004"
+  embedding_dimension: 768
+  max_similar_results: 5
+
+# LLM optimization configuration
+llm:
+  batch_size: 10
+  max_context_length: 8000
+  cache_ttl: 3600
