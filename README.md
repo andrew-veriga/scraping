@@ -32,14 +32,6 @@ This project is a FastAPI application that analyzes Discord chat logs to identif
 
 The application will be available at `http://127.0.0.1:8000`. You can access the interactive API documentation at `http://127.0.0.1:8000/docs`.
 
-### Running Tests
-
-To run the tests, execute the following command from the project root:
-
-```shell
-py -m pytest
-```
-
 ## API Endpoints
 
 *   `POST /full-process`: Kicks off the initial processing of the entire message log.
