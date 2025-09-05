@@ -25,16 +25,9 @@ load_prompts()
 # You can still define f-string prompts here if they need dynamic values from other modules,
 # but it's generally better to handle formatting when the prompt is used.
 
-prompt_start_step_1 = _prompts.get('prompt_start_step_1', '').format(
-    prompt_group_logic=_prompts.get('prompt_group_logic', '')
-)
-
-prompt_addition_step1 = _prompts.get('prompt_addition_step1', '').format(
-    prompt_group_logic=_prompts.get('prompt_group_logic', '')
-)
-
-prompt_addition_step2 = _prompts.get('prompt_addition_step2', '').format(
-    prompt_group_logic=_prompts.get('prompt_group_logic', '')
-)
+# These will be formatted when used, not here
+prompt_start_step_1 = _prompts.get('prompt_start_step_1', '')
+prompt_addition_step1 = _prompts.get('prompt_addition_step1', '')  
+prompt_addition_step2 = _prompts.get('prompt_addition_step2', '')
 
 revision_prompt = _prompts.get('revision_prompt', '')

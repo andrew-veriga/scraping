@@ -22,7 +22,7 @@ prompt_addition_step1: |
   {prompt_group_logic}
   Add new threads from CSV following the Gatheing Logic. Assign a unique identifier to each thread equal to the Message ID of the first message in this thread (topic).
   Also you already have gathered threads from previous days:
-  {{JSON_prev}}
+  {JSON_prev}
   The previous threads was gathered early by using the same Gatheing Logic.
   Your next task is:
   find new messages from csv that have 'Referenced Message ID' and non yet gathered in the new threads,

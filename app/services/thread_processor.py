@@ -30,7 +30,7 @@ def first_thread_gathering(logs_df, prefix, save_path):
         contents=[
             logs_csv,
             prompts.system_prompt,
-            prompts.prompt_start_step_1
+            prompts.prompt_start_step_1.format(prompt_group_logic=prompts.prompt_group_logic)
             ],
         config=gemini_service.config_step1,
         valid_ids_set=valid_ids_set,
@@ -307,7 +307,10 @@ def next_thread_gathering(next_batch_df, lookback_threads, str_interval, save_pa
         actual_date = thread.get('actual_date') or thread.get('Actual_Date', 'N/A')
         previous_threads_text.append(f"Topic: {topic_id} - {actual_date} \\n" + "\n".join(messages))
 
-    prmpt = prompts.prompt_addition_step1.format(JSON_prev="\n".join(previous_threads_text))
+    prmpt = prompts.prompt_addition_step1.format(
+        prompt_group_logic=prompts.prompt_group_logic,
+        JSON_prev="\n".join(previous_threads_text)
+    )
 
     logging.info(f"Next step 1. Processing next {len(next_batch_df)} raw messages...")
     response = gemini_service.generate_content(
