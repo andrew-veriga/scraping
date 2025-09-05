@@ -16,6 +16,7 @@ def first_thread_gathering(logs_df, prefix, save_path):
     """
     Group messages into threads using LLM from DataFrame provided flat message list
     """
+    prompts.reload_prompts()
     logs_csv = logs_df.to_csv(index=False)
     valid_ids_set = set(logs_df['Message ID'].unique())
     response = gemini_service.generate_content(
@@ -47,6 +48,7 @@ def filter_technical_topics(filename, prefix: str, messages_df, save_path):
     Extract technical topics from JSON file using LLM with DataFrame logs provided full texts of messages
     return only technical threads
     """
+    prompts.reload_prompts()
     with open(filename, 'r') as f:
         threads_json_data = json.load(f)
 
@@ -77,6 +79,7 @@ def generalization_solution(filename,prefix: str, save_path):
     Generalize technical topics from JSON file using LLM
     Create "Header" and "Solution" fields
     """
+    prompts.reload_prompts()
     with open(filename, 'r') as f:
         technical_threads = json.load(f)
     valid_ids_set = set()
@@ -121,6 +124,7 @@ def next_thread_gathering(next_batch_df, lookback_threads, str_interval, save_pa
     """
     Gather next batch of messages into raw threads for processing
     """
+    prompts.reload_prompts()
     df_indexed = messages_df.copy()
     df_indexed.set_index('Message ID', inplace=True)
     
@@ -183,6 +187,7 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
     next_solutions_filename - file name of saved new solutions
     next_technical_filename - file name of adding raw threads with 'new' and 'modified' status
     """
+    prompts.reload_prompts()
     with open(next_solutions_filename, 'r') as f:
         next_solutions_list = json.load(f)
 
