@@ -36,9 +36,10 @@ class DatabaseService:
             # Try to get database URL from environment first, then fall back to config
             db_url = os.environ.get('DATABASE_URL')
             
+            db_config = self.config.get('database', {})
+            
             if not db_url:
                 # Fall back to config (with environment variable expansion)
-                db_config = self.config.get('database', {})
                 db_url = db_config.get('url')
                 
                 # Handle environment variable expansion in config
