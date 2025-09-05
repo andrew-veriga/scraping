@@ -43,7 +43,7 @@ def mock_services(monkeypatch):
     monkeypatch.setattr("app.main.process_batch", mock_process_batch)
 
     # Mock json.load for process_first_batch
-    mock_json_load = MagicMock(return_value=[{'Topic_ID': '1'}])
+    mock_json_load = MagicMock(return_value=[{'topic_id': '1'}])
     m_open = patch('builtins.open', MagicMock())
     m_json_load = patch('json.load', mock_json_load)
 

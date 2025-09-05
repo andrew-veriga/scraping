@@ -31,13 +31,21 @@ class Message(Base):
     dated_message = Column(Text, nullable=False)
     referenced_message_id = Column(String(50), nullable=True, index=True)
     
+    # Processing metadata fields
+    processing_status = Column(JSON, default=lambda: {}, nullable=False)
+    last_processed_at = Column(DateTime(timezone=True), nullable=True)
+    processing_version = Column(String(20), nullable=True)
+    
     # Relationships
     threads = relationship("ThreadMessage", back_populates="message")
+    processing_steps = relationship("MessageProcessing", back_populates="message", cascade="all, delete-orphan")
+    annotations = relationship("MessageAnnotation", back_populates="message", cascade="all, delete-orphan")
     
     # Indexes for performance
     __table_args__ = (
         Index('idx_message_datetime_author', 'datetime', 'author_id'),
         Index('idx_message_referenced', 'referenced_message_id'),
+        Index('idx_message_processed', 'last_processed_at'),
     )
 
     def __repr__(self):
@@ -62,6 +70,11 @@ class Thread(Base):
     status = Column(String(20), default='new', index=True)  # new, modified, persisted
     is_technical = Column(Boolean, default=False, index=True)
     is_processed = Column(Boolean, default=False, index=True)
+    
+    # Enhanced processing metadata
+    processing_history = Column(JSON, default=lambda: [], nullable=False)
+    confidence_scores = Column(JSON, default=lambda: {}, nullable=False)
+    processing_metadata = Column(JSON, default=lambda: {}, nullable=False)
     
     # Relationships
     messages = relationship("ThreadMessage", back_populates="thread", cascade="all, delete-orphan")
@@ -102,10 +115,19 @@ class Solution(Base):
     label = Column(String(20), nullable=False)  # resolved, unresolved, suggestion, outside
     confidence_score = Column(Integer, nullable=True)  # 0-100
     
+    # Duplicate tracking fields
+    is_duplicate = Column(Boolean, default=False, nullable=False, index=True)
+    duplicate_count = Column(Integer, default=0, nullable=False)  # Count of duplicates pointing to this solution
+    
     # Metadata
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
     version = Column(Integer, default=1)
+    
+    # Enhanced processing metadata
+    extraction_metadata = Column(JSON, default=lambda: {}, nullable=False)
+    processing_steps = Column(JSON, default=lambda: [], nullable=False)
+    source_messages = Column(JSON, default=lambda: [], nullable=False)  # Array of message IDs used
     
     # Relationships
     thread = relationship("Thread", back_populates="solutions")
@@ -113,9 +135,52 @@ class Solution(Base):
     similarities = relationship("SolutionSimilarity", back_populates="solution_a", 
                                foreign_keys="SolutionSimilarity.solution_a_id", 
                                cascade="all, delete-orphan")
+    # Duplicate relationships
+    duplicates = relationship("SolutionDuplicate", back_populates="solution", 
+                             foreign_keys="SolutionDuplicate.solution_id",
+                             cascade="all, delete-orphan")
+    original_of = relationship("SolutionDuplicate", back_populates="original_solution",
+                              foreign_keys="SolutionDuplicate.original_solution_id")
     
     def __repr__(self):
         return f"<Solution(id={self.id}, header='{self.header[:50]}...')>"
+
+
+class SolutionDuplicate(Base):
+    """Track duplicate relationships between solutions"""
+    __tablename__ = 'solution_duplicates'
+
+    id = Column(Integer, primary_key=True)
+    solution_id = Column(Integer, ForeignKey('solutions.id'), nullable=False)
+    original_solution_id = Column(Integer, ForeignKey('solutions.id'), nullable=False)
+    similarity_score = Column(String(10), nullable=False)  # Cosine similarity as string
+    status = Column(String(20), default='pending_review', nullable=False, index=True)  
+    # Status: 'pending_review', 'confirmed_duplicate', 'false_positive'
+    
+    # Admin review fields
+    reviewed_by = Column(String(100), nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+    notes = Column(Text, nullable=True)
+    
+    # Metadata
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    
+    # Relationships
+    solution = relationship("Solution", back_populates="duplicates", foreign_keys=[solution_id])
+    original_solution = relationship("Solution", back_populates="original_of", foreign_keys=[original_solution_id])
+    
+    # Indexes and constraints
+    __table_args__ = (
+        Index('idx_duplicate_solution', 'solution_id'),
+        Index('idx_duplicate_original', 'original_solution_id'),
+        Index('idx_duplicate_status', 'status'),
+        Index('idx_duplicate_similarity', 'similarity_score'),
+        # Prevent duplicate entries for the same solution pair
+        Index('idx_unique_duplicate_pair', 'solution_id', 'original_solution_id', unique=True),
+    )
+    
+    def __repr__(self):
+        return f"<SolutionDuplicate(solution_id={self.solution_id}, original_id={self.original_solution_id}, status='{self.status}')>"
 
 
 class SolutionEmbedding(Base):
@@ -187,6 +252,82 @@ class ProcessingBatch(Base):
     
     def __repr__(self):
         return f"<ProcessingBatch(id={self.id}, type='{self.batch_type}', status='{self.status}')>"
+
+
+class MessageProcessing(Base):
+    """Track each processing step applied to individual messages"""
+    __tablename__ = 'message_processing'
+
+    id = Column(Integer, primary_key=True)
+    message_id = Column(Integer, ForeignKey('messages.id'), nullable=False)
+    processing_step = Column(String(50), nullable=False, index=True)
+    step_order = Column(Integer, nullable=False)
+    result = Column(JSON, nullable=True)
+    confidence_score = Column(String(10), nullable=True)  # Store as string for consistency
+    processing_metadata = Column(JSON, nullable=True)
+    processed_at = Column(DateTime(timezone=True), default=func.now())
+    processing_version = Column(String(20), nullable=True)
+    
+    # Relationships
+    message = relationship("Message", back_populates="processing_steps")
+    
+    # Indexes
+    __table_args__ = (
+        Index('idx_message_processing', 'message_id', 'processing_step'),
+        Index('idx_processing_step_order', 'processing_step', 'step_order'),
+        Index('idx_processing_timestamp', 'processed_at'),
+    )
+    
+    def __repr__(self):
+        return f"<MessageProcessing(message_id={self.message_id}, step='{self.processing_step}')>"
+
+
+class ProcessingPipeline(Base):
+    """Define and track processing pipeline configuration"""
+    __tablename__ = 'processing_pipeline'
+
+    id = Column(Integer, primary_key=True)
+    pipeline_name = Column(String(100), nullable=False, index=True)
+    step_order = Column(Integer, nullable=False)
+    step_name = Column(String(50), nullable=False)
+    step_config = Column(JSON, nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), default=func.now())
+    
+    # Indexes
+    __table_args__ = (
+        Index('idx_pipeline_order', 'pipeline_name', 'step_order'),
+        Index('idx_pipeline_active', 'pipeline_name', 'is_active'),
+    )
+    
+    def __repr__(self):
+        return f"<ProcessingPipeline(pipeline='{self.pipeline_name}', step='{self.step_name}')>"
+
+
+class MessageAnnotation(Base):
+    """Store message-level classifications and annotations"""
+    __tablename__ = 'message_annotations'
+
+    id = Column(Integer, primary_key=True)
+    message_id = Column(Integer, ForeignKey('messages.id'), nullable=False)
+    annotation_type = Column(String(50), nullable=False, index=True)
+    annotation_value = Column(JSON, nullable=True)
+    confidence_score = Column(String(10), nullable=True)
+    annotated_by = Column(String(50), nullable=False, index=True)  # 'gemini_ai', 'manual', 'rule_based'
+    annotated_at = Column(DateTime(timezone=True), default=func.now())
+    
+    # Relationships
+    message = relationship("Message", back_populates="annotations")
+    
+    # Indexes
+    __table_args__ = (
+        Index('idx_message_annotations', 'message_id', 'annotation_type'),
+        Index('idx_annotation_type_confidence', 'annotation_type', 'confidence_score'),
+        Index('idx_annotation_timestamp', 'annotated_at'),
+    )
+    
+    def __repr__(self):
+        return f"<MessageAnnotation(message_id={self.message_id}, type='{self.annotation_type}')>"
 
 
 class LLMCache(Base):

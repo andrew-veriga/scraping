@@ -15,7 +15,7 @@ except ImportError:
     genai = None
 
 from app.services.database import get_database_service
-from app.models.db_models import Solution, SolutionEmbedding, SolutionSimilarity
+from app.models.db_models import Solution, SolutionEmbedding, SolutionSimilarity, SolutionDuplicate
 
 
 class RAGService:
@@ -286,16 +286,16 @@ class RAGService:
                 if sol.label == label
             ]
             
-            # Decision logic
+            # Decision logic - modified to mark duplicates instead of skipping
             if highest_similarity >= 0.95:
-                recommendation = 'skip'
-                reason = f'Very similar solution exists (similarity: {highest_similarity:.3f})'
+                recommendation = 'mark_duplicate'
+                reason = f'Very similar solution exists (similarity: {highest_similarity:.3f}) - marking as duplicate'
             elif highest_similarity >= self.similarity_threshold and same_label_solutions:
                 recommendation = 'merge'
                 reason = f'Similar solution with same label exists (similarity: {highest_similarity:.3f})'
             elif highest_similarity >= self.similarity_threshold:
-                recommendation = 'review'
-                reason = f'Similar solution exists but different label (similarity: {highest_similarity:.3f})'
+                recommendation = 'mark_duplicate'
+                reason = f'Similar solution exists (similarity: {highest_similarity:.3f}) - marking as duplicate for review'
             else:
                 recommendation = 'add'
                 reason = f'Solutions exist but not similar enough (max similarity: {highest_similarity:.3f})'
@@ -391,6 +391,95 @@ class RAGService:
         
         self.logger.info(f"Successfully generated {success_count}/{len(solutions)} embeddings")
         return success_count
+    
+    def create_duplicate_record(self, session: Session, solution_id: int, original_solution_id: int, 
+                              similarity_score: float) -> Optional[SolutionDuplicate]:
+        """Create a duplicate record linking a solution to its original."""
+        try:
+            # Check if duplicate record already exists
+            existing_duplicate = session.query(SolutionDuplicate).filter(
+                and_(
+                    SolutionDuplicate.solution_id == solution_id,
+                    SolutionDuplicate.original_solution_id == original_solution_id
+                )
+            ).first()
+            
+            if existing_duplicate:
+                self.logger.debug(f"Duplicate record already exists for solution {solution_id} -> {original_solution_id}")
+                return existing_duplicate
+            
+            # Create new duplicate record
+            duplicate_record = SolutionDuplicate(
+                solution_id=solution_id,
+                original_solution_id=original_solution_id,
+                similarity_score=f"{similarity_score:.6f}",
+                status='pending_review'
+            )
+            
+            session.add(duplicate_record)
+            
+            # Update duplicate count on original solution
+            original_solution = session.query(Solution).filter(Solution.id == original_solution_id).first()
+            if original_solution:
+                original_solution.duplicate_count = session.query(SolutionDuplicate).filter(
+                    SolutionDuplicate.original_solution_id == original_solution_id
+                ).count() + 1
+            
+            # Mark the duplicate solution
+            duplicate_solution = session.query(Solution).filter(Solution.id == solution_id).first()
+            if duplicate_solution:
+                duplicate_solution.is_duplicate = True
+            
+            session.flush()  # Get the ID without committing
+            
+            self.logger.info(f"Created duplicate record: solution {solution_id} -> original {original_solution_id} (similarity: {similarity_score:.3f})")
+            return duplicate_record
+            
+        except Exception as e:
+            self.logger.error(f"Failed to create duplicate record: {e}")
+            return None
+    
+    def get_duplicate_chain(self, session: Session, solution_id: int) -> List[Tuple[Solution, float]]:
+        """Get all solutions in a duplicate chain (original + all duplicates)."""
+        try:
+            # First, check if this solution is itself a duplicate
+            duplicate_record = session.query(SolutionDuplicate).filter(
+                SolutionDuplicate.solution_id == solution_id
+            ).first()
+            
+            if duplicate_record:
+                # This is a duplicate, get the original
+                original_id = duplicate_record.original_solution_id
+            else:
+                # This might be an original, use it as the root
+                original_id = solution_id
+            
+            # Get the original solution
+            original_solution = session.query(Solution).filter(Solution.id == original_id).first()
+            if not original_solution:
+                return []
+            
+            # Get all duplicates of the original
+            duplicates = session.query(Solution, SolutionDuplicate).join(
+                SolutionDuplicate, Solution.id == SolutionDuplicate.solution_id
+            ).filter(
+                SolutionDuplicate.original_solution_id == original_id
+            ).all()
+            
+            # Build result list
+            result = [(original_solution, 1.0)]  # Original has similarity of 1.0
+            for solution, duplicate_record in duplicates:
+                similarity = float(duplicate_record.similarity_score)
+                result.append((solution, similarity))
+            
+            # Sort by similarity (highest first)
+            result.sort(key=lambda x: x[1], reverse=True)
+            
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Failed to get duplicate chain: {e}")
+            return []
     
     def rebuild_vector_index(self, session: Session):
         """Rebuild vector index for better performance."""

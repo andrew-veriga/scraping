@@ -51,37 +51,37 @@ class IDValidationMixin:
         Tries to correct invalid IDs using Levenshtein distance.
         Returns False if the Topic_ID is invalid and cannot be corrected.
         """
-        topic_id = getattr(self, 'Topic_ID', None)
+        topic_id = getattr(self, 'topic_id', None)
         if not topic_id or topic_id not in valid_ids_set:
             corrected_topic_id = _find_closest_match(topic_id, valid_ids_set)
             if corrected_topic_id:
                 logging.info(f"{log_prefix} Corrected invalid Topic_ID '{topic_id}' to '{corrected_topic_id}'.")
-                self.Topic_ID = corrected_topic_id
+                self.topic_id = corrected_topic_id
             else:
                 header = getattr(self, 'Header', topic_id)
                 logging.warning(f"{log_prefix} Invalid and uncorrectable Topic_ID '{topic_id}'. Skipping thread: {header}.")
                 return False
         
         # Re-fetch topic_id in case it was corrected
-        topic_id = self.Topic_ID
+        topic_id = self.topic_id
 
-        # Validate Answer_ID if the attribute exists
-        if hasattr(self, 'Answer_ID') and self.Answer_ID and self.Answer_ID not in valid_ids_set:
-            corrected_answer_id = _find_closest_match(self.Answer_ID, valid_ids_set)
+        # Validate answer_id if the attribute exists
+        if hasattr(self, 'answer_id') and self.answer_id and self.answer_id not in valid_ids_set:
+            corrected_answer_id = _find_closest_match(self.answer_id, valid_ids_set)
             if corrected_answer_id:
-                logging.info(f"{log_prefix} Corrected invalid Answer_ID '{self.Answer_ID}' to '{corrected_answer_id}' for Topic_ID '{topic_id}'.")
-                self.Answer_ID = corrected_answer_id
+                logging.info(f"{log_prefix} Corrected invalid answer_id '{self.answer_id}' to '{corrected_answer_id}' for topic_id '{topic_id}'.")
+                self.answer_id = corrected_answer_id
             else:
-                logging.warning(f"{log_prefix} Invalid and uncorrectable Answer_ID '{self.Answer_ID}' for Topic_ID '{topic_id}'. Setting to None.")
-                self.Answer_ID = None
+                logging.warning(f"{log_prefix} Invalid and uncorrectable answer_id '{self.answer_id}' for topic_id '{topic_id}'. Setting to None.")
+                self.answer_id = None
 
-        # Validate Whole_thread messages
-        if hasattr(self, 'Whole_thread'):
+        # Validate whole_thread messages
+        if hasattr(self, 'whole_thread'):
             corrected_thread = []
             corrections = {} # 'bad_id': 'good_id'
             removals = [] # 'bad_id'
 
-            for msg_id in self.Whole_thread:
+            for msg_id in self.whole_thread:
                 if msg_id in valid_ids_set:
                     corrected_thread.append(msg_id)
                 else:
@@ -92,20 +92,20 @@ class IDValidationMixin:
                     else:
                         removals.append(msg_id)
             
-            self.Whole_thread = corrected_thread
+            self.whole_thread = corrected_thread
 
             if corrections:
-                logging.info(f"{log_prefix} Corrected {len(corrections)} Message ID(s) in Whole_thread for Topic_ID '{topic_id}': {corrections}")
+                logging.info(f"{log_prefix} Corrected {len(corrections)} Message ID(s) in whole_thread for topic_id '{topic_id}': {corrections}")
             if removals:
-                logging.warning(f"{log_prefix} Removed {len(removals)} uncorrectable Message ID(s) from Whole_thread for Topic_ID '{topic_id}': {removals}")
+                logging.warning(f"{log_prefix} Removed {len(removals)} uncorrectable Message ID(s) from whole_thread for topic_id '{topic_id}': {removals}")
         
         return True
 
 class RawThreadList(BaseModel):
 
     class RawThread(BaseModel, IDValidationMixin):
-        Topic_ID: str = Field( description="Id of the first message in the thread")
-        Whole_thread: List[str] = Field( description="List of Message IDs of this thread")
+        topic_id: str = Field( description="ID of the first message in the thread")
+        whole_thread: List[str] = Field( description="List of Message IDs of this thread")
 
     threads: List[RawThread] = Field( description="List of threads")
 
@@ -116,8 +116,8 @@ class RawThreadList(BaseModel):
 
 class ModifiedTechnicalThreadList(BaseModel):
     class ModifiedTechnicalThread(BaseModel, IDValidationMixin):
-        Topic_ID: str = Field( description="Id of the first message in the thread")
-        Whole_thread: List[str] = Field( description="List of Message IDs of this thread")
+        topic_id: str = Field( description="ID of the first message in the thread")
+        whole_thread: List[str] = Field( description="List of Message IDs of this thread")
         status: str = Field(default='persisted',description= "Status of the gathered thread: 'new' if it is completely new thread and 'modified' if the thread has both previous messages from json data and new messages from CSV table, in other cases status is 'persisted'")
         @field_validator('status')
         @classmethod
@@ -135,15 +135,15 @@ class ModifiedTechnicalThreadList(BaseModel):
 
 class ThreadList(BaseModel):
     class Thread(BaseModel, IDValidationMixin):
-        Header: str = Field( description="General description of the problem derived by the entire conversation")
-        Topic_ID: str = Field( description="Id of the first message in the thread")
-        Actual_Date: datetime = Field( description="DateTime of the last message in the thread")
-        Answer_ID: Optional[str] = Field( description="Id of solution message")
-        Whole_thread: List[str] = Field( description="List of 'Message ID' of this thread")
-        Label: str = Field(description="Label indicating the resolution status: 'resolved', 'unresolved','suggestion' or 'outside'")
-        Solution: str = Field( description="General description of the solution to the problem derived by the entire conversation. If doesn't exist, 'N/A'")
+        header: str = Field( description="General description of the problem derived by the entire conversation")
+        topic_id: str = Field( description="ID of the first message in the thread")
+        actual_date: datetime = Field( description="DateTime of the last message in the thread")
+        answer_id: Optional[str] = Field( description="ID of solution message")
+        whole_thread: List[str] = Field( description="List of Message IDs of this thread")
+        label: str = Field(description="Label indicating the resolution status: 'resolved', 'unresolved','suggestion' or 'outside'")
+        solution: str = Field( description="General description of the solution to the problem derived by the entire conversation. If doesn't exist, 'N/A'")
 
-        @field_validator('Label')
+        @field_validator('label')
         @classmethod
         def validate_label(cls, value):
             allowed_labels = ['resolved', 'unresolved', 'suggestion', 'outside']
@@ -170,9 +170,9 @@ class RevisedList(BaseModel):
         """
         single comparison of old and modified solution
         """
-        Topic_ID: str = Field(..., description="solution ID")
-        Label: str = Field(..., description="classification result label")
-        @field_validator('Label')
+        topic_id: str = Field(..., description="solution ID")
+        label: str = Field(..., description="classification result label")
+        @field_validator('label')
         @classmethod
         def validate_label(cls, value):
             allowed_labels = ['improved', 'changed', 'persisted']

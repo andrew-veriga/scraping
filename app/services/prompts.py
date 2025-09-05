@@ -6,14 +6,14 @@ a) The first message in a thread (topic) ask a question (contains \"?\" or a pro
 b) the field Referenced Message ID define the message as a reply to referenced message. The reply cannot be a the first message in the thread (topic) and should continue the existing thread;
 c) consider subsequent messages from the same author for relatively short time interval with empty field Referenced Message ID  as a continuation of the conversation if they likely are the addition clarifications;
 d) consider messages from the same author repeating the same question as a reminder and a follow-up of the conversation;
-e) for short time interval consider consecutive messages of different authors with empty field Referenced Message ID as a part of the same conversation, if they have a common meaning;
+e) for a short period of time (a few minutes), consider a subsequent message from a new author with an empty "Referenced Message ID" field to be part of the conversation if this message is relevant to the conversation in meaning, answers a question, or reports the same problem;
 f) consider the message as a follow-up for the conversation if the message contains a tag, defined like '<@(\d+)>', where after Commertial At follows Author ID, that author asked the question in the conversation and this message seems to be an answer to the author's question;
 """
 
 prompt_start_step_1 = f"""Analyze the CSV table with messages from the  Discord Channel 'Sui Blockchain Support'.
 Your task is group all messages into threads following the logic:
 {prompt_group_logic}
-Assign a unique identifier to each thread equal to the Message ID of the first message in this thread (topic).
+Assign a unique identifier to each thread equal to the message_id of the first message in this thread (topic).
 Output the information in the list of JSON objects.
 """
 
@@ -21,13 +21,13 @@ prompt_addition_step1 = f"""
 Analyze the CSV table with messages from the  Discord Channel 'Sui Blockchain Support'.
 Your task is group all messages into threads following the Gatheing Logic:
 {prompt_group_logic}
-Add new threads from CSV following the Gatheing Logic. Assign a unique identifier to each thread equal to the Message ID of the first message in this thread (topic).
+Add new threads from CSV following the Gatheing Logic. Assign a unique identifier to each thread equal to the message_id of the first message in this thread (topic).
 Also you already have gathered threads from previous days:
 {{JSON_prev}}
 The previous threads was gathered early by using the same Gatheing Logic.
 Your next task is:
-find new messages from csv that have 'Referenced Message ID' and non yet gathered in the new threads,
-find corresponding Message ID in message lists of previous threads from JSON and add found messages in there as a continue of conversations;
+find new messages from csv that have 'referenced_message_id' and non yet gathered in the new threads,
+find corresponding message_id in message lists of previous threads from JSON and add found messages in there as a continue of conversations;
 Find other messages that fit mentioned Gatheing Logic. Each message must belong to only one topic.
 Finally prepare output:
 Only threads fully gathered from CSV table could get status 'new'.
@@ -50,7 +50,7 @@ Analyze the  message of each thread (topic).
 Categorize a thread as a \"technical topic\" if its messages contains one or more keywords from the list and it is a question (contains \"?\" or a problem description) or describes a problem.
 Ignore irrelevant topics: spam, flood and discussions not directly related to the technical aspects of Sui.
 Identify and filter technical topics.
-Output the list of 'Topic ID' for technical threads only.
+Output the list of 'topic_id' for technical threads only.
 """
 
 prompt_step_3 = """
@@ -61,9 +61,9 @@ If there are messages with thanks or other confirmations of the verified solutio
 If there are no any confirmation or a solution message followed by additional unanswered questions, label it as 'suggestion'.
 If there are no answers from other users in the thread, or the answers are irrelevant, label it as 'unresolved'.
 If the answer recommend another internet resource or channel, label it as 'outside'.
-replicate the Message IDs exactly as they are presented. Do not add, remove, or modify any characters in the IDs. 
+replicate the message_ids exactly as they are presented. Do not add, remove, or modify any characters in the IDs. 
 Derive a general description of the problem and a general description of the solution to the problem if exists.
-Set Actual Date of each thread as a datetime of the last message in the thread.
+Set actual_date of each thread as a datetime of the last message in the thread.
 Output the information in the list of JSON objects."""
 
 revision_prompt = """

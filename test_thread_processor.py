@@ -14,9 +14,9 @@ from app.services import gemini_service
 # These would normally be in app.models.pydantic_models. We mock them here
 # because the file is not provided.
 class MockMessage(BaseModel):
-    Message_ID: str
-    Author_ID: str
-    Content: str
+    message_id: str
+    author_id: str
+    content: str
 
 class MockThread(BaseModel):
     Topic_ID: str
@@ -82,10 +82,10 @@ def test_first_thread_gathering(sample_messages_df, mock_gemini_response_step1, 
         mock_json_dump.assert_called_once()
         dumped_data = mock_json_dump.call_args[0][0]
         assert len(dumped_data) == 1
-        assert dumped_data[0]['Topic_ID'] == '1'
+        assert dumped_data[0]['topic_id'] == '1'
 
 def test_illustrated_threads(sample_messages_df):
-    threads_json_data = [{'Topic_ID': '1', 'Whole_thread': ['1', '2']}]
+    threads_json_data = [{'topic_id': '1', 'whole_thread': ['1', '2']}]
 
     enriched_data = thread_processor.illustrated_threads(threads_json_data, sample_messages_df)
 
@@ -93,13 +93,13 @@ def test_illustrated_threads(sample_messages_df):
     thread = enriched_data[0]
     assert 'Whole_thread_formatted' in thread
     assert len(thread['Whole_thread_formatted']) == 2
-    assert thread['Whole_thread_formatted'][0]['Message_ID'] == '1'
-    assert thread['Whole_thread_formatted'][0]['Author_ID'] == '101'
-    assert "How do I stake SUI?" in thread['Whole_thread_formatted'][0]['Content']
+    assert thread['Whole_thread_formatted'][0]['message_id'] == '1'
+    assert thread['Whole_thread_formatted'][0]['author_id'] == '101'
+    assert "How do I stake SUI?" in thread['Whole_thread_formatted'][0]['content']
 
 def test_filter_technical_topics(sample_messages_df, mock_gemini_response_step2, tmp_path):
     save_path = str(tmp_path)
-    threads_data = [{'Topic_ID': '1', 'Whole_thread': ['1', '2']}, {'Topic_ID': '4', 'Whole_thread': ['4', '5']}]
+    threads_data = [{'topic_id': '1', 'whole_thread': ['1', '2']}, {'topic_id': '4', 'whole_thread': ['4', '5']}]
     input_filename = os.path.join(save_path, "input.json")
     with open(input_filename, 'w') as f:
         json.dump(threads_data, f)
@@ -118,11 +118,11 @@ def test_filter_technical_topics(sample_messages_df, mock_gemini_response_step2,
         written_content = handle.write.call_args[0][0]
         written_json = json.loads(written_content)
         assert len(written_json) == 1
-        assert written_json[0]['Topic_ID'] == '1'
+        assert written_json[0]['topic_id'] == '1'
 
 def test_generalization_solution(mock_gemini_response_step3, tmp_path):
     save_path = str(tmp_path)
-    technical_threads = [{'Topic_ID': '1', 'Whole_thread_formatted': [{'Message_ID': '1', 'Author_ID': '101', 'Content': '...'}]}]
+    technical_threads = [{'topic_id': '1', 'whole_thread_formatted': [{'message_id': '1', 'author_id': '101', 'content': '...'}]}]
     input_filename = os.path.join(save_path, "tech_input.json")
     with open(input_filename, 'w') as f:
         json.dump(technical_threads, f)
@@ -139,4 +139,4 @@ def test_generalization_solution(mock_gemini_response_step3, tmp_path):
         mock_json_dump.assert_called_once()
         dumped_data = mock_json_dump.call_args[0][0]
         assert len(dumped_data) == 1
-        assert dumped_data[0]['Topic_ID'] == '1'
+        assert dumped_data[0]['topic_id'] == '1'

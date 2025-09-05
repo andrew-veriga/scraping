@@ -48,9 +48,9 @@ config_step2 = types.GenerateContentConfig(
 )
 solution_config = types.GenerateContentConfig(
     seed=42,
-    temperature= 1.0,
+    temperature= 0.5,
     response_mime_type= "application/json",
-    thinking_config=types.ThinkingConfig(thinking_budget=2000),
+    thinking_config=types.ThinkingConfig(thinking_budget=2500),
     response_schema=ThreadList
 )
 

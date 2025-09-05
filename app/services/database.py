@@ -10,10 +10,15 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from contextlib import contextmanager
 import hashlib
 import json
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 from app.models.db_models import (
-    Base, Message, Thread, ThreadMessage, Solution, 
-    SolutionEmbedding, SolutionSimilarity, ProcessingBatch, LLMCache
+    Base, Message, Thread, ThreadMessage, Solution, SolutionDuplicate,
+    SolutionEmbedding, SolutionSimilarity, ProcessingBatch, LLMCache,
+    MessageProcessing, MessageAnnotation, ProcessingPipeline
 )
 
 class DatabaseService:
@@ -346,6 +351,141 @@ class DatabaseService:
                 existing.last_accessed = func.now()
                 existing.access_count += 1
                 existing.ttl_expires_at = expires_at
+    
+    # Duplicate management methods
+    def create_duplicate_record(self, session: Session, duplicate_data: Dict[str, Any]) -> Optional[SolutionDuplicate]:
+        """Create a new duplicate record."""
+        try:
+            duplicate_record = SolutionDuplicate(**duplicate_data)
+            session.add(duplicate_record)
+            session.flush()
+            return duplicate_record
+        except IntegrityError as e:
+            session.rollback()
+            self.logger.error(f"Failed to create duplicate record: {e}")
+            return None
+    
+    def get_solution_duplicates(self, session: Session, solution_id: int) -> List[SolutionDuplicate]:
+        """Get all duplicates of a solution."""
+        return session.query(SolutionDuplicate).filter(
+            SolutionDuplicate.original_solution_id == solution_id
+        ).order_by(SolutionDuplicate.created_at).all()
+    
+    def get_duplicate_by_id(self, session: Session, duplicate_id: int) -> Optional[SolutionDuplicate]:
+        """Get a specific duplicate record by ID."""
+        return session.query(SolutionDuplicate).filter(SolutionDuplicate.id == duplicate_id).first()
+    
+    def update_duplicate_status(self, session: Session, duplicate_id: int, 
+                               status: str, reviewed_by: str = None, notes: str = None) -> bool:
+        """Update the status of a duplicate record."""
+        try:
+            duplicate_record = session.query(SolutionDuplicate).filter(
+                SolutionDuplicate.id == duplicate_id
+            ).first()
+            
+            if not duplicate_record:
+                return False
+            
+            duplicate_record.status = status
+            if reviewed_by:
+                duplicate_record.reviewed_by = reviewed_by
+                duplicate_record.reviewed_at = func.now()
+            if notes:
+                duplicate_record.notes = notes
+            
+            session.flush()
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Failed to update duplicate status: {e}")
+            return False
+    
+    def get_pending_duplicates(self, session: Session, limit: int = 50, offset: int = 0) -> List[SolutionDuplicate]:
+        """Get duplicates pending review."""
+        return session.query(SolutionDuplicate).filter(
+            SolutionDuplicate.status == 'pending_review'
+        ).order_by(
+            SolutionDuplicate.similarity_score.desc(), 
+            SolutionDuplicate.created_at.desc()
+        ).offset(offset).limit(limit).all()
+    
+    def get_duplicate_statistics(self, session: Session) -> Dict[str, Any]:
+        """Get comprehensive duplicate statistics."""
+        try:
+            # Basic counts
+            total_duplicates = session.query(SolutionDuplicate).count()
+            pending_duplicates = session.query(SolutionDuplicate).filter(
+                SolutionDuplicate.status == 'pending_review'
+            ).count()
+            confirmed_duplicates = session.query(SolutionDuplicate).filter(
+                SolutionDuplicate.status == 'confirmed_duplicate'
+            ).count()
+            false_positives = session.query(SolutionDuplicate).filter(
+                SolutionDuplicate.status == 'false_positive'
+            ).count()
+            
+            # Solutions with duplicates
+            solutions_with_duplicates = session.query(Solution).filter(
+                Solution.duplicate_count > 0
+            ).count()
+            
+            # Most duplicated solution
+            most_duplicated = session.query(Solution).filter(
+                Solution.duplicate_count > 0
+            ).order_by(Solution.duplicate_count.desc()).first()
+            
+            return {
+                'total_duplicates': total_duplicates,
+                'pending_review': pending_duplicates,
+                'confirmed_duplicates': confirmed_duplicates,
+                'false_positives': false_positives,
+                'solutions_with_duplicates': solutions_with_duplicates,
+                'most_duplicated_count': most_duplicated.duplicate_count if most_duplicated else 0,
+                'most_duplicated_header': most_duplicated.header[:100] if most_duplicated else None
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Failed to get duplicate statistics: {e}")
+            return {}
+    
+    def bulk_update_duplicate_counts(self, session: Session) -> int:
+        """Recalculate and update duplicate counts for all solutions."""
+        try:
+            # Get all solutions that have duplicates
+            duplicate_counts = session.query(
+                SolutionDuplicate.original_solution_id,
+                func.count(SolutionDuplicate.id).label('count')
+            ).group_by(SolutionDuplicate.original_solution_id).all()
+            
+            updated_count = 0
+            for original_id, count in duplicate_counts:
+                solution = session.query(Solution).filter(Solution.id == original_id).first()
+                if solution and solution.duplicate_count != count:
+                    solution.duplicate_count = count
+                    updated_count += 1
+            
+            # Reset count to 0 for solutions with no duplicates
+            solutions_with_zero_duplicates = session.query(Solution).filter(
+                and_(
+                    Solution.duplicate_count > 0,
+                    ~Solution.id.in_([dc.original_solution_id for dc in duplicate_counts])
+                )
+            ).all()
+            
+            for solution in solutions_with_zero_duplicates:
+                solution.duplicate_count = 0
+                updated_count += 1
+            
+            session.flush()
+            return updated_count
+            
+        except Exception as e:
+            self.logger.error(f"Failed to bulk update duplicate counts: {e}")
+            return 0
+    
+    def get_thread_by_topic_id(self, session: Session, topic_id: str) -> Optional[Thread]:
+        """Get thread by its topic_id."""
+        return session.query(Thread).filter(Thread.topic_id == topic_id).first()
     
     # Utility methods
     def get_database_stats(self) -> Dict[str, int]:
