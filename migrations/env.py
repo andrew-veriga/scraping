@@ -3,6 +3,7 @@ from logging.config import fileConfig
 import os
 import sys
 import yaml
+from dotenv import load_dotenv
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -25,13 +26,19 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.models.db_models import Base
 target_metadata = Base.metadata
 
+# Load .env file
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
+
 # Load database URL from config file
 def get_database_url():
     config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'configs', 'config.yaml')
     try:
         with open(config_path, 'r') as f:
             config_data = yaml.safe_load(f)
-            return config_data.get('database', {}).get('url')
+            url = config_data.get('database', {}).get('url')
+            if url:
+                return os.path.expandvars(url)
+            return None
     except Exception as e:
         logging.error(f"Could not load database URL from config: {e}")
         return None

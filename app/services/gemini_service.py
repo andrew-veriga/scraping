@@ -2,7 +2,7 @@ import os
 
 from google import genai
 from google.genai import types #import GenerationConfig, ThinkingConfig
-from app.models.pydantic_models import RawThreadList, ModifiedTechnicalThreadList, ThreadList, TechnicalTopics, RevisedList
+from app.models.pydantic_models import RawThreadList, ModifiedRawThreadList, ThreadList, TechnicalTopics, RevisedList
 import logging
 
 #load_dotenv(dotenv_path)
@@ -30,14 +30,14 @@ config_step1 = types.GenerateContentConfig(
     response_mime_type="application/json",
     thinking_config=types.ThinkingConfig(thinking_budget=2000),
     response_schema=RawThreadList
-)
+    )
 config_addition_step1 = types.GenerateContentConfig(
     seed=42,
     temperature=1.0,
     response_mime_type="application/json",
     thinking_config=types.ThinkingConfig(thinking_budget=2000),
-    response_schema=ModifiedTechnicalThreadList
-)
+    response_schema=ModifiedRawThreadList
+    )
 
 config_step2 = types.GenerateContentConfig(
     seed=42,
@@ -45,14 +45,14 @@ config_step2 = types.GenerateContentConfig(
     response_mime_type= "application/json",
     thinking_config=types.ThinkingConfig(thinking_budget=1000),
     response_schema=TechnicalTopics
-)
+    )
 solution_config = types.GenerateContentConfig(
     seed=42,
     temperature= 0.5,
     response_mime_type= "application/json",
     thinking_config=types.ThinkingConfig(thinking_budget=2500),
     response_schema=ThreadList
-)
+    )
 
 revision_config = types.GenerateContentConfig(
     seed=42,

@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Foreign
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import ARRAY
+from .pydantic_models import ThreadStatus #, SolutionStatus
 from datetime import datetime
 from typing import Optional, List
 import os
@@ -25,6 +26,7 @@ class Message(Base):
 
     id = Column(Integer, primary_key=True)
     message_id = Column(String(50), unique=True, nullable=False, index=True)
+    parent_id = Column(String(50), nullable=True, index=True)
     author_id = Column(String(50), nullable=False, index=True)
     content = Column(Text, nullable=False)
     datetime = Column(DateTime(timezone=True), nullable=False, index=True)
@@ -67,7 +69,7 @@ class Thread(Base):
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
     
     # Processing status
-    status = Column(String(20), default='new', index=True)  # new, modified, persisted
+    status = Column(String(20), default=ThreadStatus.NEW, index=True)  # new, modified, persisted
     is_technical = Column(Boolean, default=False, index=True)
     is_processed = Column(Boolean, default=False, index=True)
     

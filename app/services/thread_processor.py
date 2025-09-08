@@ -2,6 +2,7 @@ import json
 import re
 from datetime import datetime, timezone
 import os
+from typing import Optional
 import pandas as pd
 import logging
 
@@ -9,19 +10,30 @@ from app.services import gemini_service, prompts
 from app.services.rag_service import get_rag_service
 from app.services.database import get_database_service
 from app.services.processing_tracker import get_processing_tracker
-from app.models import pydantic_models
+from app.models.pydantic_models import ThreadStatus, SolutionStatus, RevisedStatus
 from app.models.db_models import Message, Thread, Solution
 from app.utils.file_utils import * # illustrated_message, illustrated_threads, save_solutions_dict, load_solutions_dict, create_dict_from_list, add_new_solutions_to_dict, add_or_update_solution, convert_datetime_to_str
 
 
-def first_thread_gathering(logs_df, prefix, save_path):
+def first_thread_gathering(logs_df, prefix, save_path): 
     """
     Group messages into threads using LLM from DataFrame provided flat message list
     """
+    # TODO
+    # Создает таблицу для threads и устанавливает связи найденных message_ids с thread_id
+    # threads содержит поля:
+    # "topic_id", 
+    # "is_technical" (bool), 
+    # "status" (new, modified, persisted),default=persisted
+    # "solution" (str),
+    # "actual_date" (datetime)
+    # "answer_id" (str)
+    # "solution_status" (resolved, unresolved, suggestion, outside)
+    # Возвращает список добавленных topic_id
     prompts.reload_prompts()
     logs_csv = logs_df.to_csv(index=False)
-    valid_ids_set = set(logs_df['Message ID'].unique())
-    
+    valid_ids_set = set(logs_df['Message ID'].astype(str))
+
     # Record the start of thread grouping processing
     processing_tracker = get_processing_tracker()
     db_service = get_database_service()
@@ -48,8 +60,8 @@ def first_thread_gathering(logs_df, prefix, save_path):
             message_to_thread = {}
             for thread in response.threads:
                 thread_id = thread.topic_id
-                for msg_id in thread.whole_thread:
-                    message_to_thread[str(msg_id)] = thread_id
+                for msg in thread.whole_thread:
+                    message_to_thread[str(msg.message_id)] = thread_id
             
             # Record thread grouping steps
             for idx, row in logs_df.iterrows():
@@ -96,6 +108,11 @@ def filter_technical_topics(filename, prefix: str, messages_df, save_path):
     Extract technical topics from JSON file using LLM with DataFrame logs provided full texts of messages
     return only technical threads
     """
+    # TODO
+    # Получает список topic_id из предыдущего шага
+    # Для каждого topic_id заполняет сообщения из SQL (раньше получал из messages_df)
+    # Возращает список помеченных технических топиков
+
     prompts.reload_prompts()
     with open(filename, 'r') as f:
         threads_json_data = json.load(f)
@@ -128,7 +145,9 @@ def filter_technical_topics(filename, prefix: str, messages_df, save_path):
                 is_technical = thread_id in response.technical_topics
                 
                 # Record processing for all messages in thread
-                for msg_id in (thread.get('whole_thread') or thread.get('Whole_thread', [])):
+                whole_thread = (thread.get('whole_thread') or thread.get('Whole_thread', []))
+                for msg in whole_thread:
+                    msg_id = str(msg['message_id'])
                     db_message = session.query(Message).filter(
                         Message.message_id == str(msg_id)
                     ).first()
@@ -178,25 +197,31 @@ def generalization_solution(filename,prefix: str, save_path):
     Generalize technical topics from JSON file using LLM
     Create "Header" and "Solution" fields
     """
+    # TODO
+    # получает список технических thread_id из предыдущего шага
+    # Возвращает список topic_id с заполненными полями "header", "solution", "actual_date", "answer_id", "solution_status"
+
     prompts.reload_prompts()
     with open(filename, 'r') as f:
         technical_threads = json.load(f)
-    
+    technical_threads = {t.get('topic_id'): t for t in technical_threads}
     # Convert to consistent format if needed
     from app.utils.file_utils import convert_legacy_format
     technical_threads = convert_legacy_format(technical_threads)
     valid_ids_set = set()
-    for t in technical_threads: 
+    text_threads = {}
+    for key,t in technical_threads.items(): 
         # Handle both old and new formats during transition
-        whole_thread = t.get('whole_thread') or t.get('Whole_thread', [])
-        valid_ids_set = valid_ids_set.union(set(whole_thread))
-        
+        whole_thread = t.get('whole_thread', [])
+        valid_ids_set = valid_ids_set.union(set([msg['message_id'] for msg in whole_thread]))
+        text_threads[key] = t['whole_thread_formatted']
+
     processing_tracker = get_processing_tracker()
     db_service = get_database_service()
         
     response_solutions = gemini_service.generate_content( 
         contents=[
-            json.dumps(technical_threads, indent=2),
+            json.dumps(text_threads, indent=2),
             prompts.system_prompt,
             prompts.prompt_step_3
             ],
@@ -206,18 +231,22 @@ def generalization_solution(filename,prefix: str, save_path):
     )
 
     logging.info(f"{prefix} step 3. Generalization of {len(response_solutions.threads)} technical threads")
-    solutions_list = [thread.model_dump() for thread in response_solutions.threads]
-
+    # solutions_list = [thread.model_dump() for thread in response_solutions.threads]
+    solutions_list = []
     # Record solution extraction processing steps
     try:
         with db_service.get_session() as session:
             for solution_thread in response_solutions.threads:
+                solution=solution_thread.model_dump()
                 thread_id = solution_thread.topic_id
-                
+                whole_thread = technical_threads[thread_id]['whole_thread']
+                solution['whole_thread'] = whole_thread
+                solutions_list.append(solution)
                 # Record processing for all messages in thread
-                for msg_id in solution_thread.whole_thread:
+                for msg in whole_thread:
+                    msg_id = str(msg['message_id'])
                     db_message = session.query(Message).filter(
-                        Message.message_id == str(msg_id)
+                        Message.message_id == msg_id
                     ).first()
                     
                     if db_message:
@@ -278,26 +307,35 @@ def next_thread_gathering(next_batch_df, lookback_threads, str_interval, save_pa
     """
     Gather next batch of messages into raw threads for processing
     """
+    # TODO
+    # получает диапазон дат с новыми сообщениями (сейчас это next_batch_df)
+    # получает список предыдущих thread_id из SQL (сейчас это lookback_threads)
+    # Меняет этим threads  статус new/modified/persisted , где
+    # new - новые топики, созданные только что,
+    # modified - топики, созданные в предыдущих шагах к которым добавились новые сообщения
+    # persisted - топики, которые не изменились (их не возвращает)
+    # Возвращает список новых/измененных thread_id
+
+
     prompts.reload_prompts()
-    df_indexed = messages_df.copy()
-    df_indexed.set_index('Message ID', inplace=True)
     
     next_batch_csv = next_batch_df.to_csv(index=False)
 
     
     # previous_threads_json = illustrated_threads(technical_threads_json, messages_df)
     previous_threads_text = []
-    valid_ids_set = set(next_batch_df['Message ID'].unique())
-    # valid_ids_set = set(df_indexed.index)
+    valid_ids_set = set(next_batch_df['Message ID'].astype(str))
+    # valid_ids_set = set(messages_df.index)
     for thread in lookback_threads:
-        whole_thread_ids = thread.get('Whole_thread', [])
+        whole_thread = thread.get('Whole_thread', [])
+        whole_thread_ids = [msg['message_id'] for msg in whole_thread]
         messages = []  # Initialize messages before the if statement
         if whole_thread_ids:
             valid_ids_set = valid_ids_set.union(set(whole_thread_ids))
             for message_id in whole_thread_ids:
                 # Ensure message_id is a string for lookup
                 # Assuming formatted_message function is defined and accessible
-                message_content =illustrated_message(message_id, df_indexed)
+                message_content =illustrated_message(message_id, messages_df)
                 if message_id == (thread.get('topic_id') or thread.get('Topic_ID', 'N/A')):
                     messages.append(f"""- ({message_id}) - **Topic started** :{message_content} """)
                 else:
@@ -325,10 +363,10 @@ def next_thread_gathering(next_batch_df, lookback_threads, str_interval, save_pa
     )
 
     # The response is now the parsed and validated Pydantic object
-    added_threads_pydantic = [t for t in response.threads if t.status !='persisted']
+    added_threads_pydantic = [t for t in response.threads if t.status !=ThreadStatus.PERSISTED]
     added_threads = [t.model_dump() for t in added_threads_pydantic]
-    cnt_modified = len([t for t in added_threads if t['status']=='modified'])
-    cnt_new = len([t for t in added_threads if t['status']=='new'])
+    cnt_modified = len([t for t in added_threads if t['status']==ThreadStatus.MODIFIED])
+    cnt_new = len([t for t in added_threads if t['status']==ThreadStatus.NEW])
 
     logging.info(f"Added {cnt_new} new threads. Modified {cnt_modified} threads created before {str_interval}.")
     # str_interval = f"{next_start_date.date()}-{next_end_date.date()}"
@@ -344,8 +382,20 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
     Check improvement of solutions for topics file using LLM
     args:
     next_solutions_filename - file name of saved new solutions
-    next_technical_filename - file name of adding raw threads with 'new' and 'modified' status
+    next_technical_filename - file name of adding raw threads with ThreadStatus.NEW and ThreadStatus.MODIFIED status
     """
+    # TODO
+    # получает список технических топиков из шага 2 (filter_technical_topic)
+    # получает список новых решений для этих топиков из шага 3 (generalization_solution)
+    # сравнивает решение для каждого топика со статусом ThreadStatus.MODIFIED с текущим решением из таблицы threads, (поля "header", "solution", "actual_date", "answer_id", "solution_status")
+    # если решение улучшилось (RevisedStatus.IMPROVED):
+    # - копирует содержимое полей "header", "solution", "actual_date", "answer_id", "solution_status" таблицы threads в таблицу solutions;
+    # - заполняет поля "header", "solution", "actual_date", "answer_id", "solution_status" текущего треда в таблице threads;
+    # - проверяет в RAG, если решение не уникально - помечает как дубликат
+    # если решение изменилось незначительно (RevisedStatus.MINORCHANGES) - копирует текущее в solutions, заменяет текущее новым, пропускает проверку в RAG
+    # если header и solution изменились значительно (RevisedStatus.CHANGES) - копирует текущее в solutions, заменяет текущее новым, проверяет в RAG
+    # для топиков со статусом ThreadStatus.NEW - проверяет в RAG
+    # возвращает список новых решений для топиков со статусом ThreadStatus.NEW, прошедших проверку в RAG
     prompts.reload_prompts()
     with open(next_solutions_filename, 'r') as f:
         next_solutions_list = json.load(f)
@@ -361,9 +411,9 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
     with open(next_technical_filename, 'r') as f:
         adding_threads = json.load(f)
 
-    modified_threads = [(t.get('topic_id') or t.get('Topic_ID')) for t in adding_threads if t['status']=='modified']
+    modified_threads = [t.get('topic_id') for t in adding_threads if t['status']==ThreadStatus.MODIFIED]
 
-    new_threads = [(t.get('topic_id') or t.get('Topic_ID')) for t in adding_threads if t['status']=='new']
+    new_threads = [t.get('topic_id') for t in adding_threads if t['status']==ThreadStatus.NEW]
     if len(modified_threads) > 0:
         # pairs of old and modified sloutions
         logging.info(f"{len(modified_threads)} comparising")
@@ -375,7 +425,7 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
             if m not in new_solution_dict:
                 logging.warning(f"Topic {m} marked as modified but not found in new solutions")
                 continue
-            modified_pairs[m] = {'prev': prev_solution_dict[m],'new':new_solution_dict[m]}
+            modified_pairs[m] = {'prev': prev_solution_dict[m],ThreadStatus.NEW:new_solution_dict[m]}
         pairs_in_text = []
         for key, p in modified_pairs.items():
             pairs_in_text.append(f"""
@@ -385,9 +435,9 @@ Previous version:
     solution: {p['prev']['Solution']}
     status: {p['prev']['Label']}
 New version:
-    statement: {p['new']['Header']}
-    solution: {p['new']['Solution']}
-    status: {p['new']['Label']}
+    statement: {p[ThreadStatus.NEW]['Header']}
+    solution: {p[ThreadStatus.NEW]['Solution']}
+    status: {p[ThreadStatus.NEW]['Label']}
 """
         )
         # logging.debug("pairs: %s", pairs_in_text)
@@ -403,17 +453,17 @@ New version:
         revised_solutions=response_solutions.comparisions
 
         for s in revised_solutions:
-            if  s.Label=='improved': #thread has significant improved solution, should be replaced in the main dictionary
+            if  s.Label==RevisedStatus.IMPROVED: #thread has significant improved solution, should be replaced in the main dictionary
                 add_or_update_solution(solutions_dict, new_solution_dict[s.topic_id])
                 logging.info(f'Topic {s.topic_id} improved')
-            elif s.Label=='persisted': #thread persists the header and solution text, but should change the message list
+            elif s.Label==RevisedStatus.MINORCHANGES: #thread persists the header and solution text, but should change the message list
                 logging.info(f"Topic {s.topic_id} get {len(new_solution_dict[s.topic_id]['whole_thread']) - len(solutions_dict[s.topic_id]['whole_thread'])} new messages")
                 solutions_dict[s.topic_id]['whole_thread'] = new_solution_dict[s.topic_id]['whole_thread']
                 solutions_dict[s.topic_id]['actual_date'] = new_solution_dict[s.topic_id]['actual_date']
                 solutions_dict[s.topic_id]['answer_id'] = new_solution_dict[s.topic_id]['answer_id']
                 solutions_dict[s.topic_id]['label'] = new_solution_dict[s.topic_id]['label']
             else:
-                # s.Label=='changed': thread has changes in header and solution text. Should be checked in RAG
+                # s.Label==RevisedStatus.CHANGED: thread has changes in header and solution text. Should be checked in RAG
                 changed_solution = new_solution_dict[s.topic_id]
                 rag_check_result = _check_solution_with_rag(changed_solution, exclude_solution_id=s.topic_id)
                 
@@ -438,6 +488,25 @@ New version:
     new_solutions_for_add = {key: s for key, s in new_solution_dict.items() if key in new_threads}
     
     # Check each new solution against RAG before adding
+    
+    
+    return new_solutions_for_add
+
+def check_in_rag_and_save(solutions_dict, new_solutions_for_add):
+    """
+    Check new solutions against RAG and add to solutions_dict if approved
+    """
+    # TODO -- не отлажена, надо проверять
+    # получает список новых решений для топиков со статусом ThreadStatus.NEW (из функции new_solutions_revision_and_add или из первого запуска generalization_solution)
+    # проверяет в RAG
+    # если решение уникально - добавляет в solutions_dict
+    
+    if not new_solutions_for_add:
+        logging.info("No new solutions to check in RAG")
+        return
+    
+    logging.info(f"Checking {len(new_solutions_for_add)} new solutions in RAG...")
+
     filtered_solutions_for_add = []
     for topic_id, solution_data in new_solutions_for_add.items():
         rag_check_result = _check_solution_with_rag(solution_data)
@@ -463,9 +532,7 @@ New version:
     
     add_new_solutions_to_dict(solutions_dict, filtered_solutions_for_add)
     logging.info(f"Added {len(filtered_solutions_for_add)} new solutions after RAG filtering")
-    
     return solutions_dict
-
 
 # RAG Helper Functions for the implemented TODOs
 
@@ -600,7 +667,7 @@ def _create_duplicate_records(solution_data: dict, similar_solutions: list):
                     'thread_id': thread.id,
                     'header': solution_data.get('Header', ''),
                     'solution': solution_data.get('Solution', ''),
-                    'label': solution_data.get('Label', 'unresolved'),
+                    'label': solution_data.get('Label', SolutionStatus.UNRESOLVED),
                     'is_duplicate': True
                 }
                 solution = db_service.create_solution(session, solution_db_data)
@@ -655,7 +722,7 @@ def _update_database_with_solutions(solutions_dict: dict):
                         'answer_id': solution_data.get('Answer_ID'),
                         'label': solution_data.get('Label'),
                         'solution': solution_data.get('Solution'),
-                        'status': 'new',
+                        'status': ThreadStatus.NEW,
                         'is_technical': True,
                         'is_processed': True
                     }
@@ -673,7 +740,7 @@ def _update_database_with_solutions(solutions_dict: dict):
                     db_service.update_solution(session, thread.id, {
                         'header': solution_data.get('Header', ''),
                         'solution': solution_data.get('Solution', ''),
-                        'label': solution_data.get('Label', 'unresolved')
+                        'label': solution_data.get('Label', SolutionStatus.UNRESOLVED)
                     })
                 else:
                     # Create new solution
@@ -681,7 +748,7 @@ def _update_database_with_solutions(solutions_dict: dict):
                         'thread_id': thread.id,
                         'header': solution_data.get('Header', ''),
                         'solution': solution_data.get('Solution', ''),
-                        'label': solution_data.get('Label', 'unresolved')
+                        'label': solution_data.get('Label', SolutionStatus.UNRESOLVED)
                     }
                     solution = db_service.create_solution(session, solution_db_data)
                     

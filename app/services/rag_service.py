@@ -193,6 +193,7 @@ class RAGService:
         params.extend([query_embedding, self.max_similar_results])
         
         # Execute raw SQL query
+        # TODO: Всегда выдает ошибку "List argument must consist only of dictionaries" 
         result = session.execute(text(query), params)
         rows = result.fetchall()
         

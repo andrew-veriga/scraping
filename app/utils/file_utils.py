@@ -105,7 +105,7 @@ def is_admin(message_ID):
 
 # Map Author IDs to User <N> using all unique author IDs from the entire Messages_df
 
-def illustrated_message(message_ID, df_indexed):
+def illustrated_message(message_ID, messages_df):
     """
     Formats a message with user mapping and reply information.
     user_mapping: A dictionary mapping Author IDs to formatted user names.
@@ -117,7 +117,7 @@ def illustrated_message(message_ID, df_indexed):
         A formatted string representation of the message.
     """
 
-    message = df_indexed.loc[message_ID]
+    message = messages_df.loc[message_ID]
     author_id = message['Author ID']
     referenced_message_id = message['Referenced Message ID']
     message_content = message['Content']
@@ -128,8 +128,8 @@ def illustrated_message(message_ID, df_indexed):
     formatted_msg = f"{message['DateTime']} {user_mapping(author_id)}: "
 
     # Handle replies
-    if referenced_message_id in df_indexed.index:
-        referenced_message = df_indexed.loc[referenced_message_id]
+    if referenced_message_id in messages_df.index:
+        referenced_message = messages_df.loc[referenced_message_id]
         referenced_author_id = referenced_message['Author ID']
         formatted_msg += f" reply to {user_mapping(referenced_author_id)} - "
 
@@ -199,19 +199,16 @@ def illustrated_threads(threads_json_data, messages_df):
     """
     Enriches thread data with full message content for better analysis by the LLM.
     """
-    messages_dict = messages_df.set_index('Message ID')['DatedMessage'].to_dict()
-    authors_dict = messages_df.set_index('Message ID')['Author ID'].to_dict()
-
     for thread in threads_json_data:
         thread['Whole_thread_formatted'] = []
         # Support both old and new formats during transition
         whole_thread = thread.get('whole_thread') or thread.get('Whole_thread', [])
-        for msg_id in whole_thread:
-            message_content = messages_dict.get(str(msg_id), "Message content not found")
-            author_id = authors_dict.get(str(msg_id), "Author not found")
+        for msg in whole_thread:
+            msg_id = msg['message_id']
+            message_content = illustrated_message(msg_id, messages_df)
             thread['Whole_thread_formatted'].append({
                 "message_id": str(msg_id),
-                "author_id": str(author_id),
+                "parent_id": str(msg.get('parent_id', None)),
                 "content": message_content
             })
     return threads_json_data

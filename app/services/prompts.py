@@ -26,8 +26,8 @@ load_prompts()
 # but it's generally better to handle formatting when the prompt is used.
 
 # These will be formatted when used, not here
+
 prompt_start_step_1 = _prompts.get('prompt_start_step_1', '')
 prompt_addition_step1 = _prompts.get('prompt_addition_step1', '')  
-prompt_addition_step2 = _prompts.get('prompt_addition_step2', '')
 
 revision_prompt = _prompts.get('revision_prompt', '')

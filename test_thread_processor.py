@@ -59,7 +59,7 @@ def mock_gemini_response_step3():
         Topic_ID="1",
         Problem_Statement="Problem",
         Solution="Solution",
-        Status="resolved",
+        Status=SolutionStatus.RESOLVED,
         Actual_Date=datetime.now()
     )
     solution_list = MockSolutionList(threads=[solution])

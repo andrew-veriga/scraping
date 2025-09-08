@@ -8,6 +8,8 @@ from app.services import data_loader, thread_processor
 from app.utils.file_utils import load_solutions_dict, save_solutions_dict, get_end_date_from_solutions, create_dict_from_list
 from app.utils.analytics import get_analytics_service
 from app.services.database import get_database_service
+from app.models.pydantic_models import SolutionStatus
+
 from app.services.processing_tracker import get_processing_tracker
 from app.models.db_models import Solution, Message, Thread
 import pandas as pd
@@ -98,11 +100,14 @@ def process_first_batch():
             logging.info(f"Created processing batch record with ID: {batch_id}")
         
         first_some_days_df = messages_df[messages_df['DateTime'] < end_date].copy()
+        # TODO first_some_days_df - pd.DataFrame
+        # надо заменить на получение этого списка из SQL
         step1_output_filename = thread_processor.first_thread_gathering(first_some_days_df,  f"first_{str_interval}", SAVE_PATH)
         first_technical_filename = thread_processor.filter_technical_topics(step1_output_filename, f"first_{str_interval}", messages_df, SAVE_PATH) # messages_df is needed for illustrated_threads
         first_solutions_filename = thread_processor.generalization_solution(first_technical_filename,  f"first_{str_interval}", SAVE_PATH)
         solutions_list = json.load(open(first_solutions_filename, 'r'))
-        solutions_dict = create_dict_from_list(solutions_list)
+        first_solutions_dict = create_dict_from_list(solutions_list)
+        solutions_dict = thread_processor.check_in_rag_and_save(first_solutions_dict)
         save_solutions_dict(solutions_dict, SOLUTIONS_DICT_FILENAME, SAVE_PATH)
         
         # Update database with solutions
@@ -112,7 +117,7 @@ def process_first_batch():
         with db_service.get_session() as session:
             batch_stats = {
                 'threads_created': len(solutions_dict),
-                'technical_threads': len([s for s in solutions_dict.values() if s.get('label') != 'unresolved']),
+                'technical_threads': len([s for s in solutions_dict.values() if s.get('label') != SolutionStatus.UNRESOLVED]),
                 'solutions_added': len([s for s in solutions_dict.values() if s.get('solution')])
             }
             db_service.complete_processing_batch(session, batch_id, batch_stats)
@@ -145,16 +150,20 @@ def process_batch(solutions_dict, lookback_date:pd.Timestamp, next_start_date: p
         session.commit()
         batch_id = processing_batch.id
         logging.info(f"Created incremental processing batch record with ID: {batch_id}")
-    
+
     prev_threads = [t for t in solutions_dict.values() if pd.Timestamp(t.get('actual_date') or t.get('Actual_Date')) > lookback_date]
     next_step1_output_filename = thread_processor.next_thread_gathering(next_batch_df, prev_threads, str_interval, SAVE_PATH, messages_df)
     next_technical_filename = thread_processor.filter_technical_topics(next_step1_output_filename, f"next_{str_interval}", messages_df, SAVE_PATH)
     next_solutions_filename = thread_processor.generalization_solution(next_technical_filename, f"next_{str_interval}", SAVE_PATH)
-    
+
+    adding_solutions_dict = thread_processor.new_solutions_revision_and_add(next_solutions_filename, next_technical_filename, solutions_dict, lookback_date)
+
     # Count existing solutions before processing
+    
     initial_solution_count = len(solutions_dict)
     
-    solutions_dict = thread_processor.new_solutions_revision_and_add(next_solutions_filename, next_technical_filename, solutions_dict, lookback_date)
+    solutions_dict = thread_processor.check_in_rag_and_save(solutions_dict, adding_solutions_dict)
+    
     save_solutions_dict(solutions_dict, SOLUTIONS_DICT_FILENAME, save_path=SAVE_PATH)
     
     # Update database with solutions
@@ -163,10 +172,13 @@ def process_batch(solutions_dict, lookback_date:pd.Timestamp, next_start_date: p
     # Complete processing batch
     with db_service.get_session() as session:
         new_solution_count = len(solutions_dict) - initial_solution_count
+        #TODO: Я думаю, что посчитать количество измененных топиков здесь не получится, так как все изменения видны только внутри thread_processor.new_solutions_revision_and_add
+        # можно там вычислять batch_stats и возвращать его сюда как solutions_dict, batch_stats = thread_processor.new_solutions_revision_and_add
+
         batch_stats = {
             'threads_created': new_solution_count,
             'threads_modified': len(solutions_dict) - new_solution_count,  # Approximate
-            'technical_threads': len([s for s in solutions_dict.values() if s.get('label') != 'unresolved']),
+            'technical_threads': len([s for s in solutions_dict.values() if s.get('label') != SolutionStatus.UNRESOLVED]),
             'solutions_added': len([s for s in solutions_dict.values() if s.get('solution')])
         }
         db_service.complete_processing_batch(session, batch_id, batch_stats)
@@ -223,9 +235,6 @@ def iterate_final_threads(thread_data, messages_df):
     """
     Iterates over the final threads and yields formatted markdown output.
     """
-    # Set 'Message ID' as the index for efficient message lookup.
-    df_indexed = messages_df.set_index('Message ID')
-
     for i, thread in enumerate(thread_data):
         actual_date = thread.get('actual_date') or thread.get('Actual_Date', 'no date')
         header = thread.get('header') or thread.get('Header', 'N/A')
@@ -239,7 +248,7 @@ def iterate_final_threads(thread_data, messages_df):
             for message_id in whole_thread_ids:
                 # Ensure message_id is a string for lookup
                 # Assuming formatted_message function is defined and accessible
-                message_content =illustrated_message(message_id,df_indexed)
+                message_content =illustrated_message(message_id,messages_df)
                 topic_id = thread.get('topic_id') or thread.get('Topic_ID', 'N/A')
                 answer_id = thread.get('answer_id') or thread.get('Answer_ID', 'N/A')
                 if message_id == topic_id:
@@ -253,7 +262,7 @@ def iterate_final_threads(thread_data, messages_df):
             markdown_output += "\n  N/A"
         label = thread.get('label') or thread.get('Label', 'N/A') # Check the label field
         solution = thread.get('solution') or thread.get('Solution','')
-        if label == 'unresolved':
+        if label == SolutionStatus.UNRESOLVED:
             markdown_output += f"\n\n### Solution {label}"
         else:
             markdown_output += f"\n\n### Solution {label}: {solution}"

@@ -15,6 +15,9 @@ def load_and_preprocess_data(file_path):
     messages_df['DatedMessage'] = messages_df.DateTime.astype(str) +" - " + messages_df.Content
     # Remove the 'Unix Timestamp' column
     messages_df = messages_df.drop(columns=['Unix Timestamp'])
+    
+    messages_df.set_index('Message ID',inplace=True, drop=False)
+
     logging.info(f"{len(messages_df)} rows of data loaded and preprocessed successfully.")
     return messages_df
 

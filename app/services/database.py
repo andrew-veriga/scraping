@@ -1,13 +1,14 @@
 import os
 import yaml
 import logging
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Generator
 from datetime import datetime, timezone
 import pandas as pd
 from sqlalchemy import create_engine, text, and_, or_, desc, func
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from contextlib import contextmanager
+from app.models.pydantic_models import ThreadStatus
 import hashlib
 import json
 from dotenv import load_dotenv
@@ -104,7 +105,7 @@ class DatabaseService:
             return False
     
     @contextmanager
-    def get_session(self) -> Session:
+    def get_session(self) -> Generator[Session, None, None]:
         """Get database session with automatic cleanup."""
         session = self.SessionLocal()
         try:
@@ -121,6 +122,7 @@ class DatabaseService:
         """Create a new message record."""
         message = Message(
             message_id=message_data['message_id'],
+            parent_id=message_data.get('parent_id'),
             author_id=message_data['author_id'],
             content=message_data['content'],
             datetime=message_data['datetime'],
@@ -169,7 +171,7 @@ class DatabaseService:
             answer_id=thread_data.get('answer_id'),
             label=thread_data.get('label'),
             solution=thread_data.get('solution'),
-            status=thread_data.get('status', 'new'),
+            status=thread_data.get('status', ThreadStatus.NEW),
             is_technical=thread_data.get('is_technical', False),
             is_processed=thread_data.get('is_processed', False)
         )

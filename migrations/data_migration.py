@@ -24,6 +24,7 @@ from app.services.rag_service import get_rag_service
 from app.services.data_loader import load_and_preprocess_data
 from app.utils.file_utils import load_solutions_dict, convert_datetime_to_str
 from app.models.db_models import Message, Thread, ThreadMessage, Solution, ProcessingBatch
+from app.models.pydantic_models import ThreadStatus, SolutionStatus
 
 
 class DataMigrator:
@@ -172,7 +173,7 @@ class DataMigrator:
             'answer_id': solution_data.get('Answer_ID'),
             'label': solution_data.get('Label'),
             'solution': solution_data.get('Solution'),
-            'status': 'persisted',  # These are from existing data
+            'status': ThreadStatus.PERSISTED,  # These are from existing data
             'is_technical': True,  # Solutions dict only contains technical threads
             'is_processed': True   # These have been processed
         }
@@ -185,7 +186,7 @@ class DataMigrator:
             thread_id=thread.id,
             header=solution_data.get('Header', ''),
             solution=solution_data.get('Solution', ''),
-            label=solution_data.get('Label', 'unresolved'),
+            label=solution_data.get('Label', SolutionStatus.UNRESOLVED),
             confidence_score=None,  # Not available in old data
             version=1
         )
