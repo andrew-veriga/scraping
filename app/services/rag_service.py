@@ -4,7 +4,7 @@ import yaml
 from typing import List, Optional, Dict, Any, Tuple
 import numpy as np
 from sqlalchemy.orm import Session
-from sqlalchemy import text, func
+from sqlalchemy import text, func, and_
 import hashlib
 import json
 
