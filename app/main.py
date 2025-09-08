@@ -242,13 +242,14 @@ def iterate_final_threads(thread_data, messages_df):
 
 #### Whole Thread Messages:
 """
-        whole_thread_ids = thread.get('whole_thread') or thread.get('Whole_thread', [])
+        whole_thread = thread.get('whole_thread', [])
         messages = []
-        if whole_thread_ids:
+        if whole_thread:
+            whole_thread_ids = [t['message_id'] for t in whole_thread]
             for message_id in whole_thread_ids:
                 # Ensure message_id is a string for lookup
                 # Assuming formatted_message function is defined and accessible
-                message_content =illustrated_message(message_id,messages_df)
+                message_content = illustrated_message(message_id, messages_df)
                 topic_id = thread.get('topic_id') or thread.get('Topic_ID', 'N/A')
                 answer_id = thread.get('answer_id') or thread.get('Answer_ID', 'N/A')
                 if message_id == topic_id:
