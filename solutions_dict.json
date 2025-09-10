@@ -1,0 +1,5932 @@
+{
+  "1399199156089917511": {
+    "header": "User is unable to perform any transactions due to an error indicating objects are reserved for another transaction, which is identified as equivocation.",
+    "topic_id": "1399199156089917511",
+    "actual_date": "2025-07-28T01:40:29+00:00",
+    "answer_id": "1399200056405528717",
+    "label": "suggestion",
+    "solution": "The error is due to equivocation which happens when attempting concurrent transactions. The user needs to wait until the next epoch, approximately 16 hours, to perform transactions again.",
+    "whole_thread": [
+      {
+        "message_id": "1399199156089917511",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399200056405528717",
+        "parent_id": "1399199156089917511"
+      },
+      {
+        "message_id": "1399200221329752196",
+        "parent_id": "1399200056405528717"
+      },
+      {
+        "message_id": "1399200454650626129",
+        "parent_id": "1399200221329752196"
+      },
+      {
+        "message_id": "1399201039508570204",
+        "parent_id": "1399200454650626129"
+      },
+      {
+        "message_id": "1399204838168072382",
+        "parent_id": "1399201039508570204"
+      }
+    ]
+  },
+  "1399218868806746245": {
+    "header": "User's wallet is unusable.",
+    "topic_id": "1399218868806746245",
+    "actual_date": "2025-07-28T02:47:53+00:00",
+    "answer_id": "1399221799274942475",
+    "label": "suggestion",
+    "solution": "It's likely a glitch; the user should retry a few times and ensure the wallet is updated to the latest version.",
+    "whole_thread": [
+      {
+        "message_id": "1399218868806746245",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399221799274942475",
+        "parent_id": "1399218726053609624"
+      }
+    ]
+  },
+  "1399275113454501889": {
+    "header": "User cannot complete transactions and transaction history might be down.",
+    "topic_id": "1399275113454501889",
+    "actual_date": "2025-07-28T06:43:51+00:00",
+    "answer_id": "1399281184814399529",
+    "label": "suggestion",
+    "solution": "Try retrying the transaction with a VPN.",
+    "whole_thread": [
+      {
+        "message_id": "1399275113454501889",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399281184814399529",
+        "parent_id": "1399275113454501889"
+      }
+    ]
+  },
+  "1399325397988151388": {
+    "header": "User is unable to send transactions due to objects being reserved, leading to a locked wallet and concerns about the duration and cause of the lock, and the distinction between \"reserved\" and \"equivocated\" states.",
+    "topic_id": "1399325397988151388",
+    "actual_date": "2025-07-28T17:46:27+00:00",
+    "answer_id": "1399328597294059580",
+    "label": "resolved",
+    "solution": "The wallet objects are locked due to a double-spending prevention mechanism, often triggered by concurrent transactions. The user needs to wait until the current epoch ends for the objects to unlock, which is guaranteed. The error message \"reserved\" is a generic wallet error and implies an epoch-level lock. To prevent recurrence, avoid performing many transactions in a very short amount of time.",
+    "whole_thread": [
+      {
+        "message_id": "1399325397988151388",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399326114006171668",
+        "parent_id": "1399325397988151388"
+      },
+      {
+        "message_id": "1399327337346236458",
+        "parent_id": "1399326114006171668"
+      },
+      {
+        "message_id": "1399327559090438145",
+        "parent_id": "1399326114006171668"
+      },
+      {
+        "message_id": "1399327854767902730",
+        "parent_id": "1399327559090438145"
+      },
+      {
+        "message_id": "1399328597294059580",
+        "parent_id": "1399327337346236458"
+      },
+      {
+        "message_id": "1399330853393272923",
+        "parent_id": "1399328597294059580"
+      },
+      {
+        "message_id": "1399334223407616121",
+        "parent_id": "1399330853393272923"
+      },
+      {
+        "message_id": "1399447932708720902",
+        "parent_id": "1399334223407616121"
+      }
+    ]
+  },
+  "1399330269999272109": {
+    "header": "User wants to know if transaction information can be retrieved from a full node using getbalance or if an archive node is required, and seeks access to the node-operators group.",
+    "topic_id": "1399330269999272109",
+    "actual_date": "2025-07-28T10:03:42+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1399330269999272109",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399331478651011134",
+        "parent_id": "1399330269999272109"
+      }
+    ]
+  },
+  "1399357235414700032": {
+    "header": "User is unable to unstake from 'mysten-1' validator; transactions fail after showing as pending.",
+    "topic_id": "1399357235414700032",
+    "actual_date": "2025-07-28T12:26:11+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1399357235414700032",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399360231946977301",
+        "parent_id": "1399357235414700032"
+      },
+      {
+        "message_id": "1399360286988963903",
+        "parent_id": "1399360231946977301"
+      },
+      {
+        "message_id": "1399360359290372116",
+        "parent_id": "1399360286988963903"
+      },
+      {
+        "message_id": "1399360740200026184",
+        "parent_id": "1399360359290372116"
+      },
+      {
+        "message_id": "1399367335692996728",
+        "parent_id": "1399360740200026184"
+      }
+    ]
+  },
+  "1399361014457303081": {
+    "header": "User bought an NFT (suiplay) by paying from Ethereum and connected their email, but the NFT was sent to a Sui wallet they don't have access to, and they need help recovering it.",
+    "topic_id": "1399361014457303081",
+    "actual_date": "2025-07-28T12:26:26+00:00",
+    "answer_id": "1399367397588340847",
+    "label": "outside",
+    "solution": "The user should send their question to the suiplay Discord channel for assistance.",
+    "whole_thread": [
+      {
+        "message_id": "1399361014457303081",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399367397588340847",
+        "parent_id": "1399361014457303081"
+      }
+    ]
+  },
+  "1399379128800645151": {
+    "header": "User bridged ETH to the Sui network, but the transaction showed 'failed', and clicking 'Claim Now' did nothing, with gas fees remaining pending.",
+    "topic_id": "1399379128800645151",
+    "actual_date": "2025-07-28T13:17:04+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1399379128800645151",
+        "parent_id": "1399376229290999939"
+      },
+      {
+        "message_id": "1399380139707727892",
+        "parent_id": "1399379128800645151"
+      }
+    ]
+  },
+  "1399376229290999939": {
+    "header": "User's bridge transaction from ETH to Sui failed with a 'Claim Now' button that did not work, and gas fees remained pending. The user is asking for guidance on how to proceed.",
+    "topic_id": "1399376229290999939",
+    "actual_date": "2025-07-28T13:30:03+00:00",
+    "answer_id": "1399382974532685854",
+    "label": "resolved",
+    "solution": "The bridge transaction failed due to insufficient limit. The user should try claiming it again after a few hours when there might be enough limit.",
+    "whole_thread": [
+      {
+        "message_id": "1399376229290999939",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399378233832509450",
+        "parent_id": "1399376229290999939"
+      },
+      {
+        "message_id": "1399378411708874954",
+        "parent_id": "1399376229290999939"
+      },
+      {
+        "message_id": "1399378610783125637",
+        "parent_id": "1399376229290999939"
+      },
+      {
+        "message_id": "1399380286935928975",
+        "parent_id": "1399376229290999939"
+      },
+      {
+        "message_id": "1399381274262507600",
+        "parent_id": "1399380286935928975"
+      },
+      {
+        "message_id": "1399381641935454239",
+        "parent_id": "1399380286935928975"
+      },
+      {
+        "message_id": "1399381784281616404",
+        "parent_id": "1399378610783125637"
+      },
+      {
+        "message_id": "1399381922089799780",
+        "parent_id": "1399381784281616404"
+      },
+      {
+        "message_id": "1399382362546114711",
+        "parent_id": "1399381922089799780"
+      },
+      {
+        "message_id": "1399382566519439361",
+        "parent_id": "1399382362546114711"
+      },
+      {
+        "message_id": "1399382816852017193",
+        "parent_id": "1399382566519439361"
+      },
+      {
+        "message_id": "1399382855557054646",
+        "parent_id": "1399382816852017193"
+      },
+      {
+        "message_id": "1399382974532685854",
+        "parent_id": "1399382362546114711"
+      },
+      {
+        "message_id": "1399383271338676384",
+        "parent_id": "1399382974532685854"
+      },
+      {
+        "message_id": "1399383323150647316",
+        "parent_id": "1399383271338676384"
+      },
+      {
+        "message_id": "1399383408991539202",
+        "parent_id": "1399383323150647316"
+      }
+    ]
+  },
+  "1399412821178978426": {
+    "header": "User is encountering an error \"Failed to sign transaction by a quorum of validators because one or more of its objects is reserved for another transaction\" when trying to swap.",
+    "topic_id": "1399412821178978426",
+    "actual_date": "2025-07-28T15:30:15+00:00",
+    "answer_id": "1399413656982257835",
+    "label": "suggestion",
+    "solution": "The user's wallet has locked objects. They must wait until the current epoch ends before they can transact again.",
+    "whole_thread": [
+      {
+        "message_id": "1399412821178978426",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399413656982257835",
+        "parent_id": "1399412821178978426"
+      }
+    ]
+  },
+  "1399435720434909234": {
+    "header": "User accidentally sent USDC on the Aptos network to a Sui Ledger address and needs assistance to recover the tokens by signing an Aptos transaction using the Sui Ledger app, extracting the public key, or finding another recovery method.",
+    "topic_id": "1399435720434909234",
+    "actual_date": "2025-07-28T17:30:50+00:00",
+    "answer_id": "1399443538143608892",
+    "label": "outside",
+    "solution": "The USDC was sent to the wrong network (Aptos). The Sui team cannot assist with recovery as it's a different network. The user needs to reach out to the Aptos team for any possibility of recovery.",
+    "whole_thread": [
+      {
+        "message_id": "1399435720434909234",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399436005206917140",
+        "parent_id": "1399435720434909234"
+      },
+      {
+        "message_id": "1399436530711265361",
+        "parent_id": "1399436005206917140"
+      },
+      {
+        "message_id": "1399436806855983185",
+        "parent_id": "1399436530711265361"
+      },
+      {
+        "message_id": "1399439152944255089",
+        "parent_id": "1399436806855983185"
+      },
+      {
+        "message_id": "1399439397019058226",
+        "parent_id": "1399439152944255089"
+      },
+      {
+        "message_id": "1399439627550724268",
+        "parent_id": "1399439397019058226"
+      },
+      {
+        "message_id": "1399440413282009262",
+        "parent_id": "1399436005206917140"
+      },
+      {
+        "message_id": "1399440900576379003",
+        "parent_id": "1399440413282009262"
+      },
+      {
+        "message_id": "1399441036266438797",
+        "parent_id": "1399440900576379003"
+      },
+      {
+        "message_id": "1399441317003788379",
+        "parent_id": "1399436530711265361"
+      },
+      {
+        "message_id": "1399441471966281849",
+        "parent_id": "1399441317003788379"
+      },
+      {
+        "message_id": "1399441496620400862",
+        "parent_id": "1399440413282009262"
+      },
+      {
+        "message_id": "1399441555097649213",
+        "parent_id": "1399441471966281849"
+      },
+      {
+        "message_id": "1399441778075238554",
+        "parent_id": "1399441555097649213"
+      },
+      {
+        "message_id": "1399442166702407751",
+        "parent_id": "1399441778075238554"
+      },
+      {
+        "message_id": "1399442305492189316",
+        "parent_id": "1399442166702407751"
+      },
+      {
+        "message_id": "1399443076795334759",
+        "parent_id": "1399442305492189316"
+      },
+      {
+        "message_id": "1399443538143608892",
+        "parent_id": "1399443076795334759"
+      },
+      {
+        "message_id": "1399444000267829472",
+        "parent_id": "1399443538143608892"
+      }
+    ]
+  },
+  "1399594661844095078": {
+    "header": "Issue seeing airdropped tokens in wallet",
+    "topic_id": "1399594661844095078",
+    "actual_date": "2025-07-29T03:54:46+00:00",
+    "answer_id": "1399601019997917347",
+    "label": "outside",
+    "solution": "Users experiencing issues with seeing airdropped tokens in their wallet should seek assistance in the dedicated wallet support Discord channel.",
+    "whole_thread": [
+      {
+        "message_id": "1399594661844095078",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399594987007639572",
+        "parent_id": "1399594661844095078"
+      },
+      {
+        "message_id": "1399598453704622261",
+        "parent_id": "1399594661844095078"
+      },
+      {
+        "message_id": "1399599277033914472",
+        "parent_id": "1399598453704622261"
+      },
+      {
+        "message_id": "1399601019997917347",
+        "parent_id": "1399599277033914472"
+      }
+    ]
+  },
+  "1399707479679565854": {
+    "header": "\"Insufficient gas\" error when unstaking SUI in Trust Wallet",
+    "topic_id": "1399707479679565854",
+    "actual_date": "2025-07-29T11:03:30+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1399707479679565854",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399707931271892993",
+        "parent_id": "1399707479679565854"
+      },
+      {
+        "message_id": "1399708915230310522",
+        "parent_id": "1399707479679565854"
+      }
+    ]
+  },
+  "1399743650707279903": {
+    "header": "Inquiry about a bridge from Base to Sui",
+    "topic_id": "1399743650707279903",
+    "actual_date": "2025-07-29T13:32:57+00:00",
+    "answer_id": "1399746455861854290",
+    "label": "resolved",
+    "solution": "A bridge from Base to Sui exists only for USDC, and the link to the bridge is provided.",
+    "whole_thread": [
+      {
+        "message_id": "1399743650707279903",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399744631629156404",
+        "parent_id": "1399743650707279903"
+      },
+      {
+        "message_id": "1399746373162762240",
+        "parent_id": "1399744631629156404"
+      },
+      {
+        "message_id": "1399746455861854290",
+        "parent_id": "1399746373162762240"
+      },
+      {
+        "message_id": "1399746525025800264",
+        "parent_id": "1399746455861854290"
+      }
+    ]
+  },
+  "1399803363402580119": {
+    "header": "Unable to log out Slush wallet from other devices after compromise",
+    "topic_id": "1399803363402580119",
+    "actual_date": "2025-07-29T17:42:38+00:00",
+    "answer_id": "1399806960655663388",
+    "label": "unresolved",
+    "solution": "It is not possible to remotely log out a Slush wallet from other devices if the login credentials have been compromised. Users can suggest this as a future feature in the designated channel.",
+    "whole_thread": [
+      {
+        "message_id": "1399803363402580119",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399803688058359980",
+        "parent_id": "1399803363402580119"
+      },
+      {
+        "message_id": "1399803759856717945",
+        "parent_id": "1399803688058359980"
+      },
+      {
+        "message_id": "1399804009430384720",
+        "parent_id": "1399803759856717945"
+      },
+      {
+        "message_id": "1399804664098324643",
+        "parent_id": "1399804009430384720"
+      },
+      {
+        "message_id": "1399804838820319362",
+        "parent_id": "1399804664098324643"
+      },
+      {
+        "message_id": "1399804988628402237",
+        "parent_id": "1399804838820319362"
+      },
+      {
+        "message_id": "1399806275809968199",
+        "parent_id": "1399804838820319362"
+      },
+      {
+        "message_id": "1399806328175591494",
+        "parent_id": "1399806275809968199"
+      },
+      {
+        "message_id": "1399806629452447847",
+        "parent_id": "1399806328175591494"
+      },
+      {
+        "message_id": "1399806960655663388",
+        "parent_id": "1399806629452447847"
+      },
+      {
+        "message_id": "1399807250864013562",
+        "parent_id": "1399806960655663388"
+      },
+      {
+        "message_id": "1399809360259055777",
+        "parent_id": "1399807250864013562"
+      }
+    ]
+  },
+  "1399834297728237780": {
+    "header": "Inability to trace wallet affiliation from an address to recover funds with an incorrect seed phrase",
+    "topic_id": "1399834297728237780",
+    "actual_date": "2025-07-29T22:43:49+00:00",
+    "answer_id": "1399835055769260126",
+    "label": "unresolved",
+    "solution": "It is not possible to trace which wallet an address is affiliated with on the blockchain. A seed phrase is unique to a specific wallet, and if it's for the wrong address, it won't grant access to another. Users can check wallet activities on the Sui explorer.",
+    "whole_thread": [
+      {
+        "message_id": "1399834297728237780",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399835055769260126",
+        "parent_id": "1399834297728237780"
+      },
+      {
+        "message_id": "1399885153014382675",
+        "parent_id": "1399834297728237780"
+      }
+    ]
+  },
+  "1399834430645735454": {
+    "header": "Inquiry about the public release of Sui node software version 1.52.3",
+    "topic_id": "1399834430645735454",
+    "actual_date": "2025-07-29T19:29:37+00:00",
+    "answer_id": "1399836282846314547",
+    "label": "outside",
+    "solution": "Questions regarding the public release of Sui node software, including specific versions like 1.52.3, should be directed to the designated channel.",
+    "whole_thread": [
+      {
+        "message_id": "1399834430645735454",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399835280814641155",
+        "parent_id": "1399834430645735454"
+      },
+      {
+        "message_id": "1399835929761288213",
+        "parent_id": "1399835280814641155"
+      },
+      {
+        "message_id": "1399836063777685676",
+        "parent_id": "1399835929761288213"
+      },
+      {
+        "message_id": "1399836282846314547",
+        "parent_id": "1399835929761288213"
+      }
+    ]
+  },
+  "1399920560229716049": {
+    "header": "User cannot see SuiPlay pre-order rewards (WAL tokens) in their wallet.",
+    "topic_id": "1399920560229716049",
+    "actual_date": "2025-07-30T01:22:39+00:00",
+    "answer_id": "1399925124865720321",
+    "label": "outside",
+    "solution": "User is advised to ask for support in the Mysten Labs Discord server.",
+    "whole_thread": [
+      {
+        "message_id": "1399920560229716049",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399925124865720321",
+        "parent_id": "1399920560229716049"
+      }
+    ]
+  },
+  "1399926069372387534": {
+    "header": "Inquiring about exchanging Sui test tokens for ETH-sepolia.",
+    "topic_id": "1399926069372387534",
+    "actual_date": "2025-07-30T01:37:44+00:00",
+    "answer_id": "1399928924342845460",
+    "label": "suggestion",
+    "solution": "It is not possible to exchange Sui test tokens for ETH-sepolia.",
+    "whole_thread": [
+      {
+        "message_id": "1399926069372387534",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399928924342845460",
+        "parent_id": "1399926069372387534"
+      }
+    ]
+  },
+  "1399951748625596567": {
+    "header": "Bridge delay and seeking support contact.",
+    "topic_id": "1399951748625596567",
+    "actual_date": "2025-07-30T03:10:43+00:00",
+    "answer_id": "1399952322028634172",
+    "label": "suggestion",
+    "solution": "The bridge has a rolling limit, so users need to check periodically to claim.",
+    "whole_thread": [
+      {
+        "message_id": "1399951748625596567",
+        "parent_id": null
+      },
+      {
+        "message_id": "1399952322028634172",
+        "parent_id": "1399951748625596567"
+      }
+    ]
+  },
+  "1399990301967519814": {
+    "header": "Incorrect wallet address used for OKX social task.",
+    "topic_id": "1399990301967519814",
+    "actual_date": "2025-07-30T06:04:50+00:00",
+    "answer_id": "1399991240002375700",
+    "label": "resolved",
+    "solution": "User is advised to contact the OKX wallet team for assistance with changing the incorrect wallet address.",
+    "whole_thread": [
+      {
+        "message_id": "1399990301967519814",
+        "parent_id": "1399952322028634172"
+      },
+      {
+        "message_id": "1399991240002375700",
+        "parent_id": "1399990301967519814"
+      },
+      {
+        "message_id": "1399991413403553813",
+        "parent_id": "1399991240002375700"
+      },
+      {
+        "message_id": "1399994182424199209",
+        "parent_id": "1399991413403553813"
+      },
+      {
+        "message_id": "1399996141042536499",
+        "parent_id": "1399994182424199209"
+      }
+    ]
+  },
+  "1400019373489389659": {
+    "header": "Query about Walrus testnet signer keypair.",
+    "topic_id": "1400019373489389659",
+    "actual_date": "2025-07-30T07:38:50+00:00",
+    "answer_id": "1400019795511873576",
+    "label": "outside",
+    "solution": "User is advised to join the Walrus Protocol Discord and ask in their developer channel.",
+    "whole_thread": [
+      {
+        "message_id": "1400019373489389659",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400019795511873576",
+        "parent_id": "1400019373489389659"
+      }
+    ]
+  },
+  "1400097022471704730": {
+    "header": "Difficulty claiming gas refund after 5 days.",
+    "topic_id": "1400097022471704730",
+    "actual_date": "2025-07-30T13:21:23+00:00",
+    "answer_id": "1400106001201500282",
+    "label": "suggestion",
+    "solution": "Gas refunds happen automatically during certain transactions, specifically if many objects are deleted.",
+    "whole_thread": [
+      {
+        "message_id": "1400097022471704730",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400103677519462540",
+        "parent_id": "1400097022471704730"
+      },
+      {
+        "message_id": "1400104656260300883",
+        "parent_id": "1400103677519462540"
+      },
+      {
+        "message_id": "1400104979079106640",
+        "parent_id": "1400104656260300883"
+      },
+      {
+        "message_id": "1400105301121830932",
+        "parent_id": "1400104979079106640"
+      },
+      {
+        "message_id": "1400106001201500282",
+        "parent_id": "1400105301121830932"
+      }
+    ]
+  },
+  "1400219719943983134": {
+    "header": "Unable to send assets (SUI or any coin) due to transaction limits.",
+    "topic_id": "1400219719943983134",
+    "actual_date": "2025-07-30T21:23:00+00:00",
+    "answer_id": "1400225492597997672",
+    "label": "suggestion",
+    "solution": "The issue occurs when attempting multiple transactions simultaneously. Users need to wait until the next epoch (24 hours) to perform another transaction.",
+    "whole_thread": [
+      {
+        "message_id": "1400219719943983134",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400222758444732577",
+        "parent_id": "1400219719943983134"
+      },
+      {
+        "message_id": "1400222925298077757",
+        "parent_id": "1400219719943983134"
+      },
+      {
+        "message_id": "1400224437566963854",
+        "parent_id": "1400222925298077757"
+      },
+      {
+        "message_id": "1400224722830233680",
+        "parent_id": "1400222758444732577"
+      },
+      {
+        "message_id": "1400224845509165137",
+        "parent_id": "1400224437566963854"
+      },
+      {
+        "message_id": "1400224894834311168",
+        "parent_id": "1400224722830233680"
+      },
+      {
+        "message_id": "1400225045913272464",
+        "parent_id": "1400224894834311168"
+      },
+      {
+        "message_id": "1400225492597997672",
+        "parent_id": "1400225045913272464"
+      },
+      {
+        "message_id": "1400226144703484106",
+        "parent_id": "1400225492597997672"
+      },
+      {
+        "message_id": "1400227204591259790",
+        "parent_id": "1400226144703484106"
+      }
+    ]
+  },
+  "1400230371622129724": {
+    "header": "Inquiring about the legitimacy of a user asking to DM for support.",
+    "topic_id": "1400230371622129724",
+    "actual_date": "2025-07-30T21:37:29+00:00",
+    "answer_id": "1400230850016055337",
+    "label": "outside",
+    "solution": "User is warned to beware of scammers and reminded that no admin or team member will share unverified links or ask for sensitive information via DM.",
+    "whole_thread": [
+      {
+        "message_id": "1400230371622129724",
+        "parent_id": "1400228206669336648"
+      },
+      {
+        "message_id": "1400230850016055337",
+        "parent_id": "1400230371622129724"
+      }
+    ]
+  },
+  "1400282160321003641": {
+    "header": "User unable to claim bridged tokens and seeking support.",
+    "topic_id": "1400282160321003641",
+    "actual_date": "2025-07-31T01:58:04+00:00",
+    "answer_id": "1400291328956563557",
+    "label": "resolved",
+    "solution": "The user was advised to clear browser cache and cookies or try a different browser/device to resolve the issue with claiming bridged tokens. If the issue persisted, they were to contact the Portal support team via Discord.",
+    "whole_thread": [
+      {
+        "message_id": "1400282160321003641",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400282685410250784",
+        "parent_id": "1400282160321003641"
+      },
+      {
+        "message_id": "1400282832143781928",
+        "parent_id": "1400282685410250784"
+      },
+      {
+        "message_id": "1400283009701118065",
+        "parent_id": "1400282832143781928"
+      },
+      {
+        "message_id": "1400283228543254588",
+        "parent_id": "1400283009701118065"
+      },
+      {
+        "message_id": "1400283316237766808",
+        "parent_id": "1400283228543254588"
+      },
+      {
+        "message_id": "1400283649907097664",
+        "parent_id": "1400283316237766808"
+      },
+      {
+        "message_id": "1400286632933986544",
+        "parent_id": "1400282685410250784"
+      },
+      {
+        "message_id": "1400287579492057240",
+        "parent_id": "1400286632933986544"
+      },
+      {
+        "message_id": "1400287921382359051",
+        "parent_id": "1400287579492057240"
+      },
+      {
+        "message_id": "1400288381333667881",
+        "parent_id": "1400287921382359051"
+      },
+      {
+        "message_id": "1400291328956563557",
+        "parent_id": "1400288381333667881"
+      },
+      {
+        "message_id": "1400295788344774688",
+        "parent_id": "1400291328956563557"
+      },
+      {
+        "message_id": "1400296099239035002",
+        "parent_id": "1400295788344774688"
+      },
+      {
+        "message_id": "1400296426738683935",
+        "parent_id": "1400296099239035002"
+      }
+    ]
+  },
+  "1400291699267207221": {
+    "header": "User deposited USDT to Sui network but Binance does not support USDT on Sui.",
+    "topic_id": "1400291699267207221",
+    "actual_date": "2025-07-31T01:45:27+00:00",
+    "answer_id": "1400293252451799160",
+    "label": "outside",
+    "solution": "Contact Binance support team regarding the USDT deposit issue.",
+    "whole_thread": [
+      {
+        "message_id": "1400291699267207221",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400293252451799160",
+        "parent_id": "1400291699267207221"
+      }
+    ]
+  },
+  "1400382281398485165": {
+    "header": "User unable to find assets when searching from Arbitrum to Sui.",
+    "topic_id": "1400382281398485165",
+    "actual_date": "2025-07-31T07:42:29+00:00",
+    "answer_id": "1400383101288321099",
+    "label": "outside",
+    "solution": "The issue was addressed in another channel.",
+    "whole_thread": [
+      {
+        "message_id": "1400382281398485165",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400383101288321099",
+        "parent_id": "1400382281398485165"
+      }
+    ]
+  },
+  "1400480055817277521": {
+    "header": "User unable to access SUI tokens in an old wallet after a wallet update, even with correct passphrase and Google login.",
+    "topic_id": "1400480055817277521",
+    "actual_date": "2025-07-31T14:32:19+00:00",
+    "answer_id": "1400486241417429013",
+    "label": "outside",
+    "solution": "The user was advised to forward the issue to the Mysten Discord for further assistance, after troubleshooting steps like checking the correct passphrase and Google email did not resolve the problem.",
+    "whole_thread": [
+      {
+        "message_id": "1400480055817277521",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400480714662739968",
+        "parent_id": "1400480055817277521"
+      },
+      {
+        "message_id": "1400481000202567702",
+        "parent_id": "1400480055817277521"
+      },
+      {
+        "message_id": "1400482076289142814",
+        "parent_id": "1400480055817277521"
+      },
+      {
+        "message_id": "1400482418686951485",
+        "parent_id": "1400482076289142814"
+      },
+      {
+        "message_id": "1400482770173825064",
+        "parent_id": "1400482418686951485"
+      },
+      {
+        "message_id": "1400484298053914694",
+        "parent_id": "1400482418686951485"
+      },
+      {
+        "message_id": "1400484791719170098",
+        "parent_id": "1400484298053914694"
+      },
+      {
+        "message_id": "1400485132523012188",
+        "parent_id": "1400484791719170098"
+      },
+      {
+        "message_id": "1400486241417429013",
+        "parent_id": "1400485132523012188"
+      }
+    ]
+  },
+  "1400490362279301202": {
+    "header": "Web app/game flagged as a malicious site on Slush wallet browser.",
+    "topic_id": "1400490362279301202",
+    "actual_date": "2025-07-31T14:50:42+00:00",
+    "answer_id": "1400490868229804135",
+    "label": "outside",
+    "solution": "The user was advised to forward the question to the Mysten Discord for assistance.",
+    "whole_thread": [
+      {
+        "message_id": "1400490362279301202",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400490868229804135",
+        "parent_id": "1400490362279301202"
+      }
+    ]
+  },
+  "1400635057454190736": {
+    "header": "User is unable to send USDC to a slush wallet on the SUI network from an exchange and asks for the correct network to use.",
+    "topic_id": "1400635057454190736",
+    "actual_date": "2025-08-01T00:27:40+00:00",
+    "answer_id": "1400636065894760508",
+    "label": "outside",
+    "solution": "The user needs to use the Sui network. If the exchange does not support it, the user should reach out to the specific exchange's support team for assistance.",
+    "whole_thread": [
+      {
+        "message_id": "1400635057454190736",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400635768933716060",
+        "parent_id": "1400635057454190736"
+      },
+      {
+        "message_id": "1400636065894760508",
+        "parent_id": "1400635057454190736"
+      }
+    ]
+  },
+  "1400642978560872478": {
+    "header": "User inquires about cross-chain bridging SUI ETH to the Base network.",
+    "topic_id": "1400642978560872478",
+    "actual_date": "2025-08-01T01:10:03+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1400642978560872478",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400645875348406373",
+        "parent_id": "1400642978560872478"
+      },
+      {
+        "message_id": "1400646432284868648",
+        "parent_id": "1400645875348406373"
+      },
+      {
+        "message_id": "1400646733301678120",
+        "parent_id": "1400646432284868648"
+      }
+    ]
+  },
+  "1400731995444740136": {
+    "header": "User bridged USDC from the Sui network to Aptos on the testnet using the Cashmere platform, but the funds have not arrived in their Aptos wallet.",
+    "topic_id": "1400731995444740136",
+    "actual_date": "2025-08-01T06:55:40+00:00",
+    "answer_id": "1400733433105219667",
+    "label": "resolved",
+    "solution": "The user needs to contact the support team of the Cashmere platform for issues related to their bridge, as the admin is unfamiliar with it.",
+    "whole_thread": [
+      {
+        "message_id": "1400731995444740136",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400732277998354463",
+        "parent_id": "1400731995444740136"
+      },
+      {
+        "message_id": "1400733273508024391",
+        "parent_id": "1400732277998354463"
+      },
+      {
+        "message_id": "1400733433105219667",
+        "parent_id": "1400733273508024391"
+      },
+      {
+        "message_id": "1400733709983940649",
+        "parent_id": "1400733433105219667"
+      }
+    ]
+  },
+  "1400795848786575430": {
+    "header": "User is encountering an error when trying to withdraw SUI from the Navi protocol.",
+    "topic_id": "1400795848786575430",
+    "actual_date": "2025-08-01T12:11:51+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1400795848786575430",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400796689329033246",
+        "parent_id": "1400795848786575430"
+      },
+      {
+        "message_id": "1400797279492771870",
+        "parent_id": "1400796689329033246"
+      },
+      {
+        "message_id": "1400797424909553755",
+        "parent_id": "1400797279492771870"
+      },
+      {
+        "message_id": "1400798675415859241",
+        "parent_id": "1400797424909553755"
+      },
+      {
+        "message_id": "1400812942165020712",
+        "parent_id": "1400798675415859241"
+      },
+      {
+        "message_id": "1400813279034736771",
+        "parent_id": "1400812942165020712"
+      }
+    ]
+  },
+  "1400800568963895386": {
+    "header": "User wants to import a wallet created with social login on Slush to a Newmoney wallet but cannot find a private key or seed phrase.",
+    "topic_id": "1400800568963895386",
+    "actual_date": "2025-08-01T11:22:23+00:00",
+    "answer_id": "1400800829317058722",
+    "label": "suggestion",
+    "solution": "Wallets created with email (social login) do not have a traditional private key or seed phrase.",
+    "whole_thread": [
+      {
+        "message_id": "1400800568963895386",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400800829317058722",
+        "parent_id": "1400800568963895386"
+      }
+    ]
+  },
+  "1400640328482160801": {
+    "header": "Admin asks a user to confirm the correct seed phrase is being used and requests the wallet address for further investigation.",
+    "topic_id": "1400640328482160801",
+    "actual_date": "2025-08-01T00:45:26+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1400640328482160801",
+        "parent_id": null
+      },
+      {
+        "message_id": "1400640537345917028",
+        "parent_id": "1400640328482160801"
+      }
+    ]
+  },
+  "1401084285926113353": {
+    "header": "Transactions not going through and claimed Testnet tokens not appearing in wallet due to overloaded faucet.",
+    "topic_id": "1401084285926113353",
+    "actual_date": "2025-08-02T06:52:15+00:00",
+    "answer_id": "1401095192425140254",
+    "label": "suggestion",
+    "solution": "The Testnet faucet is overloaded, causing transactions to not go through and claimed tokens not to appear in the wallet.",
+    "whole_thread": [
+      {
+        "message_id": "1401084285926113353",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401086356997935148",
+        "parent_id": "1401084285926113353"
+      },
+      {
+        "message_id": "1401088143842607156",
+        "parent_id": "1401086356997935148"
+      },
+      {
+        "message_id": "1401090697863630871",
+        "parent_id": "1401088143842607156"
+      },
+      {
+        "message_id": "1401095192425140254",
+        "parent_id": "1401088143842607156"
+      },
+      {
+        "message_id": "1401095237610504363",
+        "parent_id": "1401090697863630871"
+      }
+    ]
+  },
+  "1401100647708758087": {
+    "header": "Testnet faucet transactions not processing for several days.",
+    "topic_id": "1401100647708758087",
+    "actual_date": "2025-08-02T07:26:18+00:00",
+    "answer_id": "1401103804358983773",
+    "label": "suggestion",
+    "solution": "The Testnet faucet is currently overloaded; users should retry their transactions later.",
+    "whole_thread": [
+      {
+        "message_id": "1401100647708758087",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401103804358983773",
+        "parent_id": "1401100647708758087"
+      }
+    ]
+  },
+  "1401109577998532710": {
+    "header": "User has not received faucets.",
+    "topic_id": "1401109577998532710",
+    "actual_date": "2025-08-02T09:51:08+00:00",
+    "answer_id": "1401140252931915796",
+    "label": "suggestion",
+    "solution": "Users who have not received faucets should try using the faucet again.",
+    "whole_thread": [
+      {
+        "message_id": "1401109577998532710",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401140252931915796",
+        "parent_id": "1401109577998532710"
+      }
+    ]
+  },
+  "1401264112092319814": {
+    "header": "USDT sent to Sui network from Binance is lost because Binance does not support USDT on Sui, and the transaction cannot be refunded.",
+    "topic_id": "1401264112092319814",
+    "actual_date": "2025-08-02T19:01:17+00:00",
+    "answer_id": "1401264994519089172",
+    "label": "suggestion",
+    "solution": "It is not possible to reverse a USDT transaction sent to the Sui network if the receiving exchange (Binance) does not support USDT on Sui.",
+    "whole_thread": [
+      {
+        "message_id": "1401264112092319814",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401264277003702433",
+        "parent_id": "1401264112092319814"
+      },
+      {
+        "message_id": "1401264994519089172",
+        "parent_id": "1401264112092319814"
+      },
+      {
+        "message_id": "1401277145224974356",
+        "parent_id": "1401264277003702433"
+      },
+      {
+        "message_id": "1401277423613382796",
+        "parent_id": "1401277145224974356"
+      },
+      {
+        "message_id": "1401278704847556688",
+        "parent_id": "1401277145224974356"
+      }
+    ]
+  },
+  "1401463781510615092": {
+    "header": "User's funds are stuck after bridging from ETH to Sui.",
+    "topic_id": "1401463781510615092",
+    "actual_date": "2025-08-03T07:30:50+00:00",
+    "answer_id": "1401467332970156093",
+    "label": "suggestion",
+    "solution": "The issue will be escalated internally after the user provides their wallet address via DM.",
+    "whole_thread": [
+      {
+        "message_id": "1401463781510615092",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401467082272542731",
+        "parent_id": "1401463781510615092"
+      },
+      {
+        "message_id": "1401467332970156093",
+        "parent_id": "1401467082272542731"
+      }
+    ]
+  },
+  "1401497280724471862": {
+    "header": "SUI faucet funds are not arriving in the user's wallet.",
+    "topic_id": "1401497280724471862",
+    "actual_date": "2025-08-03T09:35:36+00:00",
+    "answer_id": "1401498732121423944",
+    "label": "suggestion",
+    "solution": "Try using the faucet again shortly.",
+    "whole_thread": [
+      {
+        "message_id": "1401497280724471862",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401498732121423944",
+        "parent_id": "1401497280724471862"
+      }
+    ]
+  },
+  "1401521732292050944": {
+    "header": "User asks how to obtain SUI faucet.",
+    "topic_id": "1401521732292050944",
+    "actual_date": "2025-08-03T11:13:47+00:00",
+    "answer_id": "1401523443278807180",
+    "label": "outside",
+    "solution": "Refer to the specified channel for instructions on how to get faucet.",
+    "whole_thread": [
+      {
+        "message_id": "1401521732292050944",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401523443278807180",
+        "parent_id": "1401521732292050944"
+      }
+    ]
+  },
+  "1401546726564958390": {
+    "header": "User is experiencing an issue with the Slush wallet and is unable to report details in the public chat due to a server content block.",
+    "topic_id": "1401546726564958390",
+    "actual_date": "2025-08-03T17:33:08+00:00",
+    "answer_id": "1401618908519075892",
+    "label": "resolved",
+    "solution": "The user discovered the issue was a general problem with Walrus DC, not a unique problem requiring specific support.",
+    "whole_thread": [
+      {
+        "message_id": "1401546726564958390",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401546901664305222",
+        "parent_id": "1401546726564958390"
+      },
+      {
+        "message_id": "1401614441035862056",
+        "parent_id": "1401546901664305222"
+      },
+      {
+        "message_id": "1401616771097563146",
+        "parent_id": "1401614441035862056"
+      },
+      {
+        "message_id": "1401617214343348224",
+        "parent_id": "1401616771097563146"
+      },
+      {
+        "message_id": "1401618908519075892",
+        "parent_id": "1401617214343348224"
+      }
+    ]
+  },
+  "1401605664056283176": {
+    "header": "User's USDC is stuck after a failed swap due to locked objects.",
+    "topic_id": "1401605664056283176",
+    "actual_date": "2025-08-03T17:43:13+00:00",
+    "answer_id": "1401606940701884617",
+    "label": "resolved",
+    "solution": "The user's USDC objects were locked after a failed swap but would be automatically unlocked in the next epoch (which lasts 24 hours). The user can monitor epoch status on suivision.xyz.",
+    "whole_thread": [
+      {
+        "message_id": "1401605664056283176",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401605998031929497",
+        "parent_id": "1401605664056283176"
+      },
+      {
+        "message_id": "1401606250646736978",
+        "parent_id": "1401605998031929497"
+      },
+      {
+        "message_id": "1401606704915026091",
+        "parent_id": "1401606250646736978"
+      },
+      {
+        "message_id": "1401606940701884617",
+        "parent_id": "1401606250646736978"
+      },
+      {
+        "message_id": "1401607018086666283",
+        "parent_id": "1401606940701884617"
+      },
+      {
+        "message_id": "1401607051431641128",
+        "parent_id": "1401607018086666283"
+      },
+      {
+        "message_id": "1401607226723930283",
+        "parent_id": "1401607051431641128"
+      },
+      {
+        "message_id": "1401607579829932135",
+        "parent_id": "1401607226723930283"
+      },
+      {
+        "message_id": "1401607741042065430",
+        "parent_id": "1401607579829932135"
+      },
+      {
+        "message_id": "1401607806578196580",
+        "parent_id": "1401607741042065430"
+      },
+      {
+        "message_id": "1401621447515836580",
+        "parent_id": "1401606940701884617"
+      }
+    ]
+  },
+  "1401768465664184331": {
+    "header": "Inquiry about deep link schemes for Slushwallet and project proposal submission process.",
+    "topic_id": "1401768465664184331",
+    "actual_date": "2025-08-04T04:35:48+00:00",
+    "answer_id": "1401771600843636756",
+    "label": "outside",
+    "solution": "For developer-related questions, users are advised to ask in the designated developer channel. For project proposals, users should email growth@sui.io.",
+    "whole_thread": [
+      {
+        "message_id": "1401768465664184331",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401771600843636756",
+        "parent_id": "1401768465664184331"
+      },
+      {
+        "message_id": "1401783893006225429",
+        "parent_id": "1401771600843636756"
+      },
+      {
+        "message_id": "1401785311532683285",
+        "parent_id": "1401783893006225429"
+      },
+      {
+        "message_id": "1401785674591633489",
+        "parent_id": "1401785311532683285"
+      }
+    ]
+  },
+  "1401786506808655964": {
+    "header": "Issue with receiving SUI tokens from the Discord faucet.",
+    "topic_id": "1401786506808655964",
+    "actual_date": "2025-08-04T04:50:27+00:00",
+    "answer_id": "1401789358956351549",
+    "label": "suggestion",
+    "solution": "The SUI faucet is currently overloaded; users should retry later.",
+    "whole_thread": [
+      {
+        "message_id": "1401786506808655964",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401789358956351549",
+        "parent_id": "1401786506808655964"
+      }
+    ]
+  },
+  "1401816601979912353": {
+    "header": "Failure to receive testnet tokens from the Discord faucet.",
+    "topic_id": "1401816601979912353",
+    "actual_date": "2025-08-04T06:55:10+00:00",
+    "answer_id": "1401818417824268338",
+    "label": "suggestion",
+    "solution": "The testnet faucet is currently overloaded; users should retry later.",
+    "whole_thread": [
+      {
+        "message_id": "1401816601979912353",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401816809631645736",
+        "parent_id": "1401816601979912353"
+      },
+      {
+        "message_id": "1401817929326006273",
+        "parent_id": "1401816809631645736"
+      },
+      {
+        "message_id": "1401818417824268338",
+        "parent_id": "1401817929326006273"
+      },
+      {
+        "message_id": "1401819877291069480",
+        "parent_id": "1401818417824268338"
+      },
+      {
+        "message_id": "1401820745151152190",
+        "parent_id": "1401818417824268338"
+      }
+    ]
+  },
+  "1401842259925663868": {
+    "header": "Inquiry about zklogin salt management options and access to developer channels.",
+    "topic_id": "1401842259925663868",
+    "actual_date": "2025-08-04T08:24:12+00:00",
+    "answer_id": "1401842508870324254",
+    "label": "outside",
+    "solution": "Users are directed to ask zklogin questions in the developer channel and follow steps in the access channel to gain typing ability.",
+    "whole_thread": [
+      {
+        "message_id": "1401842259925663868",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401842508870324254",
+        "parent_id": "1401842259925663868"
+      },
+      {
+        "message_id": "1401842542689124445",
+        "parent_id": "1401842508870324254"
+      },
+      {
+        "message_id": "1401843067648213075",
+        "parent_id": "1401842542689124445"
+      },
+      {
+        "message_id": "1401843153933434931",
+        "parent_id": "1401843067648213075"
+      }
+    ]
+  },
+  "1401869262083326033": {
+    "header": "Error preventing transactions in Slush wallet.",
+    "topic_id": "1401869262083326033",
+    "actual_date": "2025-08-04T10:18:28+00:00",
+    "answer_id": "1401870388102828122",
+    "label": "resolved",
+    "solution": "The user's issue was addressed in another channel.",
+    "whole_thread": [
+      {
+        "message_id": "1401869262083326033",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401869449249951824",
+        "parent_id": "1401869262083326033"
+      },
+      {
+        "message_id": "1401869898505785406",
+        "parent_id": "1401869449249951824"
+      },
+      {
+        "message_id": "1401870388102828122",
+        "parent_id": "1401869262083326033"
+      },
+      {
+        "message_id": "1401871908378509384",
+        "parent_id": "1401870388102828122"
+      }
+    ]
+  },
+  "1401888138577580074": {
+    "header": "Unable to access an old SUI wallet/address and missing funds.",
+    "topic_id": "1401888138577580074",
+    "actual_date": "2025-08-04T11:41:03+00:00",
+    "answer_id": "1401891133679730719",
+    "label": "suggestion",
+    "solution": "The user is advised to try importing the wallet with the correct phrase. If issues persist, they can send the address via direct message to an admin after enabling DM settings.",
+    "whole_thread": [
+      {
+        "message_id": "1401888138577580074",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401888476273573959",
+        "parent_id": "1401888138577580074"
+      },
+      {
+        "message_id": "1401888589767249970",
+        "parent_id": "1401888138577580074"
+      },
+      {
+        "message_id": "1401889865276063844",
+        "parent_id": "1401888476273573959"
+      },
+      {
+        "message_id": "1401890218021228685",
+        "parent_id": "1401889865276063844"
+      },
+      {
+        "message_id": "1401890925575274497",
+        "parent_id": "1401890218021228685"
+      },
+      {
+        "message_id": "1401891133679730719",
+        "parent_id": "1401890925575274497"
+      },
+      {
+        "message_id": "1401891575985864855",
+        "parent_id": "1401891133679730719"
+      },
+      {
+        "message_id": "1401891685981749289",
+        "parent_id": "1401891575985864855"
+      },
+      {
+        "message_id": "1401892578600681694",
+        "parent_id": "1401891685981749289"
+      },
+      {
+        "message_id": "1401892692769767445",
+        "parent_id": "1401892578600681694"
+      }
+    ]
+  },
+  "1401916508287926272": {
+    "header": "Difficulty bridging USDC from Bybit to Slush wallet via SUI chain and transaction approval issues.",
+    "topic_id": "1401916508287926272",
+    "actual_date": "2025-08-04T23:15:18+00:00",
+    "answer_id": "1402063912987263149",
+    "label": "suggestion",
+    "solution": "Users can bridge USDC to Sui using bridge.sui.io/bridge-usdc, connecting their OKX wallet to the Arbitrum chain. Ensure sufficient SUI for gas fees (minimum 0.05 SUI) in the Slush wallet. If transactions fail to approve, close the bridge tab and retry. If issues persist, follow the provided Discord link for further assistance.",
+    "whole_thread": [
+      {
+        "message_id": "1401916508287926272",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401916768062144523",
+        "parent_id": "1401916508287926272"
+      },
+      {
+        "message_id": "1401917474030620813",
+        "parent_id": "1401916768062144523"
+      },
+      {
+        "message_id": "1401917794874036234",
+        "parent_id": "1401917474030620813"
+      },
+      {
+        "message_id": "1401918528260669612",
+        "parent_id": "1401917794874036234"
+      },
+      {
+        "message_id": "1401919626908139550",
+        "parent_id": "1401918528260669612"
+      },
+      {
+        "message_id": "1401921327924772995",
+        "parent_id": "1401919626908139550"
+      },
+      {
+        "message_id": "1401921702698422284",
+        "parent_id": "1401921327924772995"
+      },
+      {
+        "message_id": "1401922519958818876",
+        "parent_id": "1401921702698422284"
+      },
+      {
+        "message_id": "1401925665594540153",
+        "parent_id": "1401922519958818876"
+      },
+      {
+        "message_id": "1402045789982822623",
+        "parent_id": "1401925665594540153"
+      },
+      {
+        "message_id": "1402045968819556423",
+        "parent_id": "1402045789982822623"
+      },
+      {
+        "message_id": "1402047593390932029",
+        "parent_id": "1402045789982822623"
+      },
+      {
+        "message_id": "1402056017495457823",
+        "parent_id": "1402047593390932029"
+      },
+      {
+        "message_id": "1402058374534795344",
+        "parent_id": "1402056017495457823"
+      },
+      {
+        "message_id": "1402059245725421640",
+        "parent_id": "1402058374534795344"
+      },
+      {
+        "message_id": "1402059436004081755",
+        "parent_id": "1402059245725421640"
+      },
+      {
+        "message_id": "1402059607853236324",
+        "parent_id": "1402059436004081755"
+      },
+      {
+        "message_id": "1402060193755435018",
+        "parent_id": "1402059607853236324"
+      },
+      {
+        "message_id": "1402061441950941297",
+        "parent_id": "1402060193755435018"
+      },
+      {
+        "message_id": "1402063912987263149",
+        "parent_id": "1402061441950941297"
+      },
+      {
+        "message_id": "1402066764442894347",
+        "parent_id": "1402063912987263149"
+      },
+      {
+        "message_id": "1402067034250150080",
+        "parent_id": "1402066764442894347"
+      },
+      {
+        "message_id": "1402067406720860191",
+        "parent_id": "1402067034250150080"
+      }
+    ]
+  },
+  "1401936592527949947": {
+    "header": "Unable to send USDC from Trustwallet on Sui chain despite having enough gas fees.",
+    "topic_id": "1401936592527949947",
+    "actual_date": "2025-08-04T15:23:36+00:00",
+    "answer_id": "1401942950849806498",
+    "label": "suggestion",
+    "solution": "The user is advised that Trustwallet might be requesting an unusually high gas fee. They should contact Trustwallet support or use the recommended Slush wallet. Support for third-party wallets cannot be provided.",
+    "whole_thread": [
+      {
+        "message_id": "1401936592527949947",
+        "parent_id": null
+      },
+      {
+        "message_id": "1401936748891607201",
+        "parent_id": "1401936592527949947"
+      },
+      {
+        "message_id": "1401937934269157377",
+        "parent_id": "1401936748891607201"
+      },
+      {
+        "message_id": "1401938194571985007",
+        "parent_id": "1401937934269157377"
+      },
+      {
+        "message_id": "1401938804671254579",
+        "parent_id": "1401938194571985007"
+      },
+      {
+        "message_id": "1401938939337638019",
+        "parent_id": "1401938804671254579"
+      },
+      {
+        "message_id": "1401939505929523252",
+        "parent_id": "1401936748891607201"
+      },
+      {
+        "message_id": "1401942162819780689",
+        "parent_id": "1401939505929523252"
+      },
+      {
+        "message_id": "1401942950849806498",
+        "parent_id": "1401942162819780689"
+      },
+      {
+        "message_id": "1401943720521105489",
+        "parent_id": "1401942950849806498"
+      },
+      {
+        "message_id": "1401945211357233233",
+        "parent_id": "1401943720521105489"
+      },
+      {
+        "message_id": "1401946921547075677",
+        "parent_id": "1401945211357233233"
+      },
+      {
+        "message_id": "1401947054825275555",
+        "parent_id": "1401946921547075677"
+      },
+      {
+        "message_id": "1401948525847122081",
+        "parent_id": "1401947054825275555"
+      },
+      {
+        "message_id": "1401948699709542402",
+        "parent_id": "1401948525847122081"
+      }
+    ]
+  },
+  "1402168686953103360": {
+    "header": "Testnet faucet stopped sending tokens.",
+    "topic_id": "1402168686953103360",
+    "actual_date": "2025-08-05T06:08:09+00:00",
+    "answer_id": "1402171303460601887",
+    "label": "suggestion",
+    "solution": "The testnet faucet is overloaded; users should retry later.",
+    "whole_thread": [
+      {
+        "message_id": "1402168686953103360",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402171303460601887",
+        "parent_id": "1402168686953103360"
+      }
+    ]
+  },
+  "1402173985940181042": {
+    "header": "Discord faucet for Sui tokens is not working.",
+    "topic_id": "1402173985940181042",
+    "actual_date": "2025-08-05T06:31:26+00:00",
+    "answer_id": "1402174281634414683",
+    "label": "resolved",
+    "solution": "The Discord faucet is overloaded. Users should be cautious of scams and not share wallet details.",
+    "whole_thread": [
+      {
+        "message_id": "1402173985940181042",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402174281634414683",
+        "parent_id": "1402173985940181042"
+      },
+      {
+        "message_id": "1402177160143306824",
+        "parent_id": "1402174281634414683"
+      }
+    ]
+  },
+  "1402218180285562911": {
+    "header": "Testnet faucet not providing tokens despite multiple attempts.",
+    "topic_id": "1402218180285562911",
+    "actual_date": "2025-08-05T09:17:20+00:00",
+    "answer_id": "1402218911054954496",
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1402218180285562911",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402218363152760902",
+        "parent_id": "1402218180285562911"
+      },
+      {
+        "message_id": "1402218402860236851",
+        "parent_id": "1402218180285562911"
+      },
+      {
+        "message_id": "1402218540307582987",
+        "parent_id": "1402218402860236851"
+      },
+      {
+        "message_id": "1402218911054954496",
+        "parent_id": "1402218540307582987"
+      }
+    ]
+  },
+  "1402232243270713448": {
+    "header": "Difficulty instantiating a \"Random\" object for testing in Sui Move and access issues to developer channels.",
+    "topic_id": "1402232243270713448",
+    "actual_date": "2025-08-05T10:17:30+00:00",
+    "answer_id": "1402233872846028830",
+    "label": "outside",
+    "solution": "Users should post technical questions about Sui Move development in the designated developer channel. If access is an issue, follow the steps in the specified channel to obtain the developer badge.",
+    "whole_thread": [
+      {
+        "message_id": "1402232243270713448",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402232359591608471",
+        "parent_id": "1402232243270713448"
+      },
+      {
+        "message_id": "1402232406827597825",
+        "parent_id": "1402232243270713448"
+      },
+      {
+        "message_id": "1402233872846028830",
+        "parent_id": "1402232406827597825"
+      },
+      {
+        "message_id": "1402234054589288470",
+        "parent_id": "1402233872846028830"
+      }
+    ]
+  },
+  "1402271470159401072": {
+    "header": "Unable to import old Sui wallet using a seed phrase on the web application.",
+    "topic_id": "1402271470159401072",
+    "actual_date": "2025-08-05T22:12:15+00:00",
+    "answer_id": "1402278761071906840",
+    "label": "resolved",
+    "solution": "Importing a Sui wallet using a seed phrase is not supported on the web application. Users must use the mobile application or browser extension for this functionality.",
+    "whole_thread": [
+      {
+        "message_id": "1402271470159401072",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402274720166051971",
+        "parent_id": "1402271470159401072"
+      },
+      {
+        "message_id": "1402275343540420741",
+        "parent_id": "1402274720166051971"
+      },
+      {
+        "message_id": "1402277139205722164",
+        "parent_id": "1402275343540420741"
+      },
+      {
+        "message_id": "1402277235863457902",
+        "parent_id": "1402277139205722164"
+      },
+      {
+        "message_id": "1402277740899471481",
+        "parent_id": "1402277235863457902"
+      },
+      {
+        "message_id": "1402278517877506119",
+        "parent_id": "1402277740899471481"
+      },
+      {
+        "message_id": "1402278695397494907",
+        "parent_id": "1402278517877506119"
+      },
+      {
+        "message_id": "1402278761071906840",
+        "parent_id": "1402278517877506119"
+      },
+      {
+        "message_id": "1402279575970512896",
+        "parent_id": "1402278761071906840"
+      },
+      {
+        "message_id": "1402412075782897695",
+        "parent_id": "1402277740899471481"
+      },
+      {
+        "message_id": "1402413925299130408",
+        "parent_id": "1402412075782897695"
+      }
+    ]
+  },
+  "1402364324437299270": {
+    "header": "Faucet is not working.",
+    "topic_id": "1402364324437299270",
+    "actual_date": "2025-08-05T18:59:17+00:00",
+    "answer_id": "1402365362929926216",
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1402364324437299270",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402365362929926216",
+        "parent_id": "1402364324437299270"
+      }
+    ]
+  },
+  "1402482960539844708": {
+    "header": "Problem transferring NFTs (kiosks) to another wallet using Slush link.",
+    "topic_id": "1402482960539844708",
+    "actual_date": "2025-08-06T03:41:05+00:00",
+    "answer_id": "1402496679529287700",
+    "label": "suggestion",
+    "solution": "NFTs in kiosks cannot be directly transferred. They must be transferred via Tradeport and then claimed on the destination wallet.",
+    "whole_thread": [
+      {
+        "message_id": "1402482960539844708",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402483118363119698",
+        "parent_id": "1402482960539844708"
+      },
+      {
+        "message_id": "1402496679529287700",
+        "parent_id": "1402482960539844708"
+      }
+    ]
+  },
+  "1402581770951589901": {
+    "header": "Withdrawal time for Wal after unstaking.",
+    "topic_id": "1402581770951589901",
+    "actual_date": "2025-08-06T09:41:16+00:00",
+    "answer_id": "1402584501909065770",
+    "label": "resolved",
+    "solution": "Withdrawing Wal after unstaking takes approximately 14 days.",
+    "whole_thread": [
+      {
+        "message_id": "1402581770951589901",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402584501909065770",
+        "parent_id": "1402581770951589901"
+      },
+      {
+        "message_id": "1402587321726926880",
+        "parent_id": "1402584501909065770"
+      }
+    ]
+  },
+  "1402636281107714169": {
+    "header": "Accidental transfer of xBTC to a private key address on the Sui chain.",
+    "topic_id": "1402636281107714169",
+    "actual_date": "2025-08-06T13:04:28+00:00",
+    "answer_id": "1402638461533421640",
+    "label": "suggestion",
+    "solution": "It is not possible to recover xBTC assets accidentally transferred to a private key address on the Sui chain.",
+    "whole_thread": [
+      {
+        "message_id": "1402636281107714169",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402638461533421640",
+        "parent_id": "1402636281107714169"
+      }
+    ]
+  },
+  "1402648582481252412": {
+    "header": "Safety comparison of minting NFTs on Sui wallet vs. EVM.",
+    "topic_id": "1402648582481252412",
+    "actual_date": "2025-08-06T13:53:23+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1402648582481252412",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402650771329384488",
+        "parent_id": "1402648582481252412"
+      }
+    ]
+  },
+  "1402740543401754705": {
+    "header": "Rate limiting issue on the get zkLogin endpoint for Enoki enterprise plan users.",
+    "topic_id": "1402740543401754705",
+    "actual_date": "2025-08-06T19:57:24+00:00",
+    "answer_id": "1402741758470918175",
+    "label": "outside",
+    "solution": "Users experiencing rate limiting on the get zkLogin endpoint should seek assistance in the specified support channel and follow the provided guide if permission issues arise.",
+    "whole_thread": [
+      {
+        "message_id": "1402740543401754705",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402740763531677797",
+        "parent_id": "1402740543401754705"
+      },
+      {
+        "message_id": "1402741758470918175",
+        "parent_id": "1402740543401754705"
+      },
+      {
+        "message_id": "1402741990524715200",
+        "parent_id": "1402741758470918175"
+      },
+      {
+        "message_id": "1402742377285943316",
+        "parent_id": "1402741990524715200"
+      }
+    ]
+  },
+  "1402780985640091678": {
+    "header": "Seeking support for connecting a wallet to Slush Wallet.",
+    "topic_id": "1402780985640091678",
+    "actual_date": "2025-08-06T22:52:41+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1402780985640091678",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402781834626203811",
+        "parent_id": "1402780985640091678"
+      },
+      {
+        "message_id": "1402782581996650587",
+        "parent_id": "1402780985640091678"
+      },
+      {
+        "message_id": "1402786454429761738",
+        "parent_id": "1402780985640091678"
+      },
+      {
+        "message_id": "1402786489972166789",
+        "parent_id": "1402781834626203811"
+      }
+    ]
+  },
+  "1402825058275164293": {
+    "header": "User is confused about project tasks and rewards, specifically regarding passport minting, bridge testing, and testnet activities, and asks for clarification on what tasks are rewarded.",
+    "topic_id": "1402825058275164293",
+    "actual_date": "2025-08-07T19:58:18+00:00",
+    "answer_id": "1403104992713248838",
+    "label": "outside",
+    "solution": "Users should refer to the official X (formerly Twitter) post for details on project activities and potential benefits, as there are no ongoing tasks for rewards directly within the chat.",
+    "whole_thread": [
+      {
+        "message_id": "1402825058275164293",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402827830076772423",
+        "parent_id": "1402825058275164293"
+      },
+      {
+        "message_id": "1403025331966840954",
+        "parent_id": "1402827830076772423"
+      },
+      {
+        "message_id": "1403032187028377611",
+        "parent_id": "1403025331966840954"
+      },
+      {
+        "message_id": "1403101473394655322",
+        "parent_id": "1403032187028377611"
+      },
+      {
+        "message_id": "1403104992713248838",
+        "parent_id": "1403101473394655322"
+      }
+    ]
+  },
+  "1402892955026456648": {
+    "header": "User needs to know how to find their private key on the Slush app.",
+    "topic_id": "1402892955026456648",
+    "actual_date": "2025-08-07T06:04:28+00:00",
+    "answer_id": "1402895151801569383",
+    "label": "suggestion",
+    "solution": "To find the private key on the Slush app, click on the wallet address/username box, go to 'manage account', and then select the 'export private key' option for specific accounts.",
+    "whole_thread": [
+      {
+        "message_id": "1402892955026456648",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402895151801569383",
+        "parent_id": "1402892955026456648"
+      }
+    ]
+  },
+  "1402912164922265630": {
+    "header": "User is unable to transfer tokens due to insufficient SUI gas fees and requests assistance.",
+    "topic_id": "1402912164922265630",
+    "actual_date": "2025-08-07T08:58:37+00:00",
+    "answer_id": "1402916518949290064",
+    "label": "resolved",
+    "solution": "The user was advised to DM their wallet address to an admin to receive the necessary SUI for gas fees, which resolved the issue.",
+    "whole_thread": [
+      {
+        "message_id": "1402912164922265630",
+        "parent_id": null
+      },
+      {
+        "message_id": "1402916518949290064",
+        "parent_id": "1402912164922265630"
+      },
+      {
+        "message_id": "1402930755205599314",
+        "parent_id": "1402916518949290064"
+      },
+      {
+        "message_id": "1402938978377928756",
+        "parent_id": "1402930755205599314"
+      }
+    ]
+  },
+  "1403002167794864201": {
+    "header": "User is experiencing failed transactions when using the Slush wallet and seeks help.",
+    "topic_id": "1403002167794864201",
+    "actual_date": "2025-08-07T13:34:23+00:00",
+    "answer_id": "1403008377495486474",
+    "label": "suggestion",
+    "solution": "To ensure transactions are completed, the user needs to open the application with the Slush wallet's built-in browser for proper connection.",
+    "whole_thread": [
+      {
+        "message_id": "1403002167794864201",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403004249276682331",
+        "parent_id": "1403002167794864201"
+      },
+      {
+        "message_id": "1403008377495486474",
+        "parent_id": "1403002167794864201"
+      }
+    ]
+  },
+  "1403084392628228116": {
+    "header": "User is not receiving Sui testnet tokens for several days.",
+    "topic_id": "1403084392628228116",
+    "actual_date": "2025-08-07T18:41:38+00:00",
+    "answer_id": "1403085696239145043",
+    "label": "suggestion",
+    "solution": "The issue of not receiving Sui testnet tokens is currently being worked on, and users are advised to try again later.",
+    "whole_thread": [
+      {
+        "message_id": "1403084392628228116",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403085577016049745",
+        "parent_id": "1403084392628228116"
+      },
+      {
+        "message_id": "1403085696239145043",
+        "parent_id": "1403084392628228116"
+      }
+    ]
+  },
+  "1403090036672561173": {
+    "header": "User is unable to import a wallet created with Google from Sui Snap (MetaMask) to Slush wallet on PC, despite it working on Android, and inquires about future implementation of this feature.",
+    "topic_id": "1403090036672561173",
+    "actual_date": "2025-08-07T19:05:26+00:00",
+    "answer_id": "1403090918734692552",
+    "label": "resolved",
+    "solution": "The feature to import Google-created wallets from Sui Snap (MetaMask) to Slush wallet on PC is not currently enabled, and there is no information suggesting it will be implemented in the future.",
+    "whole_thread": [
+      {
+        "message_id": "1403090036672561173",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403090918734692552",
+        "parent_id": "1403090036672561173"
+      },
+      {
+        "message_id": "1403091407849132082",
+        "parent_id": "1403090918734692552"
+      },
+      {
+        "message_id": "1403091603010093097",
+        "parent_id": "1403091407849132082"
+      },
+      {
+        "message_id": "1403091688452522085",
+        "parent_id": "1403091603010093097"
+      }
+    ]
+  },
+  "1403094763900502146": {
+    "header": "User's wallet assets were transferred by fraudsters, and they are asking if the assets can be recovered.",
+    "topic_id": "1403094763900502146",
+    "actual_date": "2025-08-07T19:21:45+00:00",
+    "answer_id": "1403095436331454635",
+    "label": "suggestion",
+    "solution": "Unfortunately, assets transferred by fraudsters from a wallet cannot be recovered.",
+    "whole_thread": [
+      {
+        "message_id": "1403094763900502146",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403095293272133715",
+        "parent_id": "1403094763900502146"
+      },
+      {
+        "message_id": "1403095436331454635",
+        "parent_id": "1403094763900502146"
+      },
+      {
+        "message_id": "1403095793807786014",
+        "parent_id": "1403095436331454635"
+      }
+    ]
+  },
+  "1403110497913667655": {
+    "header": "User created a memecoin via 20Labs and needs to remove the mint function, but couldn't find an option during creation and failed to transfer TreasureCap authority to a dead wallet on Suivision. They want to know if they can disable the mint function independently of 20Labs.",
+    "topic_id": "1403110497913667655",
+    "actual_date": "2025-08-07T20:53:02+00:00",
+    "answer_id": "1403115319815442547",
+    "label": "outside",
+    "solution": "The user was informed that if the 20Labs dashboard indicates the mint function cannot be disabled, then it's likely not possible through their platform. For further inquiries on burning the mint function independently, the user was directed to join the developer channel for specialized support.",
+    "whole_thread": [
+      {
+        "message_id": "1403110497913667655",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403110994779181107",
+        "parent_id": "1403110497913667655"
+      },
+      {
+        "message_id": "1403111273708650496",
+        "parent_id": "1403110994779181107"
+      },
+      {
+        "message_id": "1403111444764954646",
+        "parent_id": "1403110994779181107"
+      },
+      {
+        "message_id": "1403111594036301835",
+        "parent_id": "1403111444764954646"
+      },
+      {
+        "message_id": "1403111791080374282",
+        "parent_id": "1403111594036301835"
+      },
+      {
+        "message_id": "1403112410847514818",
+        "parent_id": "1403111791080374282"
+      },
+      {
+        "message_id": "1403113647152042168",
+        "parent_id": "1403111791080374282"
+      },
+      {
+        "message_id": "1403113754702516224",
+        "parent_id": "1403112410847514818"
+      },
+      {
+        "message_id": "1403113930821472457",
+        "parent_id": "1403113647152042168"
+      },
+      {
+        "message_id": "1403114076992704665",
+        "parent_id": "1403113754702516224"
+      },
+      {
+        "message_id": "1403114201828032594",
+        "parent_id": "1403113930821472457"
+      },
+      {
+        "message_id": "1403114847855579136",
+        "parent_id": "1403114201828032594"
+      },
+      {
+        "message_id": "1403115319815442547",
+        "parent_id": "1403114847855579136"
+      },
+      {
+        "message_id": "1403115619519566015",
+        "parent_id": "1403115319815442547"
+      },
+      {
+        "message_id": "1403118765108887632",
+        "parent_id": "1403115619519566015"
+      }
+    ]
+  },
+  "1403192822726787269": {
+    "header": "User is unable to withdraw SUI from an account connected to Google.",
+    "topic_id": "1403192822726787269",
+    "actual_date": "2025-08-08T02:04:05+00:00",
+    "answer_id": "1403195246107557899",
+    "label": "suggestion",
+    "solution": "User needs to send screenshots of the issue to the admin via direct message for further assistance.",
+    "whole_thread": [
+      {
+        "message_id": "1403192822726787269",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403193106689691669",
+        "parent_id": "1403192822726787269"
+      },
+      {
+        "message_id": "1403194143794008124",
+        "parent_id": "1403193106689691669"
+      },
+      {
+        "message_id": "1403194381237878785",
+        "parent_id": "1403194143794008124"
+      },
+      {
+        "message_id": "1403194786483015823",
+        "parent_id": "1403194381237878785"
+      },
+      {
+        "message_id": "1403195246107557899",
+        "parent_id": "1403194786483015823"
+      },
+      {
+        "message_id": "1403197044511736032",
+        "parent_id": "1403195246107557899"
+      }
+    ]
+  },
+  "1403239119429304370": {
+    "header": "Inquiry about enabling passkey as an extra layer of security.",
+    "topic_id": "1403239119429304370",
+    "actual_date": "2025-08-08T05:13:11+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1403239119429304370",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403244633449828474",
+        "parent_id": "1403239119429304370"
+      }
+    ]
+  },
+  "1403243294175268876": {
+    "header": "Difficulty obtaining publicKey for Slush wallets connected via Google account during Sui integration.",
+    "topic_id": "1403243294175268876",
+    "actual_date": "2025-08-08T05:13:57+00:00",
+    "answer_id": "1403244825364533358",
+    "label": "outside",
+    "solution": "User is advised to get a developer role by checking a specific channel and then ask the question in another designated channel.",
+    "whole_thread": [
+      {
+        "message_id": "1403243294175268876",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403244825364533358",
+        "parent_id": "1403243294175268876"
+      }
+    ]
+  },
+  "1403301897531691171": {
+    "header": "Discord faucet is not working.",
+    "topic_id": "1403301897531691171",
+    "actual_date": "2025-08-08T09:06:54+00:00",
+    "answer_id": "1403303450162237575",
+    "label": "suggestion",
+    "solution": "The issue with the Discord faucet has been reported to the team; users are advised to try again after a while.",
+    "whole_thread": [
+      {
+        "message_id": "1403301897531691171",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403303450162237575",
+        "parent_id": "1403301897531691171"
+      }
+    ]
+  },
+  "1403314759537000500": {
+    "header": "Inquiry about calling sui_dryRunTransactionBlock or sui_devInspectTransactionBlock using GraphQL.",
+    "topic_id": "1403314759537000500",
+    "actual_date": "2025-08-08T10:07:00+00:00",
+    "answer_id": "1403318574155567195",
+    "label": "outside",
+    "solution": "User is advised to post the question in a specific channel for further assistance.",
+    "whole_thread": [
+      {
+        "message_id": "1403314759537000500",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403318574155567195",
+        "parent_id": "1403314759537000500"
+      }
+    ]
+  },
+  "1403320779978047628": {
+    "header": "User is experiencing issues with claiming faucet funds and believes their wallet needs activation.",
+    "topic_id": "1403320779978047628",
+    "actual_date": "2025-08-08T10:21:47+00:00",
+    "answer_id": "1403322260831342613",
+    "label": "suggestion",
+    "solution": "There is no wallet activation process, and the claim issue might be temporary. User is advised to try claiming faucet funds again later.",
+    "whole_thread": [
+      {
+        "message_id": "1403320779978047628",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403320980469715025",
+        "parent_id": "1403320779978047628"
+      },
+      {
+        "message_id": "1403321099671961600",
+        "parent_id": "1403320980469715025"
+      },
+      {
+        "message_id": "1403321179053232139",
+        "parent_id": "1403321099671961600"
+      },
+      {
+        "message_id": "1403321253321904249",
+        "parent_id": "1403321179053232139"
+      },
+      {
+        "message_id": "1403321327577858169",
+        "parent_id": "1403321253321904249"
+      },
+      {
+        "message_id": "1403321599184208085",
+        "parent_id": "1403321327577858169"
+      },
+      {
+        "message_id": "1403321918647435307",
+        "parent_id": "1403321327577858169"
+      },
+      {
+        "message_id": "1403322260831342613",
+        "parent_id": "1403321599184208085"
+      },
+      {
+        "message_id": "1403322293756756030",
+        "parent_id": "1403322260831342613"
+      }
+    ]
+  },
+  "1403324742487773295": {
+    "header": "NFT listed on Tradeport was transferred to an unknown wallet without user's permission, and the user suspects a scam.",
+    "topic_id": "1403324742487773295",
+    "actual_date": "2025-08-08T20:02:46+00:00",
+    "answer_id": "1403379054433796136",
+    "label": "suggestion",
+    "solution": "The user is advised to contact Tradeport again as the issue seems to be related to the marketplace's handling of the NFT, especially if the user's wallet was not compromised. The admin also clarified that listing a kiosk NFT on a marketplace does not transfer ownership.",
+    "whole_thread": [
+      {
+        "message_id": "1403324742487773295",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403325423927951410",
+        "parent_id": "1403324742487773295"
+      },
+      {
+        "message_id": "1403325578035204108",
+        "parent_id": "1403325423927951410"
+      },
+      {
+        "message_id": "1403326329394565151",
+        "parent_id": "1403325578035204108"
+      },
+      {
+        "message_id": "1403326526279127121",
+        "parent_id": "1403326329394565151"
+      },
+      {
+        "message_id": "1403326880794542185",
+        "parent_id": "1403326526279127121"
+      },
+      {
+        "message_id": "1403333235521617940",
+        "parent_id": "1403326880794542185"
+      },
+      {
+        "message_id": "1403333402173640817",
+        "parent_id": "1403333235521617940"
+      },
+      {
+        "message_id": "1403333540330082394",
+        "parent_id": "1403333402173640817"
+      },
+      {
+        "message_id": "1403333934237880473",
+        "parent_id": "1403333402173640817"
+      },
+      {
+        "message_id": "1403333992966656050",
+        "parent_id": "1403333540330082394"
+      },
+      {
+        "message_id": "1403334378918121594",
+        "parent_id": "1403333934237880473"
+      },
+      {
+        "message_id": "1403334586515062959",
+        "parent_id": "1403334378918121594"
+      },
+      {
+        "message_id": "1403339185829449769",
+        "parent_id": "1403334586515062959"
+      },
+      {
+        "message_id": "1403340085411446916",
+        "parent_id": "1403339185829449769"
+      },
+      {
+        "message_id": "1403358414708412497",
+        "parent_id": "1403340085411446916"
+      },
+      {
+        "message_id": "1403358536964243466",
+        "parent_id": "1403358414708412497"
+      },
+      {
+        "message_id": "1403365470568054994",
+        "parent_id": "1403358536964243466"
+      },
+      {
+        "message_id": "1403366006356840568",
+        "parent_id": "1403365470568054994"
+      },
+      {
+        "message_id": "1403370772428361781",
+        "parent_id": "1403366006356840568"
+      },
+      {
+        "message_id": "1403370893161529437",
+        "parent_id": "1403370772428361781"
+      },
+      {
+        "message_id": "1403371090927026246",
+        "parent_id": "1403370893161529437"
+      },
+      {
+        "message_id": "1403371277061718018",
+        "parent_id": "1403371090927026246"
+      },
+      {
+        "message_id": "1403373932769317025",
+        "parent_id": "1403371277061718018"
+      },
+      {
+        "message_id": "1403377225553809528",
+        "parent_id": "1403373932769317025"
+      },
+      {
+        "message_id": "1403378401712013374",
+        "parent_id": "1403377225553809528"
+      },
+      {
+        "message_id": "1403379054433796136",
+        "parent_id": "1403378401712013374"
+      },
+      {
+        "message_id": "1403380231179341855",
+        "parent_id": "1403378401712013374"
+      },
+      {
+        "message_id": "1403384782381121576",
+        "parent_id": "1403379054433796136"
+      },
+      {
+        "message_id": "1403385226993995836",
+        "parent_id": "1403380231179341855"
+      },
+      {
+        "message_id": "1403385669530812448",
+        "parent_id": "1403379054433796136"
+      },
+      {
+        "message_id": "1403385764766679072",
+        "parent_id": "1403385226993995836"
+      },
+      {
+        "message_id": "1403390218563883091",
+        "parent_id": "1403385764766679072"
+      },
+      {
+        "message_id": "1403415464729907381",
+        "parent_id": "1403390218563883091"
+      },
+      {
+        "message_id": "1403428208283746384",
+        "parent_id": "1403415464729907381"
+      },
+      {
+        "message_id": "1403456564718731265",
+        "parent_id": "1403415464729907381"
+      },
+      {
+        "message_id": "1403458428835336265",
+        "parent_id": "1403456564718731265"
+      },
+      {
+        "message_id": "1403462565316788356",
+        "parent_id": "1403458428835336265"
+      },
+      {
+        "message_id": "1403464942786707558",
+        "parent_id": "1403462565316788356"
+      },
+      {
+        "message_id": "1403468504664903862",
+        "parent_id": "1403464942786707558"
+      }
+    ]
+  },
+  "1403356527779385344": {
+    "header": "User is not receiving test SUI from the Discord faucet.",
+    "topic_id": "1403356527779385344",
+    "actual_date": "2025-08-08T12:50:51+00:00",
+    "answer_id": "1403359808098140210",
+    "label": "suggestion",
+    "solution": "The issue with the Discord faucet has been reported to the team; users are advised to continue trying.",
+    "whole_thread": [
+      {
+        "message_id": "1403356527779385344",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403356627624787969",
+        "parent_id": "1403356527779385344"
+      },
+      {
+        "message_id": "1403359598332608523",
+        "parent_id": "1403356627624787969"
+      },
+      {
+        "message_id": "1403359808098140210",
+        "parent_id": "1403359598332608523"
+      }
+    ]
+  },
+  "1403368687565672489": {
+    "header": "User accidentally sent funds to a wrong wallet address.",
+    "topic_id": "1403368687565672489",
+    "actual_date": "2025-08-08T13:34:50+00:00",
+    "answer_id": "1403370875301925037",
+    "label": "resolved",
+    "solution": "Assets sent to a wrong wallet address are lost and cannot be recovered.",
+    "whole_thread": [
+      {
+        "message_id": "1403368687565672489",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403370875301925037",
+        "parent_id": "1403368687565672489"
+      }
+    ]
+  },
+  "1403378981939708075": {
+    "header": "User is unable to import a Gmail-connected wallet to OKX because they cannot access passphrase or private keys.",
+    "topic_id": "1403378981939708075",
+    "actual_date": "2025-08-08T14:19:54+00:00",
+    "answer_id": "1403382113298022491",
+    "label": "resolved",
+    "solution": "It is not currently possible to import email-based wallets using passphrase or private keys.",
+    "whole_thread": [
+      {
+        "message_id": "1403378981939708075",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403379495070601278",
+        "parent_id": "1403378981939708075"
+      },
+      {
+        "message_id": "1403380697489735802",
+        "parent_id": "1403379495070601278"
+      },
+      {
+        "message_id": "1403380885666922536",
+        "parent_id": "1403378981939708075"
+      },
+      {
+        "message_id": "1403382113298022491",
+        "parent_id": "1403378981939708075"
+      },
+      {
+        "message_id": "1403382220390924338",
+        "parent_id": "1403382113298022491"
+      }
+    ]
+  },
+  "1403402647830003763": {
+    "header": "Inquiry about whether SUI sent to a dead address or burned tokens can still be used.",
+    "topic_id": "1403402647830003763",
+    "actual_date": "2025-08-08T15:50:53+00:00",
+    "answer_id": "1403405115485982863",
+    "label": "resolved",
+    "solution": "No, SUI sent to a dead address or burned tokens cannot be used by anyone.",
+    "whole_thread": [
+      {
+        "message_id": "1403402647830003763",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403405115485982863",
+        "parent_id": "1403402647830003763"
+      }
+    ]
+  },
+  "1403514390640197755": {
+    "header": "User is unable to connect their Ledger device to the Slush wallet Chrome extension, receiving a \"Ledger not found\" error.",
+    "topic_id": "1403514390640197755",
+    "actual_date": "2025-08-08T23:12:07+00:00",
+    "answer_id": "1403515865084854302",
+    "label": "resolved",
+    "solution": "Try uninstalling and reinstalling the Slush wallet extension from Chrome, then attempt the Ledger connection again.",
+    "whole_thread": [
+      {
+        "message_id": "1403514390640197755",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403514677606219808",
+        "parent_id": "1403514390640197755"
+      },
+      {
+        "message_id": "1403515237495345162",
+        "parent_id": "1403514677606219808"
+      },
+      {
+        "message_id": "1403515727721267301",
+        "parent_id": "1403514390640197755"
+      },
+      {
+        "message_id": "1403515865084854302",
+        "parent_id": "1403514390640197755"
+      },
+      {
+        "message_id": "1403516156610084946",
+        "parent_id": "1403515865084854302"
+      }
+    ]
+  },
+  "1403537558322811012": {
+    "header": "User unable to join Discord server due to invalid invite",
+    "topic_id": "1403537558322811012",
+    "actual_date": "2025-08-09T09:16:11+00:00",
+    "answer_id": "1403651593748086885",
+    "label": "suggestion",
+    "solution": "The user's account might be IP blocked if they were banned on a different Discord account.",
+    "whole_thread": [
+      {
+        "message_id": "1403537558322811012",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403537691571781633",
+        "parent_id": "1403537558322811012"
+      },
+      {
+        "message_id": "1403537805862240297",
+        "parent_id": "1403537691571781633"
+      },
+      {
+        "message_id": "1403649141174702141",
+        "parent_id": "1403537805862240297"
+      },
+      {
+        "message_id": "1403651593748086885",
+        "parent_id": "1403649141174702141"
+      },
+      {
+        "message_id": "1403668174548897845",
+        "parent_id": "1403651593748086885"
+      }
+    ]
+  },
+  "1403553063444156486": {
+    "header": "ETH bridge claim delays due to rolling limit and high traffic",
+    "topic_id": "1403553063444156486",
+    "actual_date": "2025-08-09T13:12:30+00:00",
+    "answer_id": "1403670461560131705",
+    "label": "suggestion",
+    "solution": "The bridge has a rolling limit for security reasons during high volume times, requiring users to check periodically and claim manually. Funds are safe, and the team is working on increasing the bridge limit.",
+    "whole_thread": [
+      {
+        "message_id": "1403553063444156486",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403553199121633404",
+        "parent_id": "1403553063444156486"
+      },
+      {
+        "message_id": "1403554156761059442",
+        "parent_id": "1403553063444156486"
+      },
+      {
+        "message_id": "1403554709230321715",
+        "parent_id": "1403554156761059442"
+      },
+      {
+        "message_id": "1403554807410724886",
+        "parent_id": "1403554709230321715"
+      },
+      {
+        "message_id": "1403572810844082196",
+        "parent_id": "1403554807410724886"
+      },
+      {
+        "message_id": "1403573134384300143",
+        "parent_id": "1403572810844082196"
+      },
+      {
+        "message_id": "1403573908774326282",
+        "parent_id": "1403573134384300143"
+      },
+      {
+        "message_id": "1403574396790112286",
+        "parent_id": "1403573908774326282"
+      },
+      {
+        "message_id": "1403577536205819935",
+        "parent_id": "1403574396790112286"
+      },
+      {
+        "message_id": "1403579429086691328",
+        "parent_id": "1403577536205819935"
+      },
+      {
+        "message_id": "1403579767017701468",
+        "parent_id": "1403579429086691328"
+      },
+      {
+        "message_id": "1403579839092494378",
+        "parent_id": "1403579767017701468"
+      },
+      {
+        "message_id": "1403579930800947330",
+        "parent_id": "1403579839092494378"
+      },
+      {
+        "message_id": "1403580172367822989",
+        "parent_id": "1403579839092494378"
+      },
+      {
+        "message_id": "1403580352546607235",
+        "parent_id": "1403580172367822989"
+      },
+      {
+        "message_id": "1403597266010374194",
+        "parent_id": "1403580352546607235"
+      },
+      {
+        "message_id": "1403597399636840450",
+        "parent_id": "1403597266010374194"
+      },
+      {
+        "message_id": "1403599010790637710",
+        "parent_id": "1403597399636840450"
+      },
+      {
+        "message_id": "1403599313082384504",
+        "parent_id": "1403599010790637710"
+      },
+      {
+        "message_id": "1403601209385947266",
+        "parent_id": "1403599313082384504"
+      },
+      {
+        "message_id": "1403601568871485502",
+        "parent_id": "1403601209385947266"
+      },
+      {
+        "message_id": "1403603741319626792",
+        "parent_id": "1403601568871485502"
+      },
+      {
+        "message_id": "1403605611299733545",
+        "parent_id": "1403603741319626792"
+      },
+      {
+        "message_id": "1403605725799776307",
+        "parent_id": "1403605611299733545"
+      },
+      {
+        "message_id": "1403608754037198900",
+        "parent_id": "1403605725799776307"
+      },
+      {
+        "message_id": "1403609156593782905",
+        "parent_id": "1403608754037198900"
+      },
+      {
+        "message_id": "1403663245708886126",
+        "parent_id": "1403597266010374194"
+      },
+      {
+        "message_id": "1403663370665853018",
+        "parent_id": "1403609156593782905"
+      },
+      {
+        "message_id": "1403663463418560512",
+        "parent_id": "1403663370665853018"
+      },
+      {
+        "message_id": "1403663512408166430",
+        "parent_id": "1403663463418560512"
+      },
+      {
+        "message_id": "1403663686467457107",
+        "parent_id": "1403663370665853018"
+      },
+      {
+        "message_id": "1403663778515521647",
+        "parent_id": "1403663512408166430"
+      },
+      {
+        "message_id": "1403664084867743814",
+        "parent_id": "1403663686467457107"
+      },
+      {
+        "message_id": "1403666507313184798",
+        "parent_id": "1403664084867743814"
+      },
+      {
+        "message_id": "1403666594126893056",
+        "parent_id": "1403664084867743814"
+      },
+      {
+        "message_id": "1403666797860749454",
+        "parent_id": "1403666594126893056"
+      },
+      {
+        "message_id": "1403666926982664294",
+        "parent_id": "1403666797860749454"
+      },
+      {
+        "message_id": "1403667071090556998",
+        "parent_id": "1403666926982664294"
+      },
+      {
+        "message_id": "1403669081755877376",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403669544828014665",
+        "parent_id": "1403669081755877376"
+      },
+      {
+        "message_id": "1403670181707911199",
+        "parent_id": "1403669544828014665"
+      },
+      {
+        "message_id": "1403670461560131705",
+        "parent_id": "1403670181707911199"
+      },
+      {
+        "message_id": "1403683221161377834",
+        "parent_id": "1403670461560131705"
+      },
+      {
+        "message_id": "1403683472056258570",
+        "parent_id": "1403683221161377834"
+      },
+      {
+        "message_id": "1403685325326258187",
+        "parent_id": "1403683472056258570"
+      },
+      {
+        "message_id": "1403697297358979114",
+        "parent_id": "1403683472056258570"
+      },
+      {
+        "message_id": "1403698552533815408",
+        "parent_id": "1403697297358979114"
+      },
+      {
+        "message_id": "1403698903819223071",
+        "parent_id": "1403698552533815408"
+      },
+      {
+        "message_id": "1403699528493695127",
+        "parent_id": "1403698903819223071"
+      },
+      {
+        "message_id": "1403699689190068245",
+        "parent_id": "1403699528493695127"
+      },
+      {
+        "message_id": "1403700978498277416",
+        "parent_id": "1403699689190068245"
+      },
+      {
+        "message_id": "1403712719898808340",
+        "parent_id": "1403699689190068245"
+      },
+      {
+        "message_id": "1403712893538668596",
+        "parent_id": "1403712719898808340"
+      },
+      {
+        "message_id": "1403713206299525140",
+        "parent_id": "1403712893538668596"
+      },
+      {
+        "message_id": "1403713362822561856",
+        "parent_id": "1403713206299525140"
+      },
+      {
+        "message_id": "1403714310357909605",
+        "parent_id": "1403713362822561856"
+      },
+      {
+        "message_id": "1403714633390358590",
+        "parent_id": "1403714310357909605"
+      },
+      {
+        "message_id": "1403714982990057553",
+        "parent_id": "1403714633390358590"
+      },
+      {
+        "message_id": "1403715231728799796",
+        "parent_id": "1403714982990057553"
+      },
+      {
+        "message_id": "1403715959960637453",
+        "parent_id": "1403715231728799796"
+      },
+      {
+        "message_id": "1403716124943716386",
+        "parent_id": "1403715959960637453"
+      },
+      {
+        "message_id": "1403717707823845427",
+        "parent_id": "1403716124943716386"
+      },
+      {
+        "message_id": "1403718012418392097",
+        "parent_id": "1403717707823845427"
+      },
+      {
+        "message_id": "1403720564450918431",
+        "parent_id": "1403718012418392097"
+      },
+      {
+        "message_id": "1403721464342908968",
+        "parent_id": "1403720564450918431"
+      },
+      {
+        "message_id": "1403727646776623165",
+        "parent_id": "1403721464342908968"
+      }
+    ]
+  },
+  "1403646065261154305": {
+    "header": "Connecting Sui wallet to Discord profile",
+    "topic_id": "1403646065261154305",
+    "actual_date": "2025-08-09T08:05:19+00:00",
+    "answer_id": "1403650340124889150",
+    "label": "suggestion",
+    "solution": "The Indexer bot is commonly used for Sui projects, but it is not needed on the Sui network Discord. Users should only connect their wallet on a Sui ecosystem server when necessary.",
+    "whole_thread": [
+      {
+        "message_id": "1403646065261154305",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403646532078534748",
+        "parent_id": "1403646065261154305"
+      },
+      {
+        "message_id": "1403646666099261462",
+        "parent_id": "1403646532078534748"
+      },
+      {
+        "message_id": "1403646806306324574",
+        "parent_id": "1403646666099261462"
+      },
+      {
+        "message_id": "1403650340124889150",
+        "parent_id": "1403646666099261462"
+      }
+    ]
+  },
+  "1403662438343249930": {
+    "header": "RPC connection error in application",
+    "topic_id": "1403662438343249930",
+    "actual_date": "2025-08-09T08:57:25+00:00",
+    "answer_id": "1403663450562891777",
+    "label": "outside",
+    "solution": "The issue is likely an interrupted RPC connection. The user is advised to forward the question to the Mysten Labs Discord channel.",
+    "whole_thread": [
+      {
+        "message_id": "1403662438343249930",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403662730484908063",
+        "parent_id": "1403662438343249930"
+      },
+      {
+        "message_id": "1403662799183282177",
+        "parent_id": "1403662730484908063"
+      },
+      {
+        "message_id": "1403663122685759538",
+        "parent_id": "1403662799183282177"
+      },
+      {
+        "message_id": "1403663317289013336",
+        "parent_id": "1403663122685759538"
+      },
+      {
+        "message_id": "1403663450562891777",
+        "parent_id": "1403663317289013336"
+      }
+    ]
+  },
+  "1403679335969460327": {
+    "header": "Problems viewing Sui on Trust Wallet",
+    "topic_id": "1403679335969460327",
+    "actual_date": "2025-08-09T10:12:41+00:00",
+    "answer_id": "1403682390861418506",
+    "label": "outside",
+    "solution": "Users are requested to post any issues in English.",
+    "whole_thread": [
+      {
+        "message_id": "1403679335969460327",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403682390861418506",
+        "parent_id": "1403679335969460327"
+      }
+    ]
+  },
+  "1403711243117924362": {
+    "header": "Not receiving testnet faucet tokens",
+    "topic_id": "1403711243117924362",
+    "actual_date": "2025-08-09T12:07:52+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1403711243117924362",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403711377826119743",
+        "parent_id": "1403711243117924362"
+      }
+    ]
+  },
+  "1403720909100941343": {
+    "header": "Difficulty finding a platform to create a liquidity pool for tokens on Testnet",
+    "topic_id": "1403720909100941343",
+    "actual_date": "2025-08-09T13:12:58+00:00",
+    "answer_id": "1403727763692589147",
+    "label": "suggestion",
+    "solution": "There are no known platforms that currently support creating a liquidity pool for tokens on the Testnet.",
+    "whole_thread": [
+      {
+        "message_id": "1403720909100941343",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403727763692589147",
+        "parent_id": "1403720909100941343"
+      }
+    ]
+  },
+  "1403727878042026014": {
+    "header": "Lost USDC due to misdirection to Aptos address instead of Sui",
+    "topic_id": "1403727878042026014",
+    "actual_date": "2025-08-09T13:19:20+00:00",
+    "answer_id": "1403728549814210621",
+    "label": "resolved",
+    "solution": "Assets misdirected to an incorrect address (e.g., USDC on Sui to an Aptos address) are lost and cannot be retrieved.",
+    "whole_thread": [
+      {
+        "message_id": "1403727714829074504",
+        "parent_id": "1403727646776623165"
+      },
+      {
+        "message_id": "1403727878042026014",
+        "parent_id": "1403727714829074504"
+      },
+      {
+        "message_id": "1403728025102581822",
+        "parent_id": "1403727878042026014"
+      },
+      {
+        "message_id": "1403728549814210621",
+        "parent_id": "1403727878042026014"
+      },
+      {
+        "message_id": "1403729364184731768",
+        "parent_id": "1403728549814210621"
+      }
+    ]
+  },
+  "1403765234232987678": {
+    "header": "Not receiving test tokens from Discord faucet",
+    "topic_id": "1403765234232987678",
+    "actual_date": "2025-08-09T15:42:35+00:00",
+    "answer_id": "1403765415116668983",
+    "label": "suggestion",
+    "solution": "A similar issue with not receiving test tokens from the Discord faucet has been reported to the team and is being checked.",
+    "whole_thread": [
+      {
+        "message_id": "1403765234232987678",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403765415116668983",
+        "parent_id": "1403765234232987678"
+      }
+    ]
+  },
+  "1403766098654003253": {
+    "header": "Scam incident involving unauthorized withdrawal from wallet",
+    "topic_id": "1403766098654003253",
+    "actual_date": "2025-08-09T15:49:58+00:00",
+    "answer_id": "1403767274460024883",
+    "label": "resolved",
+    "solution": "It is not possible to freeze or refund money after it has been withdrawn from a wallet in a scam incident.",
+    "whole_thread": [
+      {
+        "message_id": "1403766098654003253",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403766236759851179",
+        "parent_id": "1403766098654003253"
+      },
+      {
+        "message_id": "1403767274460024883",
+        "parent_id": "1403766236759851179"
+      }
+    ]
+  },
+  "1403887532285890611": {
+    "header": "Unable to claim USDC from Arbitrum to Sui after closing bridge page",
+    "topic_id": "1403887532285890611",
+    "actual_date": "2025-08-09T23:53:01+00:00",
+    "answer_id": "1403888835078787074",
+    "label": "resolved",
+    "solution": "To claim USDC after closing the bridge page, reopen the bridge, view the transaction history, and resume the transaction.",
+    "whole_thread": [
+      {
+        "message_id": "1403887532285890611",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403887867847250121",
+        "parent_id": "1403887532285890611"
+      },
+      {
+        "message_id": "1403888569407373414",
+        "parent_id": "1403887867847250121"
+      },
+      {
+        "message_id": "1403888835078787074",
+        "parent_id": "1403887867847250121"
+      }
+    ]
+  },
+  "1403934357319585864": {
+    "header": "User is not receiving faucet funds in their wallet.",
+    "topic_id": "1403934357319585864",
+    "actual_date": "2025-08-10T02:55:08+00:00",
+    "answer_id": "1403934667614191717",
+    "label": "suggestion",
+    "solution": "The faucet is currently overloaded; the user should retry later.",
+    "whole_thread": [
+      {
+        "message_id": "1403934357319585864",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403934667614191717",
+        "parent_id": "1403934357319585864"
+      }
+    ]
+  },
+  "1403977782396059668": {
+    "header": "User is asked by Bybit to sign a message to prove wallet ownership and needs help.",
+    "topic_id": "1403977782396059668",
+    "actual_date": "2025-08-10T05:58:34+00:00",
+    "answer_id": "1403980830942040135",
+    "label": "suggestion",
+    "solution": "The request to sign a message from Bybit sounds suspicious; the user should verify if they are talking to the real Bybit support.",
+    "whole_thread": [
+      {
+        "message_id": "1403977782396059668",
+        "parent_id": null
+      },
+      {
+        "message_id": "1403980830942040135",
+        "parent_id": "1403977782396059668"
+      }
+    ]
+  },
+  "1404001157432741999": {
+    "header": "User's wallet has been compromised by a scammer, and funds are immediately withdrawn upon topping up.",
+    "topic_id": "1404001157432741999",
+    "actual_date": "2025-08-10T07:42:28+00:00",
+    "answer_id": "1404005203367165962",
+    "label": "suggestion",
+    "solution": "If a wallet is compromised by sweeper bots, stop topping up the balance. Transfer any remaining assets out and do not use the compromised wallet anymore. Protocol support cannot interfere with positions to transfer funds to another address.",
+    "whole_thread": [
+      {
+        "message_id": "1404001157432741999",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404001347962933278",
+        "parent_id": "1404001157432741999"
+      },
+      {
+        "message_id": "1404003741446832128",
+        "parent_id": "1404001347962933278"
+      },
+      {
+        "message_id": "1404003814591303742",
+        "parent_id": "1404001347962933278"
+      },
+      {
+        "message_id": "1404004134721421444",
+        "parent_id": "1404003814591303742"
+      },
+      {
+        "message_id": "1404004557310136440",
+        "parent_id": "1404003814591303742"
+      },
+      {
+        "message_id": "1404004883841159229",
+        "parent_id": "1404004557310136440"
+      },
+      {
+        "message_id": "1404005203367165962",
+        "parent_id": "1404004883841159229"
+      },
+      {
+        "message_id": "1404006332918530088",
+        "parent_id": "1404005203367165962"
+      },
+      {
+        "message_id": "1404006977637580850",
+        "parent_id": "1404006332918530088"
+      }
+    ]
+  },
+  "1404039989183905832": {
+    "header": "User cannot withdraw SUI directed from VOLO to Navi, as funds are not displayed in the NAVI app.",
+    "topic_id": "1404039989183905832",
+    "actual_date": "2025-08-10T10:46:38+00:00",
+    "answer_id": "1404040927118491728",
+    "label": "outside",
+    "solution": "Contact the Navi team directly for assistance with funds not displayed in their app. Give them time to reply.",
+    "whole_thread": [
+      {
+        "message_id": "1404039989183905832",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404040927118491728",
+        "parent_id": "1404039989183905832"
+      },
+      {
+        "message_id": "1404041681912991785",
+        "parent_id": "1404040927118491728"
+      },
+      {
+        "message_id": "1404041735683964928",
+        "parent_id": "1404041681912991785"
+      },
+      {
+        "message_id": "1404043319176073319",
+        "parent_id": "1404041735683964928"
+      },
+      {
+        "message_id": "1404052885045510258",
+        "parent_id": "1404041735683964928"
+      },
+      {
+        "message_id": "1404053323879026748",
+        "parent_id": "1404052885045510258"
+      }
+    ]
+  },
+  "1404127850038300833": {
+    "header": "Arrow SUI faucet is not working.",
+    "topic_id": "1404127850038300833",
+    "actual_date": "2025-08-10T15:56:49+00:00",
+    "answer_id": "1404128543591632967",
+    "label": "resolved",
+    "solution": "Use an alternative faucet, such as https://faucet.n1stake.com/, if the primary faucet is not working.",
+    "whole_thread": [
+      {
+        "message_id": "1404127850038300833",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404128543591632967",
+        "parent_id": "1404127850038300833"
+      },
+      {
+        "message_id": "1404131385844961360",
+        "parent_id": "1404128543591632967"
+      }
+    ]
+  },
+  "1404142135313174578": {
+    "header": "User's USDC deposit in suidollar.io's \"Delta Neutral USDC Vault\" does not appear, despite a correct transaction on Suivision.xyz.",
+    "topic_id": "1404142135313174578",
+    "actual_date": "2025-08-10T16:45:05+00:00",
+    "answer_id": "1404142439865909278",
+    "label": "outside",
+    "solution": "Reach out to the support team of suidollar.io for issues with deposits not appearing in their DApp.",
+    "whole_thread": [
+      {
+        "message_id": "1404142135313174578",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404142439865909278",
+        "parent_id": "1404142135313174578"
+      },
+      {
+        "message_id": "1404143532108808243",
+        "parent_id": "1404142439865909278"
+      }
+    ]
+  },
+  "1404266647526707201": {
+    "header": "Compromised Wallet and Irreversible Drained Assets",
+    "topic_id": "1404266647526707201",
+    "actual_date": "2025-08-11T02:04:26+00:00",
+    "answer_id": "1404269591517073550",
+    "label": "unresolved",
+    "solution": "Blockchain transactions are irreversible. If your wallet is compromised, transfer all remaining assets to a safe, fresh wallet immediately. Be wary of private messages offering help, as they are likely scammers; block and report them. No refunds or reversals are possible for drained funds.",
+    "whole_thread": [
+      {
+        "message_id": "1404266647526707201",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404266866213654588",
+        "parent_id": "1404266647526707201"
+      },
+      {
+        "message_id": "1404269591517073550",
+        "parent_id": "1404266647526707201"
+      },
+      {
+        "message_id": "1404269904999219220",
+        "parent_id": "1404269591517073550"
+      },
+      {
+        "message_id": "1404275328024580099",
+        "parent_id": "1404269904999219220"
+      },
+      {
+        "message_id": "1404275652043210926",
+        "parent_id": "1404275328024580099"
+      },
+      {
+        "message_id": "1404276565986246797",
+        "parent_id": "1404275652043210926"
+      },
+      {
+        "message_id": "1404276664061530192",
+        "parent_id": "1404276565986246797"
+      },
+      {
+        "message_id": "1404276868248633446",
+        "parent_id": "1404276565986246797"
+      },
+      {
+        "message_id": "1404278723867447358",
+        "parent_id": "1404269904999219220"
+      },
+      {
+        "message_id": "1404278811712815124",
+        "parent_id": "1404278723867447358"
+      },
+      {
+        "message_id": "1404281231901724743",
+        "parent_id": "1404278811712815124"
+      },
+      {
+        "message_id": "1404281466493468772",
+        "parent_id": "1404281231901724743"
+      },
+      {
+        "message_id": "1404281698753056789",
+        "parent_id": "1404281520742465548"
+      },
+      {
+        "message_id": "1404281825559576667",
+        "parent_id": "1404276868248633446"
+      },
+      {
+        "message_id": "1404281857331302521",
+        "parent_id": "1404281825559576667"
+      },
+      {
+        "message_id": "1404281945768202260",
+        "parent_id": "1404278723867447358"
+      },
+      {
+        "message_id": "1404282160252326009",
+        "parent_id": "1404281857331302521"
+      },
+      {
+        "message_id": "1404282390146187274",
+        "parent_id": "1404282160252326009"
+      },
+      {
+        "message_id": "1404282530198454343",
+        "parent_id": "1404282390146187274"
+      },
+      {
+        "message_id": "1404283075638198323",
+        "parent_id": "1404281857331302521"
+      },
+      {
+        "message_id": "1404284294704267417",
+        "parent_id": "1404281945768202260"
+      }
+    ]
+  },
+  "1404274641236787341": {
+    "header": "Linking Nano Ledger to Slush Wallet on a New PC",
+    "topic_id": "1404274641236787341",
+    "actual_date": "2025-08-11T01:53:24+00:00",
+    "answer_id": "1404279228635156560",
+    "label": "suggestion",
+    "solution": "To link a Ledger device with the Slush wallet, click the 'setup ledger' option within the wallet interface.",
+    "whole_thread": [
+      {
+        "message_id": "1404274641236787341",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404274814944018534",
+        "parent_id": "1404274641236787341"
+      },
+      {
+        "message_id": "1404275034335346698",
+        "parent_id": "1404274814944018534"
+      },
+      {
+        "message_id": "1404275298442281110",
+        "parent_id": "1404275034335346698"
+      },
+      {
+        "message_id": "1404279228635156560",
+        "parent_id": "1404274641236787341"
+      },
+      {
+        "message_id": "1404280643176894474",
+        "parent_id": "1404279228635156560"
+      },
+      {
+        "message_id": "1404281390845136977",
+        "parent_id": "1404280643176894474"
+      },
+      {
+        "message_id": "1404281520742465548",
+        "parent_id": "1404281390845136977"
+      }
+    ]
+  },
+  "1404285755303395520": {
+    "header": "Pending SUI to ETH Bridge Transaction",
+    "topic_id": "1404285755303395520",
+    "actual_date": "2025-08-11T02:17:20+00:00",
+    "answer_id": "1404287540445450260",
+    "label": "suggestion",
+    "solution": "For pending bridge transactions, check the bridge history every few hours and manually claim the transaction once its status changes to 'claim now'.",
+    "whole_thread": [
+      {
+        "message_id": "1404285755303395520",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404287540445450260",
+        "parent_id": "1404285755303395520"
+      }
+    ]
+  },
+  "1404291651089858673": {
+    "header": "Accessing Dev-Related Channels",
+    "topic_id": "1404291651089858673",
+    "actual_date": "2025-08-11T03:17:24+00:00",
+    "answer_id": "1404295420087107716",
+    "label": "resolved",
+    "solution": "To get access to dev-related channels, refer to the information provided in the specified channel (e.g., #1089630962314387637) to find details on linked roles or required settings.",
+    "whole_thread": [
+      {
+        "message_id": "1404291651089858673",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404295420087107716",
+        "parent_id": "1404291651089858673"
+      },
+      {
+        "message_id": "1404299760487108669",
+        "parent_id": "1404295420087107716"
+      },
+      {
+        "message_id": "1404299882998796439",
+        "parent_id": "1404299760487108669"
+      },
+      {
+        "message_id": "1404300344590209095",
+        "parent_id": "1404299882998796439"
+      },
+      {
+        "message_id": "1404301898747609191",
+        "parent_id": "1404300344590209095"
+      },
+      {
+        "message_id": "1404302656578785380",
+        "parent_id": "1404301898747609191"
+      }
+    ]
+  },
+  "1404309853148811347": {
+    "header": "Hacked Sui Address on Phantom Wallet",
+    "topic_id": "1404309853148811347",
+    "actual_date": "2025-08-11T11:22:35+00:00",
+    "answer_id": "1404314515339739308",
+    "label": "suggestion",
+    "solution": "If your Sui address on Phantom wallet has been hacked, transfer all remaining assets to a new, secure wallet immediately.",
+    "whole_thread": [
+      {
+        "message_id": "1404309853148811347",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404314515339739308",
+        "parent_id": "1404309853148811347"
+      },
+      {
+        "message_id": "1404424758220685355",
+        "parent_id": "1404314515339739308"
+      }
+    ]
+  },
+  "1404369388165140502": {
+    "header": "Recovering Private Key from Crashed Hard Drive for Slash Wallet",
+    "topic_id": "1404369388165140502",
+    "actual_date": "2025-08-11T07:51:23+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1404369388165140502",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404371607169794098",
+        "parent_id": "1404369388165140502"
+      }
+    ]
+  },
+  "1404426083683799061": {
+    "header": "Faucet Test Not Working for Over a Month",
+    "topic_id": "1404426083683799061",
+    "actual_date": "2025-08-11T11:30:32+00:00",
+    "answer_id": "1404426383534456903",
+    "label": "suggestion",
+    "solution": "The issue with the faucet test not working has been reported to the team.",
+    "whole_thread": [
+      {
+        "message_id": "1404426083683799061",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404426383534456903",
+        "parent_id": "1404426083683799061"
+      },
+      {
+        "message_id": "1404426761067958326",
+        "parent_id": "1404426383534456903"
+      }
+    ]
+  },
+  "1404432047296221236": {
+    "header": "Incorrect 12-Word Seed Phrase for Old Sui Wallet",
+    "topic_id": "1404432047296221236",
+    "actual_date": "2025-08-11T12:07:51+00:00",
+    "answer_id": "1404436149828845652",
+    "label": "suggestion",
+    "solution": "Double-check and ensure all 12 words of your seed phrase are entered correctly. You can use a BIP-39 wordlist to verify the words.",
+    "whole_thread": [
+      {
+        "message_id": "1404432047296221236",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404432976426696746",
+        "parent_id": "1404432047296221236"
+      },
+      {
+        "message_id": "1404436149828845652",
+        "parent_id": "1404432047296221236"
+      }
+    ]
+  },
+  "1404454366232055948": {
+    "header": "Wallet Drained by Malicious Contract on Sui",
+    "topic_id": "1404454366232055948",
+    "actual_date": "2025-08-11T13:23:22+00:00",
+    "answer_id": "1404455028176977962",
+    "label": "resolved",
+    "solution": "There is no revoke/approval system on Sui. If your seed phrase or wallet was compromised, you must discard the compromised wallet and transfer any remaining assets to a new, secure wallet.",
+    "whole_thread": [
+      {
+        "message_id": "1404454366232055948",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404454644742098964",
+        "parent_id": "1404454366232055948"
+      },
+      {
+        "message_id": "1404454883536670922",
+        "parent_id": "1404454644742098964"
+      },
+      {
+        "message_id": "1404455028176977962",
+        "parent_id": "1404454883536670922"
+      },
+      {
+        "message_id": "1404455155289821264",
+        "parent_id": "1404455028176977962"
+      }
+    ]
+  },
+  "1404465916988620892": {
+    "header": "Unable to Claim Tokens/Points in an App",
+    "topic_id": "1404465916988620892",
+    "actual_date": "2025-08-11T14:47:07+00:00",
+    "answer_id": "1404470132658536591",
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1404465916988620892",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404466505533358081",
+        "parent_id": "1404465916988620892"
+      },
+      {
+        "message_id": "1404467038985912483",
+        "parent_id": "1404466505533358081"
+      },
+      {
+        "message_id": "1404467272009122003",
+        "parent_id": "1404467038985912483"
+      },
+      {
+        "message_id": "1404468587040870512",
+        "parent_id": "1404467038985912483"
+      },
+      {
+        "message_id": "1404469942828535940",
+        "parent_id": "1404468587040870512"
+      },
+      {
+        "message_id": "1404470132658536591",
+        "parent_id": "1404469942828535940"
+      },
+      {
+        "message_id": "1404476229893226627",
+        "parent_id": "1404470132658536591"
+      }
+    ]
+  },
+  "1404484025258610869": {
+    "header": "Sui Official Partnership with Soundness Labs",
+    "topic_id": "1404484025258610869",
+    "actual_date": "2025-08-11T15:34:52+00:00",
+    "answer_id": "1404488250076430416",
+    "label": "resolved",
+    "solution": "There is a collaboration between Sui and Walrus, and a partnership with Walrus exists, as indicated by Soundness Labs.",
+    "whole_thread": [
+      {
+        "message_id": "1404484025258610869",
+        "parent_id": "1404470132658536591"
+      },
+      {
+        "message_id": "1404485109163360297",
+        "parent_id": "1404484025258610869"
+      },
+      {
+        "message_id": "1404486920968474645",
+        "parent_id": "1404485109163360297"
+      },
+      {
+        "message_id": "1404488250076430416",
+        "parent_id": "1404486920968474645"
+      }
+    ]
+  },
+  "1404489599270523010": {
+    "header": "Website Warning During Minting",
+    "topic_id": "1404489599270523010",
+    "actual_date": "2025-08-11T15:46:47+00:00",
+    "answer_id": "1404491248231780414",
+    "label": "resolved",
+    "solution": "The issue with the website warning during minting was resolved, and the minting process was successfully completed.",
+    "whole_thread": [
+      {
+        "message_id": "1404489599270523010",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404489767634210907",
+        "parent_id": "1404489599270523010"
+      },
+      {
+        "message_id": "1404489842288492574",
+        "parent_id": "1404489767634210907"
+      },
+      {
+        "message_id": "1404491052051730563",
+        "parent_id": "1404489767634210907"
+      },
+      {
+        "message_id": "1404491248231780414",
+        "parent_id": "1404491052051730563"
+      }
+    ]
+  },
+  "1404502105024237618": {
+    "header": "Buying SUI for Gas with Ethereum Assets to a Ledger Wallet",
+    "topic_id": "1404502105024237618",
+    "actual_date": "2025-08-11T16:46:38+00:00",
+    "answer_id": "1404506307142353106",
+    "label": "resolved",
+    "solution": "The most straightforward way to buy SUI for gas using existing Ethereum crypto assets without installing a browser wallet is to use a service like HeroSwap. Alternatively, you can bridge ETH to Sui and then swap on available DEXs, but it's recommended to test with a small amount first to check liquidity.",
+    "whole_thread": [
+      {
+        "message_id": "1404502105024237618",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404503531993698406",
+        "parent_id": "1404502105024237618"
+      },
+      {
+        "message_id": "1404504862716334250",
+        "parent_id": "1404503531993698406"
+      },
+      {
+        "message_id": "1404506120906866769",
+        "parent_id": "1404504862716334250"
+      },
+      {
+        "message_id": "1404506307142353106",
+        "parent_id": "1404506120906866769"
+      }
+    ]
+  },
+  "1404503565204062308": {
+    "header": "Lost Claim Option After USDC Bridge Transaction",
+    "topic_id": "1404503565204062308",
+    "actual_date": "2025-08-11T16:42:08+00:00",
+    "answer_id": "1404504865543160048",
+    "label": "outside",
+    "solution": "To find the claim option for a USDC bridge transaction after accidentally closing the page, refer to the provided Discord channel link for instructions on how to proceed.",
+    "whole_thread": [
+      {
+        "message_id": "1404503565204062308",
+        "parent_id": "1404491248231780414"
+      },
+      {
+        "message_id": "1404503687098925176",
+        "parent_id": "1404503565204062308"
+      },
+      {
+        "message_id": "1404504414454026351",
+        "parent_id": "1404503687098925176"
+      },
+      {
+        "message_id": "1404504570570342451",
+        "parent_id": "1404504414454026351"
+      },
+      {
+        "message_id": "1404504865543160048",
+        "parent_id": "1404504414454026351"
+      },
+      {
+        "message_id": "1404505177880526878",
+        "parent_id": "1404504865543160048"
+      }
+    ]
+  },
+  "1404505553560015050": {
+    "header": "Verifying Legitimacy of a Support Ticket",
+    "topic_id": "1404505553560015050",
+    "actual_date": "2025-08-11T16:46:35+00:00",
+    "answer_id": "1404506296857788569",
+    "label": "outside",
+    "solution": "A user's support ticket is identified as a scam. For clarification on Suiplay-related issues, reach out to the MystenLabs support team.",
+    "whole_thread": [
+      {
+        "message_id": "1404505553560015050",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404505911879270600",
+        "parent_id": "1404505553560015050"
+      },
+      {
+        "message_id": "1404506041571475556",
+        "parent_id": "1404505911879270600"
+      },
+      {
+        "message_id": "1404506086886608937",
+        "parent_id": "1404506041571475556"
+      },
+      {
+        "message_id": "1404506296857788569",
+        "parent_id": "1404505553560015050"
+      }
+    ]
+  },
+  "1404509475779510424": {
+    "header": "Association of Discord with SUI Bridge Website",
+    "topic_id": "1404509475779510424",
+    "actual_date": "2025-08-11T17:03:09+00:00",
+    "answer_id": "1404510430054973502",
+    "label": "resolved",
+    "solution": "This Discord channel is associated with the official SUI bridge website, bridge.sui.io.",
+    "whole_thread": [
+      {
+        "message_id": "1404509475779510424",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404510430054973502",
+        "parent_id": "1404509475779510424"
+      },
+      {
+        "message_id": "1404510463840096326",
+        "parent_id": "1404510430054973502"
+      }
+    ]
+  },
+  "1404577763301658644": {
+    "header": "Lost USDC Due to Lagging Sui Bridge Transaction",
+    "topic_id": "1404577763301658644",
+    "actual_date": "2025-08-11T21:50:02+00:00",
+    "answer_id": "1404582660122083329",
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1404577763301658644",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404582660122083329",
+        "parent_id": "1404577763301658644"
+      }
+    ]
+  },
+  "1404580924649242837": {
+    "header": "Unable to Transact on Testnet Due to Locked Objects",
+    "topic_id": "1404580924649242837",
+    "actual_date": "2025-08-11T23:22:29+00:00",
+    "answer_id": "1404584376146071674",
+    "label": "resolved",
+    "solution": "If your wallet has locked objects on the Testnet, you must wait until the current epoch ends before you can transact again. An epoch typically lasts for 24 hours, after which your wallet should return to normal functionality.",
+    "whole_thread": [
+      {
+        "message_id": "1404580924649242837",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404581090198425620",
+        "parent_id": "1404580924649242837"
+      },
+      {
+        "message_id": "1404582269204697240",
+        "parent_id": "1404581090198425620"
+      },
+      {
+        "message_id": "1404582890108354580",
+        "parent_id": "1404581090198425620"
+      },
+      {
+        "message_id": "1404583244468322467",
+        "parent_id": "1404582890108354580"
+      },
+      {
+        "message_id": "1404583511280849110",
+        "parent_id": "1404583244468322467"
+      },
+      {
+        "message_id": "1404583755326427399",
+        "parent_id": "1404583511280849110"
+      },
+      {
+        "message_id": "1404584376146071674",
+        "parent_id": "1404583755326427399"
+      },
+      {
+        "message_id": "1404584531402559589",
+        "parent_id": "1404584376146071674"
+      },
+      {
+        "message_id": "1404604707200041003",
+        "parent_id": "1404584376146071674"
+      },
+      {
+        "message_id": "1404605925742084106",
+        "parent_id": "1404604707200041003"
+      }
+    ]
+  },
+  "1404653861708238858": {
+    "header": "USDC bridge from Optimism to Sui stuck",
+    "topic_id": "1404653861708238858",
+    "actual_date": "2025-08-12T02:49:25+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1404653861708238858",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404658004196065352",
+        "parent_id": "1404653861708238858"
+      }
+    ]
+  },
+  "1404682496121114811": {
+    "header": "USDC bridge transaction pending after 10 hours, user used unofficial bridge site",
+    "topic_id": "1404682496121114811",
+    "actual_date": "2025-08-12T05:12:53+00:00",
+    "answer_id": "1404687731463819347",
+    "label": "resolved",
+    "solution": "The user was advised to check steps on a linked Discord channel to manually complete the transaction. The user confirmed this resolved the pending bridge transaction, despite initially using an unofficial bridge site.",
+    "whole_thread": [
+      {
+        "message_id": "1404682496121114811",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404687731463819347",
+        "parent_id": "1404682496121114811"
+      },
+      {
+        "message_id": "1404687830273364078",
+        "parent_id": "1404687731463819347"
+      },
+      {
+        "message_id": "1404690690834825357",
+        "parent_id": "1404687830273364078"
+      },
+      {
+        "message_id": "1404693528222896211",
+        "parent_id": "1404690690834825357"
+      },
+      {
+        "message_id": "1404693939411222641",
+        "parent_id": "1404693528222896211"
+      },
+      {
+        "message_id": "1404694108366438400",
+        "parent_id": "1404693939411222641"
+      }
+    ]
+  },
+  "1404792938235428915": {
+    "header": "User cannot see tokens in their wallet after staking",
+    "topic_id": "1404792938235428915",
+    "actual_date": "2025-08-12T12:21:55+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1404792938235428915",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404798265299439638",
+        "parent_id": "1404792938235428915"
+      },
+      {
+        "message_id": "1404798748714074223",
+        "parent_id": "1404798265299439638"
+      },
+      {
+        "message_id": "1404798923809488977",
+        "parent_id": "1404798748714074223"
+      },
+      {
+        "message_id": "1404799187760971799",
+        "parent_id": "1404798923809488977"
+      },
+      {
+        "message_id": "1404800465517940746",
+        "parent_id": "1404799187760971799"
+      },
+      {
+        "message_id": "1404800683449913454",
+        "parent_id": "1404800465517940746"
+      },
+      {
+        "message_id": "1404801122681491456",
+        "parent_id": "1404800683449913454"
+      },
+      {
+        "message_id": "1404801210585710632",
+        "parent_id": "1404801122681491456"
+      },
+      {
+        "message_id": "1404801355096522946",
+        "parent_id": "1404801210585710632"
+      },
+      {
+        "message_id": "1404801640569110571",
+        "parent_id": "1404801355096522946"
+      },
+      {
+        "message_id": "1404801670478696572",
+        "parent_id": "1404801640569110571"
+      },
+      {
+        "message_id": "1404802078244733032",
+        "parent_id": "1404801670478696572"
+      }
+    ]
+  },
+  "1404794087164608563": {
+    "header": "User not receiving SUI testnet tokens from faucet",
+    "topic_id": "1404794087164608563",
+    "actual_date": "2025-08-12T12:06:52+00:00",
+    "answer_id": "1404798290666590301",
+    "label": "suggestion",
+    "solution": "User was advised to use an alternative faucet: https://faucet.n1stake.com/.",
+    "whole_thread": [
+      {
+        "message_id": "1404794087164608563",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404798290666590301",
+        "parent_id": "1404794087164608563"
+      }
+    ]
+  },
+  "1404819446681571420": {
+    "header": "User unable to swap tokens on SUI wallet extension or mobile, problem self-resolved",
+    "topic_id": "1404819446681571420",
+    "actual_date": "2025-08-12T13:44:18+00:00",
+    "answer_id": null,
+    "label": "resolved",
+    "solution": "The user reported that the issue resolved itself after multiple attempts and posting in the Discord channel.",
+    "whole_thread": [
+      {
+        "message_id": "1404819446681571420",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404819933547855942",
+        "parent_id": "1404819446681571420"
+      },
+      {
+        "message_id": "1404822809128997008",
+        "parent_id": "1404819933547855942"
+      }
+    ]
+  },
+  "1404873523037601842": {
+    "header": "Issue with Dogiz 2.0 not received and not installed on Slush Wallet, and inability to manually import tokens",
+    "topic_id": "1404873523037601842",
+    "actual_date": "2025-08-12T17:17:45+00:00",
+    "answer_id": "1404875769783648256",
+    "label": "outside",
+    "solution": "For the Dogiz 2.0 issue, the user was advised to contact Dogiz support. Regarding token visibility, Slush Wallet automatically detects tokens, so manual import is not needed.",
+    "whole_thread": [
+      {
+        "message_id": "1404873523037601842",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404873763329282089",
+        "parent_id": "1404873523037601842"
+      },
+      {
+        "message_id": "1404875478338244788",
+        "parent_id": "1404873763329282089"
+      },
+      {
+        "message_id": "1404875769783648256",
+        "parent_id": "1404875478338244788"
+      },
+      {
+        "message_id": "1404876528491434036",
+        "parent_id": "1404875769783648256"
+      }
+    ]
+  },
+  "1404905708264099962": {
+    "header": "Sui Android wallet not allowing transfers or swaps",
+    "topic_id": "1404905708264099962",
+    "actual_date": "2025-08-12T19:15:19+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1404905708264099962",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404906115631943793",
+        "parent_id": "1404905708264099962"
+      }
+    ]
+  },
+  "1404917997302321427": {
+    "header": "Query about test faucet working status",
+    "topic_id": "1404917997302321427",
+    "actual_date": "2025-08-12T20:04:28+00:00",
+    "answer_id": "1404918483774603396",
+    "label": "resolved",
+    "solution": "Another user confirmed that the test faucet is working.",
+    "whole_thread": [
+      {
+        "message_id": "1404917997302321427",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404918483774603396",
+        "parent_id": "1404917997302321427"
+      }
+    ]
+  },
+  "1404976093462528121": {
+    "header": "Missing funds during Sui outage",
+    "topic_id": "1404976093462528121",
+    "actual_date": "2025-08-12T23:53:23+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1404976093462528121",
+        "parent_id": null
+      }
+    ]
+  },
+  "1404990427731329076": {
+    "header": "User unable to see bridge history or claim suiEth after bridging from Sui to Eth",
+    "topic_id": "1404990427731329076",
+    "actual_date": "2025-08-13T01:13:35+00:00",
+    "answer_id": "1404996095267831809",
+    "label": "resolved",
+    "solution": "Users experiencing issues with bridging assets should check their bridge history every few hours and manually claim the assets once the status changes to \"claim now\". If history is not visible, ensure to check the specific chain section (e.g., Sui section) for the bridge history.",
+    "whole_thread": [
+      {
+        "message_id": "1404990427731329076",
+        "parent_id": null
+      },
+      {
+        "message_id": "1404990592949289101",
+        "parent_id": "1404990427731329076"
+      },
+      {
+        "message_id": "1404992423540559902",
+        "parent_id": "1404990592949289101"
+      },
+      {
+        "message_id": "1404992530344312913",
+        "parent_id": "1404990427731329076"
+      },
+      {
+        "message_id": "1404992681167552575",
+        "parent_id": "1404992423540559902"
+      },
+      {
+        "message_id": "1404992999812759562",
+        "parent_id": "1404992681167552575"
+      },
+      {
+        "message_id": "1404993316797415434",
+        "parent_id": "1404992999812759562"
+      },
+      {
+        "message_id": "1404993751545282602",
+        "parent_id": "1404992999812759562"
+      },
+      {
+        "message_id": "1404994435972071476",
+        "parent_id": "1404993751545282602"
+      },
+      {
+        "message_id": "1404994654373675086",
+        "parent_id": "1404994435972071476"
+      },
+      {
+        "message_id": "1404994787215413269",
+        "parent_id": "1404994435972071476"
+      },
+      {
+        "message_id": "1404994849203163207",
+        "parent_id": "1404994787215413269"
+      },
+      {
+        "message_id": "1404995427236970687",
+        "parent_id": "1404994849203163207"
+      },
+      {
+        "message_id": "1404996095267831809",
+        "parent_id": "1404995427236970687"
+      },
+      {
+        "message_id": "1404996274431987723",
+        "parent_id": "1404996095267831809"
+      }
+    ]
+  },
+  "1405008256467730482": {
+    "header": "User's USDC bridge transaction failed at the second step, and they are unsure how to retrieve their funds or check the status",
+    "topic_id": "1405008256467730482",
+    "actual_date": "2025-08-13T02:30:39+00:00",
+    "answer_id": "1405011824591765527",
+    "label": "suggestion",
+    "solution": "If a bridge transaction fails, the assets should remain in the user's wallet. If the transaction is processed but in a delayed stage, users should keep checking the bridge history every few hours and claim the assets when the option becomes available.",
+    "whole_thread": [
+      {
+        "message_id": "1405008256467730482",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405010193540055092",
+        "parent_id": "1405008256467730482"
+      },
+      {
+        "message_id": "1405011520097620100",
+        "parent_id": "1405010193540055092"
+      },
+      {
+        "message_id": "1405011824591765527",
+        "parent_id": "1405011520097620100"
+      },
+      {
+        "message_id": "1405012562835275847",
+        "parent_id": "1405011824591765527"
+      },
+      {
+        "message_id": "1405012644577939477",
+        "parent_id": "1405012562835275847"
+      },
+      {
+        "message_id": "1405013488354721873",
+        "parent_id": "1405012644577939477"
+      },
+      {
+        "message_id": "1405015667450839201",
+        "parent_id": "1404995427236970687"
+      }
+    ]
+  },
+  "1405154933224767539": {
+    "header": "User receiving an error message when trying to visit the lend portion of the Suilend app through Slush Wallet",
+    "topic_id": "1405154933224767539",
+    "actual_date": "2025-08-13T11:48:27+00:00",
+    "answer_id": "1405155765442052189",
+    "label": "outside",
+    "solution": "The issue appears to be on Suilend's side. Users should contact the Suilend team directly for support.",
+    "whole_thread": [
+      {
+        "message_id": "1405154933224767539",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405155071112773633",
+        "parent_id": "1405154933224767539"
+      },
+      {
+        "message_id": "1405155226377392260",
+        "parent_id": "1405155071112773633"
+      },
+      {
+        "message_id": "1405155765442052189",
+        "parent_id": "1405155226377392260"
+      },
+      {
+        "message_id": "1405156042735616020",
+        "parent_id": "1405155765442052189"
+      }
+    ]
+  },
+  "1405167991011807316": {
+    "header": "Users unable to claim SUI from the Discord faucet or other faucets",
+    "topic_id": "1405167991011807316",
+    "actual_date": "2025-08-13T15:24:20+00:00",
+    "answer_id": "1405168274030723072",
+    "label": "outside",
+    "solution": "The Discord faucet is a known issue and has been escalated. Users can try using a third-party faucet like https://faucet.n1stake.com/ in the meantime. For issues with third-party faucets, their respective support teams should be contacted directly.",
+    "whole_thread": [
+      {
+        "message_id": "1405167991011807316",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405168274030723072",
+        "parent_id": "1405167991011807316"
+      },
+      {
+        "message_id": "1405192660255510530",
+        "parent_id": "1405168274030723072"
+      },
+      {
+        "message_id": "1405193143627812965",
+        "parent_id": "1405192660255510530"
+      },
+      {
+        "message_id": "1405193436608467065",
+        "parent_id": "1405192660255510530"
+      },
+      {
+        "message_id": "1405193573879779350",
+        "parent_id": "1405193436608467065"
+      },
+      {
+        "message_id": "1405193957444419694",
+        "parent_id": "1405193573879779350"
+      },
+      {
+        "message_id": "1405206122436235355",
+        "parent_id": "1405168274030723072"
+      },
+      {
+        "message_id": "1405207084848513064",
+        "parent_id": "1405206122436235355"
+      },
+      {
+        "message_id": "1405209115059421386",
+        "parent_id": "1405207084848513064"
+      },
+      {
+        "message_id": "1405209819832651887",
+        "parent_id": "1405209115059421386"
+      },
+      {
+        "message_id": "1405210374814437547",
+        "parent_id": "1405209819832651887"
+      }
+    ]
+  },
+  "1405242616550920203": {
+    "header": "User's wallet extension is not displaying correctly",
+    "topic_id": "1405242616550920203",
+    "actual_date": "2025-08-13T17:43:15+00:00",
+    "answer_id": "1405242969682084000",
+    "label": "resolved",
+    "solution": "If a wallet extension is not displaying correctly, try uninstalling and reinstalling the wallet app/extension, or simply turning it off and on again.",
+    "whole_thread": [
+      {
+        "message_id": "1405242616550920203",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405242969682084000",
+        "parent_id": "1405242616550920203"
+      },
+      {
+        "message_id": "1405244385544900608",
+        "parent_id": "1405242969682084000"
+      },
+      {
+        "message_id": "1405244834607923252",
+        "parent_id": "1405244385544900608"
+      },
+      {
+        "message_id": "1405245165240844358",
+        "parent_id": "1405244834607923252"
+      },
+      {
+        "message_id": "1405245331964297338",
+        "parent_id": "1405244834607923252"
+      }
+    ]
+  },
+  "1405276438671917067": {
+    "header": "User received less SUI than expected from a swap transaction on a third-party platform (7k)",
+    "topic_id": "1405276438671917067",
+    "actual_date": "2025-08-13T20:20:08+00:00",
+    "answer_id": "1405280639690866741",
+    "label": "outside",
+    "solution": "Discrepancies in the amount of SUI received from a swap transaction on a third-party platform (e.g., 7k) should be addressed by reaching out to the support team of that specific swapping platform. The issue is likely related to their service or current exchange rates, not a core blockchain problem.",
+    "whole_thread": [
+      {
+        "message_id": "1405276438671917067",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405276921935171715",
+        "parent_id": "1405276438671917067"
+      },
+      {
+        "message_id": "1405277435909374004",
+        "parent_id": "1405276438671917067"
+      },
+      {
+        "message_id": "1405277463746973856",
+        "parent_id": "1405277435909374004"
+      },
+      {
+        "message_id": "1405277632525897759",
+        "parent_id": "1405277463746973856"
+      },
+      {
+        "message_id": "1405277708434276423",
+        "parent_id": "1405277463746973856"
+      },
+      {
+        "message_id": "1405277882896482415",
+        "parent_id": "1405277708434276423"
+      },
+      {
+        "message_id": "1405278299776745562",
+        "parent_id": "1405277882896482415"
+      },
+      {
+        "message_id": "1405278728782872717",
+        "parent_id": "1405278299776745562"
+      },
+      {
+        "message_id": "1405278933938733076",
+        "parent_id": "1405278728782872717"
+      },
+      {
+        "message_id": "1405279329000226829",
+        "parent_id": "1405278933938733076"
+      },
+      {
+        "message_id": "1405279585456881674",
+        "parent_id": "1405279329000226829"
+      },
+      {
+        "message_id": "1405279751748325617",
+        "parent_id": "1405279585456881674"
+      },
+      {
+        "message_id": "1405280164262313994",
+        "parent_id": "1405279751748325617"
+      },
+      {
+        "message_id": "1405280257535250502",
+        "parent_id": "1405280164262313994"
+      },
+      {
+        "message_id": "1405280282617188434",
+        "parent_id": "1405280257535250502"
+      },
+      {
+        "message_id": "1405280402448318745",
+        "parent_id": "1405280257535250502"
+      },
+      {
+        "message_id": "1405280468605341797",
+        "parent_id": "1405280402448318745"
+      },
+      {
+        "message_id": "1405280639690866741",
+        "parent_id": "1405280468605341797"
+      },
+      {
+        "message_id": "1405280650474426488",
+        "parent_id": "1405280282617188434"
+      },
+      {
+        "message_id": "1405280740060692711",
+        "parent_id": "1405280650474426488"
+      },
+      {
+        "message_id": "1405281327883751546",
+        "parent_id": "1405280740060692711"
+      },
+      {
+        "message_id": "1405281695959220296",
+        "parent_id": "1405281327883751546"
+      },
+      {
+        "message_id": "1405282680509304904",
+        "parent_id": "1405281695959220296"
+      },
+      {
+        "message_id": "1405283459659731084",
+        "parent_id": "1405282680509304904"
+      },
+      {
+        "message_id": "1405283770214383790",
+        "parent_id": "1405281327883751546"
+      },
+      {
+        "message_id": "1405284137673293854",
+        "parent_id": "1405283770214383790"
+      },
+      {
+        "message_id": "1405284272264188054",
+        "parent_id": "1405284137673293854"
+      },
+      {
+        "message_id": "1405284540855095419",
+        "parent_id": "1405284272264188054"
+      },
+      {
+        "message_id": "1405284813266751488",
+        "parent_id": "1405284540855095419"
+      }
+    ]
+  },
+  "1405285051276464188": {
+    "header": "Suiup devnet binaries not added to PATH on Windows, preventing 'sui' command execution",
+    "topic_id": "1405285051276464188",
+    "actual_date": "2025-08-13T20:23:23+00:00",
+    "answer_id": "1405285506995978362",
+    "label": "outside",
+    "solution": "For assistance with suiup devnet binaries not being registered in the PATH on Windows, users should join the dedicated support channel (e.g., #955861929346355290) as guided by the provided resources (e.g., #1089630962314387637).",
+    "whole_thread": [
+      {
+        "message_id": "1405285051276464188",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405285506995978362",
+        "parent_id": "1405285051276464188"
+      },
+      {
+        "message_id": "1405285633160904785",
+        "parent_id": "1405285506995978362"
+      }
+    ]
+  },
+  "1405309449022869697": {
+    "header": "User received funds only visible on devnet and suspects they are fake due to a scam attempt",
+    "topic_id": "1405309449022869697",
+    "actual_date": "2025-08-13T22:21:42+00:00",
+    "answer_id": "1405314306190348518",
+    "label": "suggestion",
+    "solution": "Funds received that are only visible on the devnet network are devnet tokens and are not real money. These tokens are typically used for testing and can be requested from faucets. Users should be wary of anyone asking them to create a Sui Wallet and sending 'money' that only appears on devnet, as this is a common scam tactic. Report such incidents to the appropriate channels.",
+    "whole_thread": [
+      {
+        "message_id": "1405309449022869697",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405311612704915628",
+        "parent_id": "1405309449022869697"
+      },
+      {
+        "message_id": "1405311818905161940",
+        "parent_id": "1405311612704915628"
+      },
+      {
+        "message_id": "1405313177855721597",
+        "parent_id": "1405311818905161940"
+      },
+      {
+        "message_id": "1405313523466240033",
+        "parent_id": "1405311818905161940"
+      },
+      {
+        "message_id": "1405313614675443813",
+        "parent_id": "1405313523466240033"
+      },
+      {
+        "message_id": "1405314117484679258",
+        "parent_id": "1405313177855721597"
+      },
+      {
+        "message_id": "1405314233775952047",
+        "parent_id": "1405314117484679258"
+      },
+      {
+        "message_id": "1405314306190348518",
+        "parent_id": "1405313614675443813"
+      },
+      {
+        "message_id": "1405314409475342487",
+        "parent_id": "1405314306190348518"
+      },
+      {
+        "message_id": "1405315408227205212",
+        "parent_id": "1405314409475342487"
+      }
+    ]
+  },
+  "1405312701697097821": {
+    "header": "User cannot see or unstake SUI staked in January, as the wallet interface has changed",
+    "topic_id": "1405312701697097821",
+    "actual_date": "2025-08-13T22:15:50+00:00",
+    "answer_id": "1405313930506535061",
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1405312701697097821",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405312784991784980",
+        "parent_id": "1405312701697097821"
+      },
+      {
+        "message_id": "1405313930506535061",
+        "parent_id": "1405312701697097821"
+      }
+    ]
+  },
+  "1405344846503215297": {
+    "header": "User unable to access SUI wallet (now Slush) due to missing recovery key/seed phrase.",
+    "topic_id": "1405344846503215297",
+    "actual_date": "2025-08-14T00:57:43+00:00",
+    "answer_id": "1405354133451444314",
+    "label": "resolved",
+    "solution": "Accessing a SUI wallet (now Slush) requires a seed phrase or private key, unless it was created using a Zk login. A password alone is not sufficient for recovery if the seed phrase is lost.",
+    "whole_thread": [
+      {
+        "message_id": "1405344846503215297",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405346710934257797",
+        "parent_id": "1405344846503215297"
+      },
+      {
+        "message_id": "1405350053593354422",
+        "parent_id": "1405344846503215297"
+      },
+      {
+        "message_id": "1405350967238594762",
+        "parent_id": "1405350053593354422"
+      },
+      {
+        "message_id": "1405351357598269560",
+        "parent_id": "1405350967238594762"
+      },
+      {
+        "message_id": "1405354133451444314",
+        "parent_id": "1405350967238594762"
+      },
+      {
+        "message_id": "1405354669106139216",
+        "parent_id": "1405354133451444314"
+      }
+    ]
+  },
+  "1405415855659028481": {
+    "header": "User experiencing an unspecified problem with a wallet and needs support.",
+    "topic_id": "1405415855659028481",
+    "actual_date": "2025-08-14T05:07:01+00:00",
+    "answer_id": "1405416744230584421",
+    "label": "outside",
+    "solution": "For wallet-specific issues, users should contact the support team of the respective wallet (e.g., Suiet wallet support).",
+    "whole_thread": [
+      {
+        "message_id": "1405415855659028481",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405416744230584421",
+        "parent_id": "1405415855659028481"
+      },
+      {
+        "message_id": "1405417406817505373",
+        "parent_id": "1405416744230584421"
+      }
+    ]
+  },
+  "1405417414174183607": {
+    "header": "User is not receiving faucet tokens when requested via Discord.",
+    "topic_id": "1405417414174183607",
+    "actual_date": "2025-08-14T05:22:38+00:00",
+    "answer_id": "1405421338159747203",
+    "label": "suggestion",
+    "solution": "The faucet is currently overloaded, so users should retry requesting tokens later.",
+    "whole_thread": [
+      {
+        "message_id": "1405417414174183607",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405421338159747203",
+        "parent_id": "1405417414174183607"
+      }
+    ]
+  },
+  "1405568572671135785": {
+    "header": "User sent USDC to an Aptos deposit address from a Sui wallet, transaction shows successful on Suiscan but funds are not received.",
+    "topic_id": "1405568572671135785",
+    "actual_date": "2025-08-14T15:16:13+00:00",
+    "answer_id": "1405570345704099950",
+    "label": "suggestion",
+    "solution": "Sending assets (e.g., USDC) from one blockchain (Sui) to a deposit address on a different blockchain (Aptos) will result in the loss of assets, even if the transaction appears successful on the sending chain's explorer. The chains are incompatible for direct transfers.",
+    "whole_thread": [
+      {
+        "message_id": "1405568572671135785",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405569422323880076",
+        "parent_id": "1405568572671135785"
+      },
+      {
+        "message_id": "1405569550191427586",
+        "parent_id": "1405569422323880076"
+      },
+      {
+        "message_id": "1405569590133522495",
+        "parent_id": "1405568572671135785"
+      },
+      {
+        "message_id": "1405569626146078901",
+        "parent_id": "1405569550191427586"
+      },
+      {
+        "message_id": "1405570052257874094",
+        "parent_id": "1405569590133522495"
+      },
+      {
+        "message_id": "1405570345704099950",
+        "parent_id": "1405570052257874094"
+      },
+      {
+        "message_id": "1405570719080906813",
+        "parent_id": "1405570345704099950"
+      }
+    ]
+  },
+  "1405789209045766144": {
+    "header": "User sent USDT from Sui to ByBit but funds are missing and not rolled back.",
+    "topic_id": "1405789209045766144",
+    "actual_date": "2025-08-15T05:45:53+00:00",
+    "answer_id": "1405789575338655764",
+    "label": "outside",
+    "solution": "ByBit likely does not support Sui USDT deposits, leading to lost funds. Contact ByBit support for a potential refund.",
+    "whole_thread": [
+      {
+        "message_id": "1405789209045766144",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405789575338655764",
+        "parent_id": "1405789209045766144"
+      }
+    ]
+  },
+  "1405816956820656128": {
+    "header": "User is unable to receive test SUI tokens from the faucet.",
+    "topic_id": "1405816956820656128",
+    "actual_date": "2025-08-15T07:46:37+00:00",
+    "answer_id": "1405819959036219424",
+    "label": "suggestion",
+    "solution": "The faucet for test SUI is currently overloaded; users should retry later.",
+    "whole_thread": [
+      {
+        "message_id": "1405816956820656128",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405819959036219424",
+        "parent_id": "1405816956820656128"
+      }
+    ]
+  },
+  "1405833293185683476": {
+    "header": "Node operators are missing hard fork upgrade notices despite subscribing to GitHub releases.",
+    "topic_id": "1405833293185683476",
+    "actual_date": "2025-08-15T08:42:41+00:00",
+    "answer_id": "1405834070532816916",
+    "label": "outside",
+    "solution": "Follow specified channels to receive advance notice on hard fork upgrades.",
+    "whole_thread": [
+      {
+        "message_id": "1405833293185683476",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405834070532816916",
+        "parent_id": "1405833293185683476"
+      }
+    ]
+  },
+  "1405986580342116392": {
+    "header": "User wants to report potential security vulnerabilities or externally observable validator exposures.",
+    "topic_id": "1405986580342116392",
+    "actual_date": "2025-08-15T18:51:11+00:00",
+    "answer_id": "1405987202906722394",
+    "label": "outside",
+    "solution": "Report security observations in the designated security channel and follow the provided guide for joining.",
+    "whole_thread": [
+      {
+        "message_id": "1405986580342116392",
+        "parent_id": null
+      },
+      {
+        "message_id": "1405987202906722394",
+        "parent_id": "1405986580342116392"
+      }
+    ]
+  },
+  "1406025409157529672": {
+    "header": "User is unable to perform token transactions (buy, sell, transfer) in their wallet due to an error.",
+    "topic_id": "1406025409157529672",
+    "actual_date": "2025-08-15T21:57:39+00:00",
+    "answer_id": "1406034128553513081",
+    "label": "suggestion",
+    "solution": "The wallet has locked objects, preventing transactions. Users must wait until the current epoch ends (approximately 24 hours) before they can transact again.",
+    "whole_thread": [
+      {
+        "message_id": "1406025409157529672",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406026116338286735",
+        "parent_id": "1406025409157529672"
+      },
+      {
+        "message_id": "1406027154017226802",
+        "parent_id": "1406026116338286735"
+      },
+      {
+        "message_id": "1406033702928126083",
+        "parent_id": "1406027154017226802"
+      },
+      {
+        "message_id": "1406033820393672787",
+        "parent_id": "1406033702928126083"
+      },
+      {
+        "message_id": "1406034128553513081",
+        "parent_id": "1406033820393672787"
+      }
+    ]
+  },
+  "1406028156996948179": {
+    "header": "User experienced issues with USDC not arriving in their wallet after purchase via a mobile feature, with funds getting stuck at Coinbase.",
+    "topic_id": "1406028156996948179",
+    "actual_date": "2025-08-15T22:11:15+00:00",
+    "answer_id": "1406036111981285406",
+    "label": "resolved",
+    "solution": "Funds purchased via a new feature got stuck at Coinbase on mobile; the user manually transferred them to their wallet, resolving the issue. For future issues related to funds stuck at Coinbase, contact Coinbase support.",
+    "whole_thread": [
+      {
+        "message_id": "1406028156996948179",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406028544882249780",
+        "parent_id": "1406028156996948179"
+      },
+      {
+        "message_id": "1406028741708218500",
+        "parent_id": "1406028544882249780"
+      },
+      {
+        "message_id": "1406028960382324806",
+        "parent_id": "1406028741708218500"
+      },
+      {
+        "message_id": "1406033912483811419",
+        "parent_id": "1406028156996948179"
+      },
+      {
+        "message_id": "1406034066595381308",
+        "parent_id": "1406028960382324806"
+      },
+      {
+        "message_id": "1406036111981285406",
+        "parent_id": "1406033912483811419"
+      },
+      {
+        "message_id": "1406037552661794980",
+        "parent_id": "1406036111981285406"
+      }
+    ]
+  },
+  "1406140315697545338": {
+    "header": "KYC document verification issues for Sui Overflow 2025 winner and unresponsive support",
+    "topic_id": "1406140315697545338",
+    "actual_date": "2025-08-16T05:12:42+00:00",
+    "answer_id": "1406143563951247391",
+    "label": "outside",
+    "solution": "The user is advised to communicate with Josh Lee via email regarding KYC document requirements and to wait for updates on the KYC process, as it is being actively worked on.",
+    "whole_thread": [
+      {
+        "message_id": "1406140315697545338",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406140875825877116",
+        "parent_id": "1406140315697545338"
+      },
+      {
+        "message_id": "1406141039378563184",
+        "parent_id": "1406140875825877116"
+      },
+      {
+        "message_id": "1406141204114182284",
+        "parent_id": "1406141039378563184"
+      },
+      {
+        "message_id": "1406141331998248991",
+        "parent_id": "1406141204114182284"
+      },
+      {
+        "message_id": "1406141849135218758",
+        "parent_id": "1406141331998248991"
+      },
+      {
+        "message_id": "1406142303290265660",
+        "parent_id": "1406141849135218758"
+      },
+      {
+        "message_id": "1406142581888385065",
+        "parent_id": "1406142303290265660"
+      },
+      {
+        "message_id": "1406142812453601330",
+        "parent_id": "1406142581888385065"
+      },
+      {
+        "message_id": "1406143039344218244",
+        "parent_id": "1406142812453601330"
+      },
+      {
+        "message_id": "1406143467830251572",
+        "parent_id": "1406143039344218244"
+      },
+      {
+        "message_id": "1406143563951247391",
+        "parent_id": "1406143467830251572"
+      },
+      {
+        "message_id": "1406143615897440287",
+        "parent_id": "1406143563951247391"
+      }
+    ]
+  },
+  "1406222813370650674": {
+    "header": "Sui to ETH transaction pending for over 8 hours",
+    "topic_id": "1406222813370650674",
+    "actual_date": "2025-08-16T10:29:47+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1406222813370650674",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406223411767808061",
+        "parent_id": "1406222813370650674"
+      }
+    ]
+  },
+  "1406249107680661544": {
+    "header": "User asking technical questions in the wrong channel",
+    "topic_id": "1406249107680661544",
+    "actual_date": "2025-08-16T12:16:30+00:00",
+    "answer_id": "1406249199384662118",
+    "label": "outside",
+    "solution": "Users with technical questions are advised to post them in the designated technical channel (#955861929346355290).",
+    "whole_thread": [
+      {
+        "message_id": "1406249107680661544",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406249199384662118",
+        "parent_id": "1406249107680661544"
+      },
+      {
+        "message_id": "1406249260051075093",
+        "parent_id": "1406249199384662118"
+      },
+      {
+        "message_id": "1406249398069104671",
+        "parent_id": "1406249260051075093"
+      },
+      {
+        "message_id": "1406249579040735383",
+        "parent_id": "1406249398069104671"
+      },
+      {
+        "message_id": "1406249786981613578",
+        "parent_id": "1406249579040735383"
+      },
+      {
+        "message_id": "1406249942720315392",
+        "parent_id": "1406249786981613578"
+      },
+      {
+        "message_id": "1406250266705137695",
+        "parent_id": "1406249260051075093"
+      }
+    ]
+  },
+  "1406293554422222879": {
+    "header": "Faucet is not working",
+    "topic_id": "1406293554422222879",
+    "actual_date": "2025-08-16T15:17:03+00:00",
+    "answer_id": "1406295705080959120",
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1406293554422222879",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406295705080959120",
+        "parent_id": "1406293554422222879"
+      }
+    ]
+  },
+  "1406317618901811270": {
+    "header": "Failed USDC bridge transaction",
+    "topic_id": "1406317618901811270",
+    "actual_date": "2025-08-16T17:01:18+00:00",
+    "answer_id": "1406321939206897715",
+    "label": "resolved",
+    "solution": "To recover USDC from a failed bridge transaction, go to bridge.sui.io/bridge-usdc, select 'Resume Transaction', paste the transaction hash, and confirm.",
+    "whole_thread": [
+      {
+        "message_id": "1406317618901811270",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406321939206897715",
+        "parent_id": "1406317618901811270"
+      }
+    ]
+  },
+  "1406361485260882062": {
+    "header": "Not receiving faucet tokens despite timer countdown",
+    "topic_id": "1406361485260882062",
+    "actual_date": "2025-08-16T19:42:43+00:00",
+    "answer_id": "1406362561091207219",
+    "label": "outside",
+    "solution": "Users experiencing issues with the Discord faucet can try using an alternative faucet provided by Stakely.io (https://stakely.io/faucet/sui-sui).",
+    "whole_thread": [
+      {
+        "message_id": "1406361485260882062",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406362561091207219",
+        "parent_id": "1406361485260882062"
+      }
+    ]
+  },
+  "1406517251036811385": {
+    "header": "Funds lost after sending unsupported asset to Coinbase.",
+    "topic_id": "1406517251036811385",
+    "actual_date": "2025-08-17T05:58:07+00:00",
+    "answer_id": "1406517433539362898",
+    "label": "suggestion",
+    "solution": "Funds sent to an exchange that does not support the asset are likely unrecoverable.",
+    "whole_thread": [
+      {
+        "message_id": "1406517251036811385",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406517433539362898",
+        "parent_id": "1406517251036811385"
+      }
+    ]
+  },
+  "1406587534963773502": {
+    "header": "Difficulty claiming cross-bridge transfer due to pending gas fee and unresponsive claim button.",
+    "topic_id": "1406587534963773502",
+    "actual_date": "2025-08-17T10:52:25+00:00",
+    "answer_id": "1406589858209726604",
+    "label": "resolved",
+    "solution": "Ignore pending gas fee status, click the claim button (blue button with down arrow), reload the page, or try using a PC if the claim button is unresponsive.",
+    "whole_thread": [
+      {
+        "message_id": "1406587534963773502",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406588201996648509",
+        "parent_id": "1406587534963773502"
+      },
+      {
+        "message_id": "1406588452278894623",
+        "parent_id": "1406588201996648509"
+      },
+      {
+        "message_id": "1406588520822472754",
+        "parent_id": "1406588452278894623"
+      },
+      {
+        "message_id": "1406588590447923272",
+        "parent_id": "1406588452278894623"
+      },
+      {
+        "message_id": "1406588639877660712",
+        "parent_id": "1406588590447923272"
+      },
+      {
+        "message_id": "1406589142539960424",
+        "parent_id": "1406588639877660712"
+      },
+      {
+        "message_id": "1406589255660343357",
+        "parent_id": "1406589142539960424"
+      },
+      {
+        "message_id": "1406589297783734303",
+        "parent_id": "1406589142539960424"
+      },
+      {
+        "message_id": "1406589619255902359",
+        "parent_id": "1406589297783734303"
+      },
+      {
+        "message_id": "1406589858209726604",
+        "parent_id": "1406589297783734303"
+      },
+      {
+        "message_id": "1406591433338519622",
+        "parent_id": "1406589619255902359"
+      },
+      {
+        "message_id": "1406591494093279273",
+        "parent_id": "1406591433338519622"
+      }
+    ]
+  },
+  "1406708638285959449": {
+    "header": "Unable to receive test tokens from faucet for an extended period.",
+    "topic_id": "1406708638285959449",
+    "actual_date": "2025-08-17T18:45:33+00:00",
+    "answer_id": "1406709861575692309",
+    "label": "outside",
+    "solution": "Try using an external faucet like https://stakely.io/faucet/sui-sui or check the designated channel after some time.",
+    "whole_thread": [
+      {
+        "message_id": "1406708638285959449",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406709861575692309",
+        "parent_id": "1406708638285959449"
+      },
+      {
+        "message_id": "1406710204975943741",
+        "parent_id": "1406709861575692309"
+      },
+      {
+        "message_id": "1406710440381120733",
+        "parent_id": "1406710204975943741"
+      },
+      {
+        "message_id": "1406710562984820806",
+        "parent_id": "1406710440381120733"
+      }
+    ]
+  },
+  "1406759564338135040": {
+    "header": "Wallet being drained with unauthorized transactions after months of inactivity.",
+    "topic_id": "1406759564338135040",
+    "actual_date": "2025-08-17T22:39:08+00:00",
+    "answer_id": "1406760431048982759",
+    "label": "suggestion",
+    "solution": "There is no ticketing system; for a drained wallet, move remaining assets to a safe wallet immediately. Transactions on-chain are irreversible, and tracking the perpetrator is generally not possible. Users can check the explorer to see where funds went.",
+    "whole_thread": [
+      {
+        "message_id": "1406759564338135040",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406759765647822959",
+        "parent_id": "1406759564338135040"
+      },
+      {
+        "message_id": "1406760044300861503",
+        "parent_id": "1406759765647822959"
+      },
+      {
+        "message_id": "1406760431048982759",
+        "parent_id": "1406760044300861503"
+      },
+      {
+        "message_id": "1406760943710634076",
+        "parent_id": "1406760431048982759"
+      },
+      {
+        "message_id": "1406763907644653639",
+        "parent_id": "1406760943710634076"
+      },
+      {
+        "message_id": "1406764401909825636",
+        "parent_id": "1406763907644653639"
+      },
+      {
+        "message_id": "1406764548416999666",
+        "parent_id": "1406764401909825636"
+      },
+      {
+        "message_id": "1406769347321663569",
+        "parent_id": "1406764401909825636"
+      }
+    ]
+  },
+  "1406802650988675125": {
+    "header": "User's Slush wallet compromised, seeking investigation and resolution",
+    "topic_id": "1406802650988675125",
+    "actual_date": "2025-08-18T23:49:37+00:00",
+    "answer_id": null,
+    "label": "unresolved",
+    "solution": "N/A",
+    "whole_thread": [
+      {
+        "message_id": "1406802650988675125",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406832770407202956",
+        "parent_id": "1406802650988675125"
+      },
+      {
+        "message_id": "1406841279672750210",
+        "parent_id": "1406832770407202956"
+      },
+      {
+        "message_id": "1406842117107748929",
+        "parent_id": "1406841279672750210"
+      },
+      {
+        "message_id": "1406842220710985770",
+        "parent_id": "1406841279672750210"
+      },
+      {
+        "message_id": "1406848137372504115",
+        "parent_id": "1406842220710985770"
+      },
+      {
+        "message_id": "1406848784758997165",
+        "parent_id": "1406848137372504115"
+      },
+      {
+        "message_id": "1406851305011544119",
+        "parent_id": "1406848784758997165"
+      },
+      {
+        "message_id": "1407114084004139049",
+        "parent_id": "1406851305011544119"
+      },
+      {
+        "message_id": "1407115706796998686",
+        "parent_id": "1407114084004139049"
+      },
+      {
+        "message_id": "1407147826076450837",
+        "parent_id": "1407115706796998686"
+      },
+      {
+        "message_id": "1407148279912992779",
+        "parent_id": "1407147826076450837"
+      },
+      {
+        "message_id": "1407149469329260735",
+        "parent_id": "1407147826076450837"
+      }
+    ]
+  },
+  "1406843157605515314": {
+    "header": "User entered secret phrase into a fraudulent Slush wallet app and lost funds, seeking advice and reimbursement information.",
+    "topic_id": "1406843157605515314",
+    "actual_date": "2025-08-18T08:27:37+00:00",
+    "answer_id": "1406843766412808222",
+    "label": "resolved",
+    "solution": "The user was advised to immediately move assets from the compromised wallet after entering their secret phrase into a fraudulent app. The admin also clarified that the scam app was promoted through advertising and advised blocking direct messages from suspicious users. The possibility of reimbursement from Apple was deemed unlikely by the admin.",
+    "whole_thread": [
+      {
+        "message_id": "1406843157605515314",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406843294712991837",
+        "parent_id": "1406843157605515314"
+      },
+      {
+        "message_id": "1406843615585501195",
+        "parent_id": "1406843157605515314"
+      },
+      {
+        "message_id": "1406843632010662008",
+        "parent_id": "1406843615585501195"
+      },
+      {
+        "message_id": "1406843693377523733",
+        "parent_id": "1406843632010662008"
+      },
+      {
+        "message_id": "1406843766412808222",
+        "parent_id": "1406843693377523733"
+      },
+      {
+        "message_id": "1406844928855769179",
+        "parent_id": "1406843766412808222"
+      },
+      {
+        "message_id": "1406850362928922634",
+        "parent_id": "1406844928855769179"
+      },
+      {
+        "message_id": "1406850576838561855",
+        "parent_id": "1406850362928922634"
+      },
+      {
+        "message_id": "1406850869122699304",
+        "parent_id": "1406850362928922634"
+      },
+      {
+        "message_id": "1406850948155838524",
+        "parent_id": "1406850576838561855"
+      },
+      {
+        "message_id": "1406913785301569596",
+        "parent_id": "1406850948155838524"
+      },
+      {
+        "message_id": "1406915605889679480",
+        "parent_id": "1406913785301569596"
+      },
+      {
+        "message_id": "1406917152371642429",
+        "parent_id": "1406913785301569596"
+      },
+      {
+        "message_id": "1406917444349722626",
+        "parent_id": "1406917152371642429"
+      }
+    ]
+  },
+  "1406945239368863804": {
+    "header": "User needs help transferring Sui tokens from an old Slush web wallet to a Ledger wallet and is confused about Discord support and identifying scammers.",
+    "topic_id": "1406945239368863804",
+    "actual_date": "2025-08-18T11:27:16+00:00",
+    "answer_id": "1406951876397760554",
+    "label": "outside",
+    "solution": "The user was instructed to first download the Slush wallet browser extension, then use their Ledger to import/create a Sui wallet. Once the Ledger address is obtained, they should send assets from their old web app wallet to the Ledger address. When encountering issues with the old wallet showing a new address, the user was advised to forward the issue to the Mysten Labs Discord server for further assistance, as Slush wallet is a product of Mysten Labs.",
+    "whole_thread": [
+      {
+        "message_id": "1406945091439956010",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406945239368863804",
+        "parent_id": "1406945091439956010"
+      },
+      {
+        "message_id": "1406945471431315506",
+        "parent_id": "1406945239368863804"
+      },
+      {
+        "message_id": "1406945828253204580",
+        "parent_id": "1406945471431315506"
+      },
+      {
+        "message_id": "1406946586092638270",
+        "parent_id": "1406945828253204580"
+      },
+      {
+        "message_id": "1406946725561634848",
+        "parent_id": "1406945239368863804"
+      },
+      {
+        "message_id": "1406947544092643349",
+        "parent_id": "1406946586092638270"
+      },
+      {
+        "message_id": "1406948019164811304",
+        "parent_id": "1406947544092643349"
+      },
+      {
+        "message_id": "1406948396169826307",
+        "parent_id": "1406948019164811304"
+      },
+      {
+        "message_id": "1406948562885152839",
+        "parent_id": "1406948396169826307"
+      },
+      {
+        "message_id": "1406948738857042010",
+        "parent_id": "1406948562885152839"
+      },
+      {
+        "message_id": "1406948743919697931",
+        "parent_id": "1406948738857042010"
+      },
+      {
+        "message_id": "1406948913633689681",
+        "parent_id": "1406948743919697931"
+      },
+      {
+        "message_id": "1406949045506805760",
+        "parent_id": "1406948913633689681"
+      },
+      {
+        "message_id": "1406949206295445534",
+        "parent_id": "1406949045506805760"
+      },
+      {
+        "message_id": "1406949291984945284",
+        "parent_id": "1406949206295445534"
+      },
+      {
+        "message_id": "1406949912494477393",
+        "parent_id": "1406946725561634848"
+      },
+      {
+        "message_id": "1406950128488546314",
+        "parent_id": "1406949912494477393"
+      },
+      {
+        "message_id": "1406950207962353756",
+        "parent_id": "1406950128488546314"
+      },
+      {
+        "message_id": "1406950405551689809",
+        "parent_id": "1406950207962353756"
+      },
+      {
+        "message_id": "1406950599760674967",
+        "parent_id": "1406950207962353756"
+      },
+      {
+        "message_id": "1406951040699596841",
+        "parent_id": "1406950599760674967"
+      },
+      {
+        "message_id": "1406951290319142912",
+        "parent_id": "1406951040699596841"
+      },
+      {
+        "message_id": "1406951587296837683",
+        "parent_id": "1406951290319142912"
+      },
+      {
+        "message_id": "1406951876397760554",
+        "parent_id": "1406951587296837683"
+      },
+      {
+        "message_id": "1406952393022636103",
+        "parent_id": "1406951876397760554"
+      },
+      {
+        "message_id": "1406952654248083587",
+        "parent_id": "1406952393022636103"
+      },
+      {
+        "message_id": "1406954470708875314",
+        "parent_id": "1406952654248083587"
+      },
+      {
+        "message_id": "1406954913694617710",
+        "parent_id": "1406954470708875314"
+      },
+      {
+        "message_id": "1406955000793403426",
+        "parent_id": "1406954913694617710"
+      },
+      {
+        "message_id": "1406961443072639086",
+        "parent_id": "1406955000793403426"
+      },
+      {
+        "message_id": "1406961746731597844",
+        "parent_id": "1406961443072639086"
+      },
+      {
+        "message_id": "1406962654689361971",
+        "parent_id": "1406961443072639086"
+      }
+    ]
+  },
+  "1406966245516902491": {
+    "header": "User inquires if Sui wallet has been rebranded to Slush.",
+    "topic_id": "1406966245516902491",
+    "actual_date": "2025-08-18T11:56:45+00:00",
+    "answer_id": "1406970070890053703",
+    "label": "resolved",
+    "solution": "The Sui wallet was rebranded to Slush.",
+    "whole_thread": [
+      {
+        "message_id": "1406966245516902491",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406970070890053703",
+        "parent_id": "1406966245516902491"
+      }
+    ]
+  },
+  "1406969254770770010": {
+    "header": "User did not receive an email for their Suiplay device and wants to know how to get it.",
+    "topic_id": "1406969254770770010",
+    "actual_date": "2025-08-18T12:04:36+00:00",
+    "answer_id": "1406970108454113351",
+    "label": "outside",
+    "solution": "The user was advised to post about the issue on the Mysten Labs Discord server.",
+    "whole_thread": [
+      {
+        "message_id": "1406969254770770010",
+        "parent_id": null
+      },
+      {
+        "message_id": "1406970108454113351",
+        "parent_id": "1406969254770770010"
+      },
+      {
+        "message_id": "1406972049800560701",
+        "parent_id": "1406970108454113351"
+      }
+    ]
+  },
+  "1407011828634091604": {
+    "header": "User needs to access their Playtron wallet and add it to their Suiet wallet, but never received a key or import option.",
+    "topic_id": "1407011828634091604",
+    "actual_date": "2025-08-18T14:55:45+00:00",
+    "answer_id": "1407015118616789073",
+    "label": "outside",
+    "solution": "The user was advised to forward related questions to the Mysten Labs Discord server.",
+    "whole_thread": [
+      {
+        "message_id": "1407011828634091604",
+        "parent_id": null
+      },
+      {
+        "message_id": "1407012182444609597",
+        "parent_id": "1407011828634091604"
+      },
+      {
+        "message_id": "1407012433481957376",
+        "parent_id": "1407012182444609597"
+      },
+      {
+        "message_id": "1407015118616789073",
+        "parent_id": "1407011828634091604"
+      }
+    ]
+  },
+  "1407083593817395252": {
+    "header": "User is unable to see or copy their seed phrase or private key in the Chrome extension after updating from SuiWallet to Slush.",
+    "topic_id": "1407083593817395252",
+    "actual_date": "2025-08-18T21:59:00+00:00",
+    "answer_id": "1407092022858485912",
+    "label": "suggestion",
+    "solution": "The user was informed that the recovery phrase cannot be accessed without being logged in, and it is advised to securely store the recovery phrase in a safe location. The wallet requires an update to the latest version, and recovery details are needed to log in.",
+    "whole_thread": [
+      {
+        "message_id": "1407083593817395252",
+        "parent_id": null
+      },
+      {
+        "message_id": "1407085556390953083",
+        "parent_id": "1407083593817395252"
+      },
+      {
+        "message_id": "1407085642361602120",
+        "parent_id": "1407083593817395252"
+      },
+      {
+        "message_id": "1407085929549660170",
+        "parent_id": "1407085642361602120"
+      },
+      {
+        "message_id": "1407086525082239188",
+        "parent_id": "1407085929549660170"
+      },
+      {
+        "message_id": "1407086880801030224",
+        "parent_id": "1407085929549660170"
+      },
+      {
+        "message_id": "1407088760251748352",
+        "parent_id": "1407086880801030224"
+      },
+      {
+        "message_id": "1407088922332368988",
+        "parent_id": "1407088760251748352"
+      },
+      {
+        "message_id": "1407089967204798584",
+        "parent_id": "1407088922332368988"
+      },
+      {
+        "message_id": "1407092022858485912",
+        "parent_id": "1407088760251748352"
+      },
+      {
+        "message_id": "1407107658519154770",
+        "parent_id": "1407092022858485912"
+      },
+      {
+        "message_id": "1407107821329190923",
+        "parent_id": "1407107658519154770"
+      },
+      {
+        "message_id": "1407110181585817670",
+        "parent_id": "1407107821329190923"
+      },
+      {
+        "message_id": "1407110431616794676",
+        "parent_id": "1407110181585817670"
+      },
+      {
+        "message_id": "1407119503535505559",
+        "parent_id": "1407092022858485912"
+      },
+      {
+        "message_id": "1407121632916410541",
+        "parent_id": "1407119503535505559"
+      }
+    ]
+  },
+  "1407115361391739011": {
+    "header": "User is asking about the time for the next epoch due to a 'Failed to sign transaction' error.",
+    "topic_id": "1407115361391739011",
+    "actual_date": "2025-08-18T21:47:31+00:00",
+    "answer_id": "1407118744081403964",
+    "label": "resolved",
+    "solution": "An epoch is about 24 hours long.",
+    "whole_thread": [
+      {
+        "message_id": "1407115361391739011",
+        "parent_id": null
+      },
+      {
+        "message_id": "1407115776355467437",
+        "parent_id": "1407115361391739011"
+      },
+      {
+        "message_id": "1407116056786374720",
+        "parent_id": "1407115776355467437"
+      },
+      {
+        "message_id": "1407118744081403964",
+        "parent_id": "1407116056786374720"
+      }
+    ]
+  },
+  "1407126325503725638": {
+    "header": "User is unable to receive testnet SUI from the faucet.",
+    "topic_id": "1407126325503725638",
+    "actual_date": "2025-08-18T22:48:20+00:00",
+    "answer_id": "1407128191629529139",
+    "label": "suggestion",
+    "solution": "The user was provided with an external faucet link (https://stakely.io/faucet/sui-sui) and advised to try again later when it was temporarily unavailable.",
+    "whole_thread": [
+      {
+        "message_id": "1407126325503725638",
+        "parent_id": null
+      },
+      {
+        "message_id": "1407128191629529139",
+        "parent_id": "1407126325503725638"
+      },
+      {
+        "message_id": "1407130787932799018",
+        "parent_id": "1407128191629529139"
+      },
+      {
+        "message_id": "1407134047444008990",
+        "parent_id": "1407130787932799018"
+      }
+    ]
+  },
+  "1407136975571517470": {
+    "header": "User received an airdrop for ordering Suiplay and needs to know how to access and send tokens from the created wallet.",
+    "topic_id": "1407136975571517470",
+    "actual_date": "2025-08-18T23:08:11+00:00",
+    "answer_id": "1407137675529687082",
+    "label": "outside",
+    "solution": "The user was advised to reach out to the Mysten Labs support team on their server for assistance, and a link to the Mysten Labs Discord server was provided.",
+    "whole_thread": [
+      {
+        "message_id": "1407136975571517470",
+        "parent_id": null
+      },
+      {
+        "message_id": "1407137675529687082",
+        "parent_id": "1407136975571517470"
+      },
+      {
+        "message_id": "1407138430642552963",
+        "parent_id": "1407137675529687082"
+      },
+      {
+        "message_id": "1407138972446228580",
+        "parent_id": "1407138430642552963"
+      },
+      {
+        "message_id": "1407139043690414150",
+        "parent_id": "1407138972446228580"
+      }
+    ]
+  },
+  "1407158732420419614": {
+    "header": "Drained Slush wallet after interaction with a scammer impersonating an admin.",
+    "topic_id": "1407158732420419614",
+    "actual_date": "2025-08-19T01:51:09+00:00",
+    "answer_id": "1407174863482912799",
+    "label": "suggestion",
+    "solution": "The wallet was likely drained due to the seedphrase being exposed, possibly through a virus, a scam website/app, or digital storage. Admins never initiate DMs, so any such contact is a scam.",
+    "whole_thread": [
+      {
+        "message_id": "1407158732420419614",
+        "parent_id": "1407148279912992779"
+      },
+      {
+        "message_id": "1407158940793573566",
+        "parent_id": "1406832770407202956"
+      },
+      {
+        "message_id": "1407166595117351054",
+        "parent_id": "1407158732420419614"
+      },
+      {
+        "message_id": "1407174863482912799",
+        "parent_id": "1407158732420419614"
+      },
+      {
+        "message_id": "1407180057285496872",
+        "parent_id": "1407174863482912799"
+      }
+    ]
+  },
+  "1407235877415157780": {
+    "header": "Unable to withdraw SUI from Slush wallet due to an error.",
+    "topic_id": "1407235877415157780",
+    "actual_date": "2025-08-19T05:40:21+00:00",
+    "answer_id": "1407237738130051203",
+    "label": "suggestion",
+    "solution": "The error is caused by 'equivocation' from attempting concurrent transactions. The user needs to wait until the next epoch (approximately 11 hours) to perform another transaction.",
+    "whole_thread": [
+      {
+        "message_id": "1407235877415157780",
+        "parent_id": null
+      },
+      {
+        "message_id": "1407236036916019220",
+        "parent_id": "1407235877415157780"
+      },
+      {
+        "message_id": "1407237738130051203",
+        "parent_id": "1407236036916019220"
+      }
+    ]
+  },
+  "1407363631665905715": {
+    "header": "Error 'no gas coins' when trying to get a passport on Sui.",
+    "topic_id": "1407363631665905715",
+    "actual_date": "2025-08-19T14:03:02+00:00",
+    "answer_id": "1407364240464941096",
+    "label": "suggestion",
+    "solution": "To resolve the 'no gas coins' error, the user needs to add Sui coins to their wallet to cover the gas fees.",
+    "whole_thread": [
+      {
+        "message_id": "1407363631665905715",
+        "parent_id": null
+      },
+      {
+        "message_id": "1407364240464941096",
+        "parent_id": "1407363631665905715"
+      }
+    ]
+  }
+}

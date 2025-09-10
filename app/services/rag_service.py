@@ -14,7 +14,7 @@ except ImportError:
     # Fallback for development/testing
     genai = None
 
-from app.services.database import get_database_service
+from .database import get_database_service
 from app.models.db_models import Solution, SolutionEmbedding, SolutionSimilarity, SolutionDuplicate
 
 

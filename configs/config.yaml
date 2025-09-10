@@ -7,7 +7,7 @@ SOLUTIONS_DICT_FILENAME: 'solutions_dict.json'
 
 # Database configuration
 database:
-  url: "${DATABASE_URL}"  # Set this in your .env file
+  url: "${PEERA_DB_URL}"  # Set this in your .env file
   pool_size: 5
   max_overflow: 10
   pool_timeout: 30

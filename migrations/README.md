@@ -103,7 +103,7 @@ python add_duplicate_tracking.py --rollback
 
 - Database must exist with existing `solutions` and `threads` tables
 - PostgreSQL database (uses SERIAL for auto-increment)
-- Proper environment variables set (DATABASE_URL or config.yaml)
+- Proper environment variables set (PEERA_DB_URL or config.yaml)
 
 ### Migration Status:
 

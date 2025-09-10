@@ -40,7 +40,7 @@ class DatabaseService:
         """Initialize database connection and create tables."""
         try:
             # Try to get database URL from environment first, then fall back to config
-            db_url = os.environ.get('DATABASE_URL')
+            db_url = os.environ.get('PEERA_DB_URL')
             
             db_config = self.config.get('database', {})
             
@@ -54,7 +54,7 @@ class DatabaseService:
                     db_url = os.environ.get(env_var_name)
             
             if not db_url:
-                raise ValueError("Database URL not found in environment (DATABASE_URL) or configuration")
+                raise ValueError("Database URL not found in environment (PEERA_DB_URL) or configuration")
             
             # Create engine with connection pooling
             self.engine = create_engine(
@@ -181,6 +181,8 @@ class DatabaseService:
     def get_thread_by_topic_id(self, session: Session, topic_id: str) -> Optional[Thread]:
         """Get thread by topic ID."""
         return session.query(Thread).filter(Thread.topic_id == topic_id).first()
+
+    
     
     def update_thread(self, session: Session, topic_id: str, updates: Dict[str, Any]) -> Optional[Thread]:
         """Update thread with new data."""

@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
-from app.services import thread_processor
+from app.services import thread_service
 from app.services import gemini_service
 
 # --- Mock Pydantic Models ---
@@ -74,7 +74,7 @@ def test_first_thread_gathering(sample_messages_df, mock_gemini_response_step1, 
          patch('builtins.open', mock_open()) as mock_file, \
          patch('json.dump') as mock_json_dump:
 
-        result_path = thread_processor.first_thread_gathering(sample_messages_df, save_path)
+        result_path = thread_service.first_thread_gathering(sample_messages_df, save_path)
 
         mock_generate.assert_called_once()
         assert "first_group" in os.path.basename(result_path)
@@ -87,7 +87,7 @@ def test_first_thread_gathering(sample_messages_df, mock_gemini_response_step1, 
 def test_illustrated_threads(sample_messages_df):
     threads_json_data = [{'topic_id': '1', 'whole_thread': ['1', '2']}]
 
-    enriched_data = thread_processor.illustrated_threads(threads_json_data, sample_messages_df)
+    enriched_data = thread_service.illustrated_threads(threads_json_data, sample_messages_df)
 
     assert len(enriched_data) == 1
     thread = enriched_data[0]
@@ -108,7 +108,7 @@ def test_filter_technical_topics(sample_messages_df, mock_gemini_response_step2,
     with patch('app.services.gemini_service.generate_content', return_value=mock_gemini_response_step2) as mock_generate, \
          patch('builtins.open', mock_open(read_data=json.dumps(threads_data))) as mock_file:
 
-        result_path = thread_processor.filter_technical_topics(input_filename, "first", sample_messages_df, save_path)
+        result_path = thread_service.filter_technical_topics(input_filename, "first", sample_messages_df, save_path)
 
         mock_generate.assert_called_once()
         assert "first_technical" in os.path.basename(result_path)
@@ -131,7 +131,7 @@ def test_generalization_solution(mock_gemini_response_step3, tmp_path):
          patch('builtins.open', mock_open(read_data=json.dumps(technical_threads))) as mock_file, \
          patch('json.dump') as mock_json_dump:
 
-        result_path = thread_processor.generalization_solution(input_filename, "first", save_path)
+        result_path = thread_service.generalization_solution(input_filename, "first", save_path)
 
         mock_generate.assert_called_once()
         assert "first_solutions" in os.path.basename(result_path)

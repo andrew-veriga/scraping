@@ -1,7 +1,7 @@
 # This script sends a POST request to the /process-next-batch endpoint
 # of the running FastAPI application.
 
-$uri = "http://127.0.0.1:8000/process-next-batch"
+$uri = "http://127.0.0.1:8000/process-next-batches"
 
 Write-Host "Sending POST request to $uri"
 

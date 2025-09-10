@@ -20,10 +20,6 @@ gemini_client = genai.Client(
 model_name = "gemini-2.5-flash"
 
 
-# The `response_schema` parameter is not valid for GenerationConfig.
-# For JSON mode with a schema, the schema should be passed as a `tool`.
-# The `response_mime_type` should be in the GenerationConfig.
-
 config_step1 = types.GenerateContentConfig( 
     seed=42,
     temperature=1.0,

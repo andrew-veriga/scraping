@@ -23,12 +23,12 @@ def mock_services(monkeypatch):
     }))
     monkeypatch.setattr("app.services.data_loader.load_and_preprocess_data", mock_load_data)
 
-    # Mock thread_processor
-    monkeypatch.setattr("app.services.thread_processor.first_thread_gathering", MagicMock(return_value="step1.json"))
-    monkeypatch.setattr("app.services.thread_processor.filter_technical_topics", MagicMock(return_value="tech.json"))
-    monkeypatch.setattr("app.services.thread_processor.generalization_solution", MagicMock(return_value="solutions.json"))
+    # Mock thread_service
+    monkeypatch.setattr("app.services.thread_service.first_thread_gathering", MagicMock(return_value="step1.json"))
+    monkeypatch.setattr("app.services.thread_service.filter_technical_topics", MagicMock(return_value="tech.json"))
+    monkeypatch.setattr("app.services.thread_service.generalization_solution", MagicMock(return_value="solutions.json"))
     # This function is missing from the provided code, so it must be mocked.
-    monkeypatch.setattr("app.services.thread_processor.new_solutions_revision_and_add", MagicMock())
+    monkeypatch.setattr("app.services.solution_service.new_solutions_revision_and_add", MagicMock())
 
     # Mock file_utils
     # Note: get_end_date_from_solutions needs to return a timezone-aware datetime
@@ -66,7 +66,7 @@ def test_process_first_batch_exception(mock_services):
     assert response.status_code == 500
     assert response.json() == {"detail": "Test Error"}
 
-def test_process_next_batch_success(mock_services):
+def test_process_next_batches_success(mock_services):
     response = client.post("/process-next-batch")
     assert response.status_code == 200
     assert response.json() == {"message": "Next batch processed successfully"}
@@ -75,13 +75,13 @@ def test_process_next_batch_success(mock_services):
     # The loop should run and call process_batch when it finds data
     assert mock_services["process_batch"].call_count > 0
 
-def test_process_next_batch_exception(mock_services):
+def test_process_next_batches_exception(mock_services):
     mock_services["load_data"].side_effect = Exception("Test Error")
     response = client.post("/process-next-batch")
     assert response.status_code == 500
     assert response.json() == {"detail": "Test Error"}
 
-def test_process_next_batch_no_existing_solutions(mock_services, monkeypatch):
+def test_process_next_batches_no_existing_solutions(mock_services, monkeypatch):
     """Tests processing the next batch when no solutions file exists yet."""
     monkeypatch.setattr("app.utils.file_utils.get_end_date_from_solutions", MagicMock(return_value=None))
     # With no existing solutions, it should start from the beginning of messages
@@ -94,7 +94,7 @@ def test_process_next_batch_no_existing_solutions(mock_services, monkeypatch):
     # It should have found messages and called process_batch
     assert mock_services["process_batch"].call_count > 0
 
-def test_process_next_batch_no_new_messages(mock_services, monkeypatch):
+def test_process_next_batches_no_new_messages(mock_services, monkeypatch):
     """Tests processing when the solutions are already up-to-date."""
     # Set the latest solution date to be after the last message
     last_message_date = mock_services["load_data"].return_value['DateTime'].max()
