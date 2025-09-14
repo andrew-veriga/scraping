@@ -11,35 +11,58 @@ import os
 try:
     from pgvector.sqlalchemy import Vector
     PGVECTOR_AVAILABLE = True
+    print("✅ pgvector SQLAlchemy integration loaded")
 except ImportError:
     PGVECTOR_AVAILABLE = False
+    print("⚠️  pgvector not available - using JSON fallback for embeddings")
     # Create a mock Vector type that falls back to JSON
     def Vector(dimension):
+        from sqlalchemy.dialects.postgresql import JSON
         return JSON
 
 Base = declarative_base()
 
 
 class Message(Base):
-    """Discord message model"""
+    """Discord message model with hierarchical parent-child relationships"""
     __tablename__ = 'messages'
 
-    id = Column(Integer, primary_key=True)
-    message_id = Column(String(50), unique=True, nullable=False, index=True)
+    message_id = Column(String(50), primary_key=True)
+    
+    # Hierarchical parent-child relationship within a thread (no FK constraint for flexibility)
     parent_id = Column(String(50), nullable=True, index=True)
+    
     author_id = Column(String(50), nullable=False, index=True)
     content = Column(Text, nullable=False)
     datetime = Column(DateTime(timezone=True), nullable=False, index=True)
     dated_message = Column(Text, nullable=False)
     referenced_message_id = Column(String(50), nullable=True, index=True)
     
+    # Thread relationship - many messages belong to one thread
+    thread_id = Column(String(50), ForeignKey('threads.topic_id'), nullable=True, index=True)
+    order_in_thread = Column(Integer, nullable=True)
+    
+    # Hierarchy metadata
+    depth_level = Column(Integer, default=0, nullable=False)  # 0 for root (topic), 1+ for replies
+    is_root_message = Column(Boolean, default=False, nullable=False, index=True)  # True if this is the thread starter
+    
     # Processing metadata fields
     processing_status = Column(JSON, default=lambda: {}, nullable=False)
     last_processed_at = Column(DateTime(timezone=True), nullable=True)
     processing_version = Column(String(20), nullable=True)
     
-    # Relationships
-    threads = relationship("ThreadMessage", back_populates="message")
+    # Self-referential relationships for message hierarchy (manual join via parent_id)
+    parent_message = relationship("Message", remote_side=[message_id], 
+                                 primaryjoin="foreign(Message.parent_id)==Message.message_id",
+                                 back_populates="child_messages")
+    child_messages = relationship("Message", 
+                                 primaryjoin="Message.message_id==foreign(Message.parent_id)",
+                                 back_populates="parent_message")
+    
+    # Thread relationship
+    thread = relationship("Thread", back_populates="messages")
+    
+    # Processing relationships
     processing_steps = relationship("MessageProcessing", back_populates="message", cascade="all, delete-orphan")
     annotations = relationship("MessageAnnotation", back_populates="message", cascade="all, delete-orphan")
     
@@ -48,18 +71,60 @@ class Message(Base):
         Index('idx_message_datetime_author', 'datetime', 'author_id'),
         Index('idx_message_referenced', 'referenced_message_id'),
         Index('idx_message_processed', 'last_processed_at'),
+        Index('idx_message_thread_order', 'thread_id', 'order_in_thread'),
+        Index('idx_message_parent_hierarchy', 'parent_id', 'depth_level'),
+        Index('idx_message_thread_hierarchy', 'thread_id', 'parent_id', 'depth_level'),
+        Index('idx_message_root_messages', 'thread_id', 'is_root_message'),
     )
 
     def __repr__(self):
-        return f"<Message(message_id='{self.message_id}', author_id='{self.author_id}')>"
+        return f"<Message(message_id='{self.message_id}', author_id='{self.author_id}', thread_id='{self.thread_id}', parent_id='{self.parent_id}')>"
+    
+    @property
+    def is_thread_root(self):
+        """Check if this message is the root message of its thread (topic starter)"""
+        return self.parent_id is None and self.is_root_message
+    
+    def get_all_descendants(self, session):
+        """Get all descendant messages (children, grandchildren, etc.) recursively"""
+        def _get_descendants(message):
+            descendants = []
+            for child in message.child_messages:
+                descendants.append(child)
+                descendants.extend(_get_descendants(child))
+            return descendants
+        
+        return _get_descendants(self)
+    
+    def get_message_path(self, session):
+        """Get the path from root message to this message"""
+        path = []
+        current = self
+        while current is not None:
+            path.insert(0, current)
+            current = current.parent_message
+        return path
+    
+    def get_thread_tree(self, session):
+        """Get the entire message tree for this thread, starting from root"""
+        if self.thread_id is None:
+            return []
+        
+        # Find the root message(s) of this thread
+        root_messages = session.query(Message).filter(
+            Message.thread_id == self.thread_id,
+            Message.parent_id == None,
+            Message.is_root_message == True
+        ).order_by(Message.datetime).all()
+        
+        return root_messages
 
 
 class Thread(Base):
     """Conversation thread model"""
     __tablename__ = 'threads'
 
-    id = Column(Integer, primary_key=True)
-    topic_id = Column(String(50), unique=True, nullable=False, index=True)
+    topic_id = Column(String(50), primary_key=True)
     header = Column(Text, nullable=True)
     actual_date = Column(DateTime(timezone=True), nullable=False, index=True)
     answer_id = Column(String(50), nullable=True)
@@ -78,32 +143,17 @@ class Thread(Base):
     confidence_scores = Column(JSON, default=lambda: {}, nullable=False)
     processing_metadata = Column(JSON, default=lambda: {}, nullable=False)
     
-    # Relationships
-    messages = relationship("ThreadMessage", back_populates="thread", cascade="all, delete-orphan")
+    # Relationships - one thread has many messages
+    # CRITICAL: No cascade delete on messages - messages must NEVER be deleted when thread is deleted
+    messages = relationship("Message", back_populates="thread")
+    # Solutions can be cascade deleted as they are derived from threads
     solutions = relationship("Solution", back_populates="thread", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Thread(topic_id='{self.topic_id}', header='{self.header[:50]}...')>"
 
 
-class ThreadMessage(Base):
-    """Many-to-many relationship between threads and messages"""
-    __tablename__ = 'thread_messages'
-
-    id = Column(Integer, primary_key=True)
-    thread_id = Column(Integer, ForeignKey('threads.id'), nullable=False)
-    message_id = Column(Integer, ForeignKey('messages.id'), nullable=False)
-    order_in_thread = Column(Integer, nullable=False)
-    
-    # Relationships
-    thread = relationship("Thread", back_populates="messages")
-    message = relationship("Message", back_populates="threads")
-    
-    # Unique constraint
-    __table_args__ = (
-        Index('idx_thread_message_unique', 'thread_id', 'message_id', unique=True),
-        Index('idx_thread_order', 'thread_id', 'order_in_thread'),
-    )
+# ThreadMessage junction table removed - using direct many-to-one relationship
 
 
 class Solution(Base):
@@ -111,7 +161,7 @@ class Solution(Base):
     __tablename__ = 'solutions'
 
     id = Column(Integer, primary_key=True)
-    thread_id = Column(Integer, ForeignKey('threads.id'), nullable=False, unique=True)
+    thread_id = Column(String(50), ForeignKey('threads.topic_id'), nullable=False, unique=True)
     header = Column(Text, nullable=False)
     solution = Column(Text, nullable=False)
     label = Column(String(20), nullable=False)  # resolved, unresolved, suggestion, outside
@@ -145,7 +195,7 @@ class Solution(Base):
                               foreign_keys="SolutionDuplicate.original_solution_id")
     
     def __repr__(self):
-        return f"<Solution(id={self.id}, header='{self.header[:50]}...')>"
+        return f"<solution(id={self.id}, header='{self.header[:50]}...')>"
 
 
 class SolutionDuplicate(Base):
@@ -261,7 +311,7 @@ class MessageProcessing(Base):
     __tablename__ = 'message_processing'
 
     id = Column(Integer, primary_key=True)
-    message_id = Column(Integer, ForeignKey('messages.id'), nullable=False)
+    message_id = Column(String(50), ForeignKey('messages.message_id'), nullable=False)
     processing_step = Column(String(50), nullable=False, index=True)
     step_order = Column(Integer, nullable=False)
     result = Column(JSON, nullable=True)
@@ -311,7 +361,7 @@ class MessageAnnotation(Base):
     __tablename__ = 'message_annotations'
 
     id = Column(Integer, primary_key=True)
-    message_id = Column(Integer, ForeignKey('messages.id'), nullable=False)
+    message_id = Column(String(50), ForeignKey('messages.message_id'), nullable=False)
     annotation_type = Column(String(50), nullable=False, index=True)
     annotation_value = Column(JSON, nullable=True)
     confidence_score = Column(String(10), nullable=True)

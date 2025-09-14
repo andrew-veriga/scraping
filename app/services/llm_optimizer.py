@@ -6,7 +6,7 @@ import hashlib
 from datetime import datetime, timedelta
 import pandas as pd
 from sqlalchemy.orm import Session
-
+from sqlalchemy import func
 from app.services.database import get_database_service
 from app.services import gemini_service
 from app.models.db_models import Thread, Message, ThreadMessage, LLMCache, Solution
@@ -51,7 +51,7 @@ class LLMOptimizer:
             
             # Get messages for this thread (limit to most relevant)
             messages = session.query(Message).join(ThreadMessage).filter(
-                ThreadMessage.thread_id == thread.id
+                ThreadMessage.thread_id == thread.topic_id
             ).order_by(ThreadMessage.order_in_thread).limit(max_messages_per_thread).all()
             
             if messages:
@@ -163,14 +163,14 @@ class LLMOptimizer:
                     if thread:
                         # Get messages for this thread
                         messages = db_session.query(Message).join(ThreadMessage).filter(
-                            ThreadMessage.thread_id == thread.id
+                            ThreadMessage.thread_id == thread.topic_id
                         ).order_by(ThreadMessage.order_in_thread).all()
                         
                         thread_data = {
                             'Topic_ID': topic_id,
                             'Actual_Date': thread.actual_date.isoformat() if thread.actual_date else None,
                             'Answer_ID': thread.answer_id,
-                            'Whole_thread': [msg.message_id for msg in messages],
+                            'whole_thread': [msg.message_id for msg in messages],
                             'status': thread.status
                         }
                         technical_threads.append(thread_data)
@@ -363,7 +363,7 @@ class LLMOptimizer:
             if thread and not thread.is_processed:
                 # Check if thread has enough content for classification
                 message_count = session.query(ThreadMessage).filter(
-                    ThreadMessage.thread_id == thread.id
+                    ThreadMessage.thread_id == thread.topic_id
                 ).count()
                 
                 if message_count >= 2:  # Minimum messages for meaningful classification

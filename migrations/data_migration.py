@@ -134,7 +134,7 @@ class DataMigrator:
                         solution = self._create_solution(session, thread, solution_data)
                         
                         # Add messages to thread
-                        self._add_messages_to_thread(session, thread, solution_data.get('Whole_thread', []))
+                        self._add_messages_to_thread(session, thread, solution_data.get('whole_thread', []))
                         
                         session.flush()  # Flush to get IDs
                         self.stats['threads_migrated'] += 1
@@ -142,7 +142,7 @@ class DataMigrator:
                         
                     except Exception as e:
                         self.logger.error(f"Failed to migrate solution {topic_id}: {e}")
-                        self.stats['errors'].append(f"Solution {topic_id}: {e}")
+                        self.stats['errors'].append(f"solution {topic_id}: {e}")
                         session.rollback()
                         continue
                 
@@ -151,7 +151,7 @@ class DataMigrator:
                 
         except Exception as e:
             self.logger.error(f"Failed to migrate solutions: {e}")
-            self.stats['errors'].append(f"Solution migration: {e}")
+            self.stats['errors'].append(f"solution migration: {e}")
             raise
     
     def _create_or_get_thread(self, session, topic_id: str, solution_data: Dict[str, Any]) -> Thread:
@@ -168,11 +168,11 @@ class DataMigrator:
         
         thread_data = {
             'topic_id': topic_id,
-            'header': solution_data.get('Header'),
+            'header': solution_data.get('header'),
             'actual_date': actual_date,
             'answer_id': solution_data.get('Answer_ID'),
-            'label': solution_data.get('Label'),
-            'solution': solution_data.get('Solution'),
+            'label': solution_data.get('label'),
+            'solution': solution_data.get('solution'),
             'status': ThreadStatus.PERSISTED,  # These are from existing data
             'is_technical': True,  # Solutions dict only contains technical threads
             'is_processed': True   # These have been processed
@@ -183,10 +183,10 @@ class DataMigrator:
     def _create_solution(self, session, thread: Thread, solution_data: Dict[str, Any]) -> Solution:
         """Create solution for thread."""
         solution = Solution(
-            thread_id=thread.id,
-            header=solution_data.get('Header', ''),
-            solution=solution_data.get('Solution', ''),
-            label=solution_data.get('Label', SolutionStatus.UNRESOLVED),
+            thread_id=thread.topic_id,
+            header=solution_data.get('header', ''),
+            solution=solution_data.get('solution', ''),
+            label=solution_data.get('label', SolutionStatus.UNRESOLVED),
             confidence_score=None,  # Not available in old data
             version=1
         )
@@ -204,7 +204,7 @@ class DataMigrator:
             if message:
                 try:
                     thread_message = ThreadMessage(
-                        thread_id=thread.id,
+                        thread_id=thread.topic_id,
                         message_id=message.id,
                         order_in_thread=order
                     )

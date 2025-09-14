@@ -21,7 +21,7 @@ def add_or_update_solution(solutions_dict, new_solution):
     key = new_solution.get('topic_id') or new_solution.get('Topic_ID')
     if key:
         solutions_dict[key] = new_solution
-        logging.info(f"Solution for topic_id {key} added or updated.")
+        logging.info(f"solution for topic_id {key} added or updated.")
 
 def add_new_solutions_to_dict(solutions_dict, new_solutions_list):
     """Adds a list of new solutions to the solutions dictionary."""
@@ -105,7 +105,7 @@ def is_admin(message_ID):
 
 # Map Author IDs to User <N> using all unique author IDs from the entire Messages_df
 
-def illustrated_message(message_ID, messages_df):
+def illustrated_message(message_ID, db_service):
     """
     Formats a message with user mapping and reply information.
     user_mapping: A dictionary mapping Author IDs to formatted user names.
@@ -116,25 +116,24 @@ def illustrated_message(message_ID, messages_df):
     Returns:
         A formatted string representation of the message.
     """
-
-    message = messages_df.loc[message_ID]
-    author_id = message['Author ID']
-    referenced_message_id = message['Referenced Message ID']
-    message_content = message['Content']
-
-
-    user_mapping = lambda author_id: f'Admin {author_id}' if is_admin(author_id) else f'User {author_id}'
-
-    formatted_msg = f"{message['DateTime']} {user_mapping(author_id)}: "
+    with db_service.get_session() as session:
+        message = db_service.get_message_by_message_id(session, message_ID)
+        if message is None:
+            return "<empty>"
+        author_id = message.author_id
+        referenced_message_id = message.referenced_message_id
+        message_content = message.content
+        user_mapping = lambda author_id: f'Admin {author_id}' if is_admin(author_id) else f'User {author_id}'
+        formatted_msg = f"{message.datetime} {user_mapping(author_id)}: "
 
     # Handle replies
-    if referenced_message_id in messages_df.index:
-        referenced_message = messages_df.loc[referenced_message_id]
-        referenced_author_id = referenced_message['Author ID']
-        formatted_msg += f" reply to {user_mapping(referenced_author_id)} - "
+        if referenced_message_id:
+            referenced_message = db_service.get_message_by_message_id(session, referenced_message_id)
+            referenced_author_id = referenced_message.author_id
+            formatted_msg += f" reply to {user_mapping(referenced_author_id)} - "
 
     # Ensure message_content is a string before using re.sub
-    if pd.isna(message_content):
+    if message_content is None:
         message_content = "<empty>"
     else:
         message_content = str(message_content)
@@ -154,7 +153,7 @@ def illustrated_message(message_ID, messages_df):
 
 def convert_legacy_format(data):
     """
-    Converts legacy JSON format (Topic_ID, Whole_thread, etc.) to new format (topic_id, whole_thread, etc.)
+    Converts legacy JSON format (Topic_ID, whole_thread, etc.) to new format (topic_id, whole_thread, etc.)
     Supports both individual dictionaries and lists of dictionaries.
     """
     if isinstance(data, list):
@@ -165,17 +164,17 @@ def convert_legacy_format(data):
             # Convert key names
             if key == 'Topic_ID':
                 new_key = 'topic_id'
-            elif key == 'Whole_thread':
+            elif key == 'whole_thread':
                 new_key = 'whole_thread'
             elif key == 'Answer_ID':
                 new_key = 'answer_id'
             elif key == 'Actual_Date':
                 new_key = 'actual_date'
-            elif key == 'Header':
+            elif key == 'header':
                 new_key = 'header'
-            elif key == 'Label':
+            elif key == 'label':
                 new_key = 'label'
-            elif key == 'Solution':
+            elif key == 'solution':
                 new_key = 'solution'
             elif key == 'Message_ID':
                 new_key = 'message_id'
@@ -195,18 +194,18 @@ def convert_legacy_format(data):
     else:
         return data
 
-def illustrated_threads(threads_json_data, messages_df):
+def illustrated_threads(threads_json_data, db_service):
     """
     Enriches thread data with full message content for better analysis by the LLM.
     """
     for thread in threads_json_data:
-        thread['Whole_thread_formatted'] = []
+        thread['whole_thread_formatted'] = []
         # Support both old and new formats during transition
-        whole_thread = thread.get('whole_thread') or thread.get('Whole_thread', [])
+        whole_thread = thread.get('whole_thread') or thread.get('whole_thread', [])
         for msg in whole_thread:
             msg_id = msg['message_id']
-            message_content = illustrated_message(msg_id, messages_df)
-            thread['Whole_thread_formatted'].append({
+            message_content = illustrated_message(msg_id, db_service)
+            thread['whole_thread_formatted'].append({
                 "message_id": str(msg_id),
                 "parent_id": str(msg.get('parent_id', None)),
                 "content": message_content

@@ -3,7 +3,7 @@ Database migration script to add duplicate tracking functionality.
 
 This script adds:
 1. New SolutionDuplicate table for tracking duplicate relationships
-2. New columns to Solution table: is_duplicate and duplicate_count
+2. New columns to solution table: is_duplicate and duplicate_count
 3. Indexes for performance optimization
 
 Run this script after updating the codebase to ensure database schema matches the new models.
@@ -21,7 +21,6 @@ from sqlalchemy import create_engine, text, MetaData, Table, Column, Integer, St
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 from app.services.database import get_database_service
-from app.models.db_models import Base, Solution, SolutionDuplicate
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)

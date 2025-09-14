@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from app.models.db_models import (
-    Base, Message, Thread, ThreadMessage, Solution, SolutionDuplicate,
+    Base, Message, Thread, Solution, SolutionDuplicate,
     SolutionEmbedding, SolutionSimilarity, ProcessingBatch, LLMCache,
     MessageProcessing, MessageAnnotation, ProcessingPipeline
 )
@@ -161,6 +161,48 @@ class DatabaseService:
         
         return created_count
     
+    def bulk_create_messages_hierarchical(self, messages_data: List[Dict[str, Any]]) -> int:
+        """Bulk create messages with hierarchical structure (no FK constraints on parent_id)."""
+        created_count = 0
+        
+        with self.get_session() as session:
+            try:
+                for message_data in messages_data:
+                    try:
+                        # Check if message already exists
+                        existing = self.get_message_by_message_id(session, message_data['message_id'])
+                        if not existing:
+                            # Create message with hierarchical fields
+                            message = Message(
+                                message_id=message_data['message_id'],
+                                parent_id=message_data.get('parent_id'),
+                                author_id=message_data['author_id'],
+                                content=message_data['content'],
+                                datetime=message_data['datetime'],
+                                dated_message=message_data['dated_message'],
+                                referenced_message_id=message_data.get('referenced_message_id'),
+                                thread_id=message_data.get('thread_id'),
+                                order_in_thread=message_data.get('order_in_thread', 0),
+                                depth_level=message_data.get('depth_level', 0),
+                                is_root_message=message_data.get('is_root_message', False)
+                            )
+                            session.add(message)
+                            created_count += 1
+                    except IntegrityError as e:
+                        session.rollback()
+                        self.logger.warning(f"Could not create message {message_data['message_id']}: {e}")
+                        continue
+                
+                session.commit()
+                self.logger.info(f"Created {created_count} new hierarchical messages")
+                
+            except Exception as e:
+                session.rollback()
+                self.logger.error(f"Failed to bulk create hierarchical messages: {e}")
+                raise
+        
+        return created_count
+    
     # Thread operations
     def create_thread(self, session: Session, thread_data: Dict[str, Any]) -> Thread:
         """Create a new thread record."""
@@ -208,30 +250,21 @@ class DatabaseService:
             query = query.filter(Thread.actual_date >= from_date)
         return query.order_by(Thread.actual_date).all()
     
-    # Thread-Message relationship operations
-    def add_messages_to_thread(self, session: Session, thread_id: int, message_ids: List[str]):
-        """Add messages to a thread."""
-        for order, message_id in enumerate(message_ids):
-            message = self.get_message_by_message_id(session, message_id)
-            if message:
-                try:
-                    thread_message = ThreadMessage(
-                        thread_id=thread_id,
-                        message_id=message.id,
-                        order_in_thread=order
-                    )
-                    session.add(thread_message)
-                except IntegrityError:
-                    # Message already in thread
-                    continue
+    # Thread-Message relationship operations (now direct with hierarchical structure)
+    def get_thread_messages(self, session: Session, thread_id: str) -> List[Message]:
+        """Get all messages for a thread in order (using direct relationship)."""
+        return session.query(Message).filter(
+            Message.thread_id == thread_id
+        ).order_by(Message.order_in_thread).all()
     
-    def get_thread_messages(self, session: Session, thread_id: int) -> List[Message]:
-        """Get all messages for a thread in order."""
-        return session.query(Message).join(ThreadMessage).filter(
-            ThreadMessage.thread_id == thread_id
-        ).order_by(ThreadMessage.order_in_thread).all()
+    def get_thread_root_message(self, session: Session, thread_id: str) -> Optional[Message]:
+        """Get the root message for a thread."""
+        return session.query(Message).filter(
+            Message.thread_id == thread_id,
+            Message.is_root_message == True
+        ).first()
     
-    # Solution operations
+    # solution operations
     def create_solution(self, session: Session, solution_data: Dict[str, Any]) -> Solution:
         """Create a new solution record."""
         solution = Solution(
@@ -295,6 +328,24 @@ class DatabaseService:
             ProcessingBatch.status == 'completed'
         ).order_by(desc(ProcessingBatch.end_date)).first()
         return batch.end_date if batch else None
+    
+    def get_latest_solution_date(self, session: Session) -> Optional[datetime]:
+        """Get the latest datetime from threads, normalized and incremented by one day."""
+        thread = session.query(Thread).filter(
+            Thread.actual_date.is_not(None)
+        ).order_by(desc(Thread.actual_date)).first()
+        if thread:
+            # Convert to pandas timestamp, normalize, and add one day
+            
+            latest_date = pd.Timestamp(thread.actual_date).normalize() + pd.Timedelta(days=1)
+            return latest_date.to_pydatetime()
+        return None
+    
+    def get_latest_threads_from_actual_date(self, session: Session, lookback_date: datetime) -> List[Thread]:
+        """Get all threads with actual_date >= lookback_date."""
+        return session.query(Thread).filter(
+            Thread.actual_date >= lookback_date
+        ).order_by(Thread.actual_date).all()
     
     # LLM Cache operations
     def _generate_cache_key(self, request_data: Dict[str, Any]) -> str:

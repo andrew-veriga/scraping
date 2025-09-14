@@ -23,7 +23,7 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
 
     prev_solution_dict = {}
     for topic_id, solution in solutions_dict.items():
-        actual_date = solution.get('actual_date') or solution.get('Actual_Date')
+        actual_date = solution.get('actual_date')
         if pd.Timestamp(actual_date).tz_convert(lookback_date.tzinfo) >= lookback_date:
             prev_solution_dict[topic_id] = solution
     new_solution_dict = create_dict_from_list(next_solutions_list)
@@ -52,13 +52,13 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
 
 topic_id: {key}
 Previous version:
-    statement: {p['prev']['Header']}
-    solution: {p['prev']['Solution']}
-    status: {p['prev']['Label']}
+    statement: {p['prev']['header']} 
+    solution: {p['prev']['solution']}
+    status: {p['prev']['label']}
 New version:
-    statement: {p[ThreadStatus.NEW]['Header']}
-    solution: {p[ThreadStatus.NEW]['Solution']}
-    status: {p[ThreadStatus.NEW]['Label']}
+    statement: {p['new']['header']}
+    solution: {p['new']['solution']}
+    status: {p['new']['label']}
 """
         )
 
@@ -72,16 +72,38 @@ New version:
 
         revised_solutions=response_solutions.comparisions
 
+        # Track database updates needed for message-thread assignments
+        message_thread_updates = {}  # message_id -> new_thread_id
+        threads_with_changes = set()
+        
         for s in revised_solutions:
-            if  s.Label==RevisedStatus.IMPROVED:
-                add_or_update_solution(solutions_dict, new_solution_dict[s.topic_id])
-                logging.info(f'Topic {s.topic_id} improved')
-            elif s.Label==RevisedStatus.MINORCHANGES:
-                logging.info(f"Topic {s.topic_id} get {len(new_solution_dict[s.topic_id]['whole_thread']) - len(solutions_dict[s.topic_id]['whole_thread'])} new messages")
-                solutions_dict[s.topic_id]['whole_thread'] = new_solution_dict[s.topic_id]['whole_thread']
-                solutions_dict[s.topic_id]['actual_date'] = new_solution_dict[s.topic_id]['actual_date']
-                solutions_dict[s.topic_id]['answer_id'] = new_solution_dict[s.topic_id]['answer_id']
-                solutions_dict[s.topic_id]['label'] = new_solution_dict[s.topic_id]['label']
+            thread_id = s.topic_id
+            
+            if s.label==RevisedStatus.IMPROVED:
+                add_or_update_solution(solutions_dict, new_solution_dict[thread_id])
+                threads_with_changes.add(thread_id)
+                logging.info(f'Topic {thread_id} improved')
+                
+                # Track new message assignments for database update
+                new_whole_thread = new_solution_dict[thread_id]['whole_thread']
+                for msg in new_whole_thread:
+                    message_thread_updates[str(msg['message_id'])] = thread_id
+                
+            elif s.label==RevisedStatus.MINORCHANGES:
+                old_messages = len(solutions_dict[thread_id]['whole_thread']) 
+                new_messages = len(new_solution_dict[thread_id]['whole_thread'])
+                logging.info(f"Topic {thread_id} get {new_messages - old_messages} new messages")
+                
+                solutions_dict[thread_id]['whole_thread'] = new_solution_dict[thread_id]['whole_thread']
+                solutions_dict[thread_id]['actual_date'] = new_solution_dict[thread_id]['actual_date']
+                solutions_dict[thread_id]['answer_id'] = new_solution_dict[thread_id]['answer_id']
+                solutions_dict[thread_id]['label'] = new_solution_dict[thread_id]['label']
+                threads_with_changes.add(thread_id)
+                
+                # Track new message assignments for database update
+                new_whole_thread = new_solution_dict[thread_id]['whole_thread']
+                for msg in new_whole_thread:
+                    message_thread_updates[str(msg['message_id'])] = thread_id
             else:
 
                 changed_solution = new_solution_dict[s.topic_id]
@@ -105,8 +127,50 @@ New version:
                     pass
 
 
+        # Update database with revised message-thread assignments
+        if message_thread_updates:
+            try:
+                db_service = get_database_service()
+                with db_service.get_session() as session:
+                    from app.models.db_models import Message
+                    from app.services.processing_tracker import get_processing_tracker
+                    processing_tracker = get_processing_tracker()
+                    
+                    updates_count = 0
+                    for message_id_str, new_thread_id in message_thread_updates.items():
+                        db_message = session.query(Message).filter(Message.message_id == message_id_str).first()
+                        
+                        if db_message:
+                            old_thread_id = db_message.thread_id
+                            if old_thread_id != new_thread_id:
+                                db_message.thread_id = new_thread_id
+                                updates_count += 1
+                                
+                                # Record processing step for message reassignment
+                                processing_tracker.record_processing_step(
+                                    session=session,
+                                    message_id=db_message.message_id,
+                                    processing_step=processing_tracker.STEPS['THREAD_GROUPING'],
+                                    result={
+                                        'assigned_to_thread': new_thread_id,
+                                        'previous_thread_id': old_thread_id,
+                                        'thread_grouping_method': 'llm_solution_revision',
+                                        'reassigned_during': 'solution_revision_phase'
+                                    },
+                                    metadata={'processing_type': 'solution_revision', 'threads_revised': list(threads_with_changes)}
+                                )
+                        else:
+                            logging.warning(f"Message {message_id_str} from revised solution not found in database")
+                    
+                    session.commit()
+                    logging.info(f"solution revision database updates:")
+                    logging.info(f"  🔄 Updated message-thread assignments: {updates_count}")
+                    logging.info(f"  📝 Threads with revised message assignments: {len(threads_with_changes)}")
+                    
+            except Exception as e:
+                logging.error(f"Failed to update database during solution revision: {e}")
+
     new_solutions_for_add = {key: s for key, s in new_solution_dict.items() if key in new_threads}
-    
     
     return new_solutions_for_add
 
@@ -128,7 +192,7 @@ def check_in_rag_and_save(solutions_dict, new_solutions_for_add):
             filtered_solutions_for_add.append(solution_data)
             logging.info(f'New solution {topic_id} approved for addition: {rag_check_result["reason"]}')
         elif rag_check_result['recommendation'] == 'merge':
-
+            #TODO: Failed to merge solutions: unhashable type: 'dict'
             _merge_similar_solutions(solutions_dict, topic_id, solution_data, rag_check_result['similar_solutions'])
             logging.info(f'New solution {topic_id} merged with existing solution')
         elif rag_check_result['recommendation'] == 'mark_duplicate':
@@ -152,7 +216,7 @@ def _check_solution_with_rag(solution_data: dict, exclude_solution_id: str = Non
     Check solution against existing solutions using RAG similarity search.
     
     Args:
-        solution_data: Dictionary containing Header, Solution, and Label
+        solution_data: Dictionary containing header, solution, and label
         exclude_solution_id: Topic ID to exclude from similarity search
         
     Returns:
@@ -172,9 +236,9 @@ def _check_solution_with_rag(solution_data: dict, exclude_solution_id: str = Non
             
             result = rag_service.check_solution_uniqueness(
                 session=session,
-                header=solution_data.get('Header', ''),
-                solution_text=solution_data.get('Solution', ''),
-                label=solution_data.get('Label', ''),
+                header=solution_data.get('header', ''),
+                solution_text=solution_data.get('solution', ''),
+                label=solution_data.get('label', ''),
                 exclude_solution_id=exclude_db_solution_id
             )
             
@@ -199,7 +263,7 @@ def _merge_similar_solutions(solutions_dict: dict, topic_id: str, new_solution_d
         solutions_dict: Current solutions dictionary
         topic_id: Topic ID of new solution
         new_solution_data: New solution data
-        similar_solutions: List of (Solution, similarity_score) tuples
+        similar_solutions: List of (solution, similarity_score) tuples
     """
     if not similar_solutions:
         return
@@ -209,32 +273,32 @@ def _merge_similar_solutions(solutions_dict: dict, topic_id: str, new_solution_d
         most_similar_solution, similarity_score = similar_solutions[0]
         existing_topic_id = most_similar_solution.thread.topic_id
         
-        if existing_topic_id in solutions_dict:
+        if existing_topic_id in solutions_dict.keys():
             existing_solution = solutions_dict[existing_topic_id]
             
             if similarity_score >= 0.95:
 
-                new_messages = set(new_solution_data.get('Whole_thread', []))
-                existing_messages = set(existing_solution.get('Whole_thread', []))
+                new_messages = set(new_solution_data.get('whole_thread', []))
+                existing_messages = set(existing_solution.get('whole_thread', []))
                 combined_messages = list(existing_messages.union(new_messages))
-                existing_solution['Whole_thread'] = combined_messages
+                existing_solution['whole_thread'] = combined_messages
                 
                 logging.info(f"Merged {topic_id} into {existing_topic_id}: updated message list")
                 
             elif similarity_score >= 0.85:
 
-                new_solution_text = new_solution_data.get('Solution', '')
-                existing_solution_text = existing_solution.get('Solution', '')
+                new_solution_text = new_solution_data.get('solution', '')
+                existing_solution_text = existing_solution.get('solution', '')
                 
                 if len(new_solution_text) > len(existing_solution_text):
-                    existing_solution['Solution'] = new_solution_text
-                    existing_solution['Header'] = new_solution_data.get('Header', existing_solution['Header'])
+                    existing_solution['solution'] = new_solution_text
+                    existing_solution['header'] = new_solution_data.get('header', existing_solution['header'])
                     logging.info(f"Merged {topic_id} into {existing_topic_id}: updated solution text")
                 
-                new_messages = set(new_solution_data.get('Whole_thread', []))
-                existing_messages = set(existing_solution.get('Whole_thread', []))
-                combined_messages = list(existing_messages.union(new_messages))
-                existing_solution['Whole_thread'] = combined_messages
+                # new_messages = set(new_solution_data.get('whole_thread', []))
+                # existing_messages = set(existing_solution.get('whole_thread', []))
+                # combined_messages = list(existing_messages.union(new_messages))
+                existing_solution['whole_thread'].extend(new_solution_data.get('whole_thread', []))
                 
     except Exception as e:
         logging.error(f"Failed to merge solutions: {e}")
@@ -245,7 +309,7 @@ def _create_duplicate_records(solution_data: dict, similar_solutions: list):
     
     Args:
         solution_data: Dictionary containing solution information (topic_id, header, solution, etc.)
-        similar_solutions: List of (Solution, similarity_score) tuples from RAG search
+        similar_solutions: List of (solution, similarity_score) tuples from RAG search
     """
     try:
         if not similar_solutions:
@@ -264,14 +328,14 @@ def _create_duplicate_records(solution_data: dict, similar_solutions: list):
                 logging.error(f"Thread not found in database for topic_id: {topic_id}")
                 return
             
-            solution = session.query(Solution).filter(Solution.thread_id == thread.id).first()
+            solution = session.query(Solution).filter(Solution.thread_id == thread.topic_id).first()
             if not solution:
 
                 solution_db_data = {
-                    'thread_id': thread.id,
-                    'header': solution_data.get('Header', ''),
-                    'solution': solution_data.get('Solution', ''),
-                    'label': solution_data.get('Label', SolutionStatus.UNRESOLVED),
+                    'thread_id': thread.topic_id,
+                    'header': solution_data.get('header', ''),
+                    'solution': solution_data.get('solution', ''),
+                    'label': solution_data.get('label', SolutionStatus.UNRESOLVED),
                     'is_duplicate': True
                 }
                 solution = db_service.create_solution(session, solution_db_data)
@@ -319,11 +383,11 @@ def update_database_with_solutions(solutions_dict: dict):
                     
                     thread_data = {
                         'topic_id': topic_id,
-                        'header': solution_data.get('Header'),
+                        'header': solution_data.get('header'),
                         'actual_date': actual_date,
                         'answer_id': solution_data.get('Answer_ID'),
-                        'label': solution_data.get('Label'),
-                        'solution': solution_data.get('Solution'),
+                        'label': solution_data.get('label'),
+                        'solution': solution_data.get('solution'),
                         'status': ThreadStatus.NEW,
                         'is_technical': True,
                         'is_processed': True
@@ -333,23 +397,23 @@ def update_database_with_solutions(solutions_dict: dict):
                 
                 # Update or create solution
                 existing_solution = session.query(Solution).filter(
-                    Solution.thread_id == thread.id
+                    Solution.thread_id == thread.topic_id
                 ).first()
                 
                 if existing_solution:
                     # Update existing solution
-                    db_service.update_solution(session, thread.id, {
-                        'header': solution_data.get('Header', ''),
-                        'solution': solution_data.get('Solution', ''),
-                        'label': solution_data.get('Label', SolutionStatus.UNRESOLVED)
+                    db_service.update_solution(session, thread.topic_id, {
+                        'header': solution_data.get('header', ''),
+                        'solution': solution_data.get('solution', ''),
+                        'label': solution_data.get('label', SolutionStatus.UNRESOLVED)
                     })
                 else:
                     # Create new solution
                     solution_db_data = {
-                        'thread_id': thread.id,
-                        'header': solution_data.get('Header', ''),
-                        'solution': solution_data.get('Solution', ''),
-                        'label': solution_data.get('Label', SolutionStatus.UNRESOLVED)
+                        'thread_id': thread.topic_id,
+                        'header': solution_data.get('header', ''),
+                        'solution': solution_data.get('solution', ''),
+                        'label': solution_data.get('label', SolutionStatus.UNRESOLVED)
                     }
                     solution = db_service.create_solution(session, solution_db_data)
                     

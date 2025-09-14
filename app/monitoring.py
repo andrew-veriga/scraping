@@ -111,9 +111,9 @@ def get_topic_duplicates(topic_id: str):
             if not thread:
                 raise HTTPException(status_code=404, detail=f"Thread with topic_id {topic_id} not found")
             
-            solution = session.query(Solution).filter(Solution.thread_id == thread.id).first()
+            solution = session.query(Solution).filter(Solution.thread_id == thread.topic_id).first()
             if not solution:
-                raise HTTPException(status_code=404, detail=f"Solution for topic_id {topic_id} not found")
+                raise HTTPException(status_code=404, detail=f"solution for topic_id {topic_id} not found")
             
             duplicate_chain = analytics_service.get_solution_duplicate_chain(session, solution.id)
             return duplicate_chain
@@ -188,7 +188,7 @@ def get_thread_processing_history(topic_id: str):
             if not thread:
                 raise HTTPException(status_code=404, detail=f"Thread with topic_id {topic_id} not found")
             
-            processing_history = processing_tracker.get_thread_processing_history(session, thread.id)
+            processing_history = processing_tracker.get_thread_processing_history(session, thread.topic_id)
             return processing_history
     except HTTPException:
         raise

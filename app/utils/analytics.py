@@ -82,7 +82,7 @@ class AnalyticsService:
                 Thread.actual_date,
                 func.count(SolutionDuplicate.original_solution_id).label('duplicate_count')
             ).join(
-                Thread, Solution.thread_id == Thread.id
+                Thread, Solution.thread_id == Thread.topic_id
             ).outerjoin(
                 SolutionDuplicate, Solution.id == SolutionDuplicate.original_solution_id
             ).group_by(
@@ -198,7 +198,7 @@ class AnalyticsService:
             ).join(
                 Solution, SolutionDuplicate.solution_id == Solution.id
             ).join(
-                Thread, Solution.thread_id == Thread.id
+                Thread, Solution.thread_id == Thread.topic_id
             ).filter(
                 SolutionDuplicate.status == 'pending_review'
             ).order_by(
@@ -209,7 +209,7 @@ class AnalyticsService:
             for dup in pending_duplicates:
                 # Get original solution details
                 original_solution = session.query(Solution, Thread).join(
-                    Thread, Solution.thread_id == Thread.id
+                    Thread, Solution.thread_id == Thread.topic_id
                 ).filter(Solution.id == dup.SolutionDuplicate.original_solution_id).first()
                 
                 if original_solution:
@@ -242,11 +242,11 @@ class AnalyticsService:
         try:
             # Get the solution
             solution = session.query(Solution, Thread).join(
-                Thread, Solution.thread_id == Thread.id
+                Thread, Solution.thread_id == Thread.topic_id
             ).filter(Solution.id == solution_id).first()
             
             if not solution:
-                return {'error': 'Solution not found'}
+                return {'error': 'solution not found'}
             
             # Get all duplicates of this solution
             duplicates = session.query(
@@ -258,20 +258,20 @@ class AnalyticsService:
             ).join(
                 Solution, SolutionDuplicate.solution_id == Solution.id
             ).join(
-                Thread, Solution.thread_id == Thread.id
+                Thread, Solution.thread_id == Thread.topic_id
             ).filter(
                 SolutionDuplicate.original_solution_id == solution_id
             ).order_by(SolutionDuplicate.created_at).all()
             
             return {
                 'original': {
-                    'solution_id': solution.Solution.id,
+                    'solution_id': solution.solution.id,
                     'topic_id': solution.Thread.topic_id,
-                    'header': solution.Solution.header,
-                    'solution': solution.Solution.solution,
-                    'label': solution.Solution.label,
+                    'header': solution.solution.header,
+                    'solution': solution.solution.solution,
+                    'label': solution.solution.label,
                     'date': solution.Thread.actual_date.isoformat() if solution.Thread.actual_date else None,
-                    'duplicate_count': solution.Solution.duplicate_count
+                    'duplicate_count': solution.solution.duplicate_count
                 },
                 'duplicates': [
                     {

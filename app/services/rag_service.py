@@ -174,47 +174,51 @@ class RAGService:
     def _find_similar_with_pgvector(self, session: Session, query_embedding: List[float],
                                    exclude_solution_id: Optional[int], min_similarity: float) -> List[Tuple[Solution, float]]:
         """Find similar solutions using pgvector extension."""
-        # Build query to find similar embeddings using pgvector
-        query = """
-        SELECT s.*, se.embedding, 
-               (se.embedding <=> %s::vector) AS distance
-        FROM solutions s
-        JOIN solution_embeddings se ON s.id = se.solution_id
-        WHERE (se.embedding <=> %s::vector) < %s
-        """
-        
-        params = [query_embedding, query_embedding, 1 - min_similarity]
-        
-        if exclude_solution_id:
-            query += " AND s.id != %s"
-            params.append(exclude_solution_id)
-        
-        query += " ORDER BY (se.embedding <=> %s::vector) LIMIT %s"
-        params.extend([query_embedding, self.max_similar_results])
-        
-        # Execute raw SQL query
-        # TODO: Всегда выдает ошибку "List argument must consist only of dictionaries" 
-        result = session.execute(text(query), params)
-        rows = result.fetchall()
-        
-        similar_solutions = []
-        for row in rows:
-            # Reconstruct solution object
-            solution = session.query(Solution).filter(Solution.id == row[0]).first()
-            if solution:
-                # Convert distance to similarity (distance = 1 - cosine_similarity)
-                similarity = 1 - float(row[-1])
-                similar_solutions.append((solution, similarity))
-        
-        self.logger.info(f"Found {len(similar_solutions)} similar solutions using pgvector")
-        return similar_solutions
+        try:
+            # Use a simpler approach with direct SQL execution
+            # Convert embedding to string format for PostgreSQL
+            embedding_str = '[' + ','.join(map(str, query_embedding)) + ']'
+            
+            # Build the query with string formatting (be careful with SQL injection)
+            query = f"""
+            SELECT s.*, se.embedding, 
+                   (se.embedding <=> '{embedding_str}'::vector) AS distance
+            FROM solutions s
+            JOIN solution_embeddings se ON s.id = se.solution_id
+            WHERE (se.embedding <=> '{embedding_str}'::vector) < {1 - min_similarity}
+            """
+            
+            if exclude_solution_id:
+                query += f" AND s.id != {exclude_solution_id}"
+            
+            query += f" ORDER BY (se.embedding <=> '{embedding_str}'::vector) LIMIT {self.max_similar_results}"
+            
+            # Execute the query directly
+            result = session.execute(text(query))
+            rows = result.fetchall()
+            
+            similar_solutions = []
+            for row in rows:
+                # Reconstruct solution object
+                solution = session.query(Solution).filter(Solution.id == row[0]).first()
+                if solution:
+                    # Convert distance to similarity (distance = 1 - cosine_similarity)
+                    similarity = 1 - float(row[-1])
+                    similar_solutions.append((solution, similarity))
+            
+            self.logger.info(f"Found {len(similar_solutions)} similar solutions using pgvector")
+            return similar_solutions
+            
+        except Exception as e:
+            self.logger.error(f"Error in pgvector similarity search: {e}")
+            return []
     
     def _find_similar_with_json(self, session: Session, query_embedding: List[float],
                                exclude_solution_id: Optional[int], min_similarity: float) -> List[Tuple[Solution, float]]:
         """Find similar solutions using JSON storage and Python similarity calculation."""
         # Get all solution embeddings
         query = session.query(Solution, SolutionEmbedding).join(
-            SolutionEmbedding, Solution.id == SolutionEmbedding.solution_id
+            SolutionEmbedding, solution.id == SolutionEmbedding.solution_id
         )
         
         if exclude_solution_id:

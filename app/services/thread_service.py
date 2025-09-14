@@ -6,13 +6,113 @@ import os
 from typing import Optional
 import pandas as pd
 import logging
-
+from sqlalchemy import func
 from app.services import gemini_service, prompts
 from app.services.processing_tracker import get_processing_tracker
 from app.services.database import get_database_service
 from app.models.pydantic_models import ThreadStatus
 from app.models.db_models import Message
 from app.utils.file_utils import *
+
+
+def _recalculate_hierarchy_metadata(session):
+    """
+    Recalculate depth_level and is_root_message for all messages after parent_id updates.
+    Returns number of messages with updated depth levels.
+    """
+    from collections import defaultdict, deque
+    
+    # Get all messages
+    messages = session.query(Message).all()
+    message_dict = {msg.message_id: msg for msg in messages}
+    
+    # Track updates
+    depth_updates = 0
+    
+    # Calculate depth for each message using BFS
+    processed = set()
+    
+    for message in messages:
+        if message.message_id in processed:
+            continue
+            
+        # Find root of this message's chain
+        current = message
+        path = []
+        while current and current.message_id not in processed:
+            if current.message_id in [m.message_id for m in path]:  # Circular reference
+                break
+            path.append(current)
+            parent = message_dict.get(current.parent_id) if current.parent_id else None
+            current = parent
+            
+        # Calculate depths from the root
+        if path:
+            # If we found a root or hit a processed message, calculate depths
+            start_depth = 0
+            if current and current.message_id in processed:
+                start_depth = current.depth_level + 1
+                
+            for i, msg in enumerate(reversed(path)):
+                new_depth = start_depth + i
+                new_is_root = (new_depth == 0)
+                
+                if msg.depth_level != new_depth or msg.is_root_message != new_is_root:
+                    msg.depth_level = new_depth
+                    msg.is_root_message = new_is_root
+                    depth_updates += 1
+                    
+                processed.add(msg.message_id)
+    
+    return depth_updates
+
+def _create_thread_object(session, thread_id, thread_messages):
+    """
+    Create a new Thread object in the database if it doesn't already exist.
+    
+    Args:
+        session: Database session
+        thread_id: The topic_id for the thread
+        thread_messages: List of message IDs in the thread
+        
+    Returns:
+        int: Number of threads created (0 or 1)
+    """
+    from app.models.db_models import Thread
+    
+    # Check if thread already exists
+    existing_thread = session.query(Thread).filter(Thread.topic_id == thread_id).first()
+    
+    if not existing_thread:
+        # Find the actual date from messages in this thread
+        actual_date = None
+        
+        # Get the latest message date in this thread
+        latest_msg = session.query(Message).filter(
+            Message.message_id.in_(thread_messages)
+        ).order_by(Message.datetime.desc()).first()
+        
+        if latest_msg:
+            actual_date = latest_msg.datetime
+        else:
+            actual_date = session.query(Message).filter(
+                Message.message_id==thread_messages[0]
+            ).first().datetime
+        # Create thread object
+               
+        new_thread = Thread(
+            topic_id=thread_id,
+            header='',  # Will be updated later by LLM analysis
+            actual_date=actual_date,
+            status='new',
+            is_technical=False,  # Will be determined later by technical filtering
+            is_processed=False
+        )
+        session.add(new_thread)
+        logging.info(f"Created Thread object for {thread_id}")
+        return 1
+    
+    return 0
 
 def first_thread_gathering(logs_df, prefix, save_path): 
     """
@@ -42,36 +142,87 @@ def first_thread_gathering(logs_df, prefix, save_path):
     try:
         with db_service.get_session() as session:
             message_to_thread = {}
+            message_to_parent = {}  # Track LLM-determined parent relationships
+            thread_hierarchy_updates = 0
+            parent_id_updates = 0
+            
+            # Build mappings from LLM analysis and create Thread objects
+            threads_created = 0
             for thread in response.threads:
                 thread_id = thread.topic_id
+                
+                # Create Thread object in database
+                try:
+                    thread_messages = [str(msg.message_id) for msg in thread.whole_thread]
+                    threads_created += _create_thread_object(session, thread_id, thread_messages)
+                        
+                except Exception as e:
+                    logging.warning(f"Could not create Thread object for {thread_id}: {e}")
+                
+                # Build message mappings
                 for msg in thread.whole_thread:
                     message_to_thread[str(msg.message_id)] = thread_id
+                    # Store LLM-determined parent_id (might be different from Referenced Message ID)
+                    if msg.parent_id:
+                        message_to_parent[str(msg.message_id)] = str(msg.parent_id)
             
+            # Update database with LLM analysis results
             for idx, row in logs_df.iterrows():
-                message_id_str = str(row['Message ID'])
                 
                 db_message = session.query(Message).filter(
-                    Message.message_id == message_id_str
+                    Message.message_id == idx
                 ).first()
                 
                 if db_message:
-                    assigned_thread = message_to_thread.get(message_id_str)
+                    # Update thread assignment
+                    assigned_thread = message_to_thread.get(idx)
+                    if assigned_thread and db_message.thread_id != assigned_thread:
+                        db_message.thread_id = assigned_thread
+                        thread_hierarchy_updates += 1
+                    
+                    # Update parent_id based on LLM analysis (this is key!)
+                    llm_parent_id = message_to_parent.get(idx)
+                    old_parent = db_message.parent_id
+                    parent_id_updated = False
+                    
+                    if llm_parent_id != old_parent:
+                        db_message.parent_id = llm_parent_id
+                        parent_id_updates += 1
+                        parent_id_updated = True
+                        logging.info(f"Updated parent_id for {idx}: {old_parent} -> {llm_parent_id}")
+
+                    # Record processing step
                     result = {
                         'assigned_to_thread': assigned_thread,
                         'thread_grouping_method': 'llm_analysis',
-                        'total_threads_created': len(response.threads)
+                        'total_threads_created': len(response.threads),
+                        'parent_id_updated': parent_id_updated,
+                        'previous_parent_id': old_parent,
+                        'new_parent_id': llm_parent_id
                     }
                     
                     processing_tracker.record_processing_step(
                         session=session,
-                        message_id=db_message.id,
+                        message_id=db_message.message_id,
                         processing_step=processing_tracker.STEPS['THREAD_GROUPING'],
                         result=result,
                         metadata={'batch_prefix': prefix, 'processing_type': 'first_batch'}
                     )
             
+            # Recalculate hierarchy metadata after LLM updates
+            if parent_id_updates > 0:
+                logging.info("🔄 Recalculating hierarchy metadata after LLM parent_id updates...")
+                depth_updates = _recalculate_hierarchy_metadata(session)
+                logging.info(f"  📏 Updated depth levels for {depth_updates} messages")
+            
             session.commit()
-            logging.info(f"Recorded thread grouping processing steps for {len(logs_df)} messages")
+            logging.info(f"Thread gathering completed:")
+            logging.info(f"  📝 Recorded processing steps for {len(logs_df)} messages")
+            logging.info(f"  🆕 Created Thread objects: {threads_created}")
+            logging.info(f"  🧵 Updated thread assignments: {thread_hierarchy_updates}")
+            logging.info(f"  🔗 Updated parent_id relationships: {parent_id_updates}")
+            if parent_id_updates > 0:
+                logging.info(f"  📏 Recalculated hierarchy metadata for improved accuracy")
             
     except Exception as e:
         logging.error(f"Failed to record thread grouping processing steps: {e}")
@@ -83,7 +234,7 @@ def first_thread_gathering(logs_df, prefix, save_path):
     logging.info(f"Successfully saved {len(response.threads)} grouped threads to {output_filename}")
     return full_path
 
-def filter_technical_topics(filename, prefix: str, messages_df, save_path):
+def filter_technical_threads(filename, prefix: str, save_path):
     """
     Extract technical topics from JSON file using LLM with DataFrame logs provided full texts of messages
     return only technical threads
@@ -94,10 +245,10 @@ def filter_technical_topics(filename, prefix: str, messages_df, save_path):
     
     from app.utils.file_utils import convert_legacy_format
     threads_json_data = convert_legacy_format(threads_json_data)
-
-    processed_threads = illustrated_threads(threads_json_data, messages_df)
-    processing_tracker = get_processing_tracker()
     db_service = get_database_service()
+
+    processed_threads = illustrated_threads(threads_json_data, db_service)
+    processing_tracker = get_processing_tracker()
 
     response = gemini_service.generate_content(
         contents=[
@@ -113,15 +264,27 @@ def filter_technical_topics(filename, prefix: str, messages_df, save_path):
 
     try:
         with db_service.get_session() as session:
+            threads_updated = 0
+            
             for thread in processed_threads:
                 thread_id = thread.get('topic_id') or thread.get('Topic_ID')
                 is_technical = thread_id in response.technical_topics
                 
-                whole_thread = (thread.get('whole_thread') or thread.get('Whole_thread', []))
+                # Update Thread object with technical classification
+                from app.models.db_models import Thread
+                db_thread = session.query(Thread).filter(Thread.topic_id == thread_id).first()
+                if db_thread:
+                    if db_thread.is_technical != is_technical:
+                        db_thread.is_technical = is_technical
+                        db_thread.updated_at = func.now()
+                        threads_updated += 1
+                        logging.info(f"Updated Thread {thread_id}: is_technical = {is_technical}")
+                
+                whole_thread = (thread.get('whole_thread') or thread.get('whole_thread', []))
                 for msg in whole_thread:
                     msg_id = str(msg['message_id'])
                     db_message = session.query(Message).filter(
-                        Message.message_id == str(msg_id)
+                        Message.message_id == msg_id
                     ).first()
                     
                     if db_message:
@@ -134,7 +297,7 @@ def filter_technical_topics(filename, prefix: str, messages_df, save_path):
                         
                         processing_tracker.record_processing_step(
                             session=session,
-                            message_id=db_message.id,
+                            message_id=db_message.message_id,
                             processing_step=processing_tracker.STEPS['TECHNICAL_FILTERING'],
                             result=result,
                             metadata={'batch_prefix': prefix}
@@ -143,14 +306,16 @@ def filter_technical_topics(filename, prefix: str, messages_df, save_path):
                         if is_technical:
                             processing_tracker.annotate_message(
                                 session=session,
-                                message_id=db_message.id,
+                                message_id=db_message.message_id,
                                 annotation_type=processing_tracker.ANNOTATION_TYPES['TECHNICAL'],
                                 annotation_value={'thread_id': thread_id, 'indicators': thread.get('technical_indicators', [])},
                                 annotated_by='gemini_ai'
                             )
             
             session.commit()
-            logging.info(f"Recorded technical filtering processing steps")
+            logging.info(f"Technical filtering completed:")
+            logging.info(f"  🔬 Updated Thread technical flags: {threads_updated}")
+            logging.info(f"  📝 Recorded processing steps for all messages")
             
     except Exception as e:
         logging.error(f"Failed to record technical filtering processing steps: {e}")
@@ -166,7 +331,7 @@ def filter_technical_topics(filename, prefix: str, messages_df, save_path):
 def generalization_solution(filename,prefix: str, save_path):
     """
     Generalize technical topics from JSON file using LLM
-    Create "Header" and "Solution" fields
+    Create "header" and "solution" fields
     """
     prompts.reload_prompts()
     with open(filename, 'r') as f:
@@ -201,12 +366,31 @@ def generalization_solution(filename,prefix: str, save_path):
     solutions_list = []
     try:
         with db_service.get_session() as session:
+            threads_updated = 0
+            
             for solution_thread in response_solutions.threads:
                 solution=solution_thread.model_dump()
                 thread_id = solution_thread.topic_id
                 whole_thread = technical_threads[thread_id]['whole_thread']
                 solution['whole_thread'] = whole_thread
                 solutions_list.append(solution)
+                
+                # Update Thread object with solution details
+                from app.models.db_models import Thread
+                db_thread = session.query(Thread).filter(Thread.topic_id == thread_id).first()
+                if db_thread:
+                    # Update thread with LLM-generated solution details
+                    if db_thread.header != solution_thread.header:
+                        db_thread.header = solution_thread.header
+                    
+                    db_thread.solution = solution_thread.solution
+                    db_thread.label = solution_thread.label
+                    db_thread.answer_id = solution_thread.answer_id
+                    db_thread.is_processed = True
+                    db_thread.updated_at = func.now()
+                    threads_updated += 1
+                    
+                    logging.info(f"Updated Thread {thread_id} with solution: {solution_thread.header[:50]}...")
 
                 for msg in whole_thread:
                     msg_id = str(msg['message_id'])
@@ -225,7 +409,7 @@ def generalization_solution(filename,prefix: str, save_path):
                         
                         processing_tracker.record_processing_step(
                             session=session,
-                            message_id=db_message.id,
+                            message_id=db_message.message_id,
                             processing_step=processing_tracker.STEPS['SOLUTION_EXTRACTION'],
                             result=result,
                             metadata={'batch_prefix': prefix, 'solution_id': thread_id}
@@ -234,14 +418,16 @@ def generalization_solution(filename,prefix: str, save_path):
                         if msg_id == solution_thread.answer_id:
                             processing_tracker.annotate_message(
                                 session=session,
-                                message_id=db_message.id,
+                                message_id=db_message.message_id,
                                 annotation_type=processing_tracker.ANNOTATION_TYPES['SOLUTION'],
                                 annotation_value={'is_answer': True, 'thread_id': thread_id},
                                 annotated_by='gemini_ai'
                             )
             
             session.commit()
-            logging.info(f"Recorded solution extraction processing steps")
+            logging.info(f"solution extraction completed:")
+            logging.info(f"  💡 Updated Thread objects with solutions: {threads_updated}")
+            logging.info(f"  📝 Recorded processing steps for all messages")
             
     except Exception as e:
         logging.error(f"Failed to record solution extraction processing steps: {e}")
@@ -253,7 +439,7 @@ def generalization_solution(filename,prefix: str, save_path):
     logging.info(f"Successfully saved {len(solutions_list)} threads to {output_filename}")
     return full_path
 
-def next_thread_gathering(next_batch_df, lookback_threads, str_interval, save_path, messages_df):
+def next_thread_gathering(next_batch_df, lookback_date, str_interval, save_path, messages_df):
     """
     Gather next batch of messages into raw threads for processing
     """
@@ -263,23 +449,23 @@ def next_thread_gathering(next_batch_df, lookback_threads, str_interval, save_pa
 
     previous_threads_text = []
     valid_ids_set = set(next_batch_df['Message ID'].astype(str))
+    db_service = get_database_service()
+    with db_service.get_session() as session:
+        lookback_threads = db_service.get_latest_threads_from_actual_date(session, lookback_date)
+        for thread in lookback_threads:
+            whole_thread = thread.messages
+            whole_thread_ids = [msg.message_id for msg in whole_thread]
+            messages = []
+            if whole_thread_ids:
+                valid_ids_set = valid_ids_set.union(set(whole_thread_ids))
+                for message_id in whole_thread_ids:
+                    message_content = illustrated_message(message_id, db_service)
+                    if message_id == thread.topic_id:
+                        messages.append(f"- ({message_id}) - **Topic started** :{message_content} ")
+                    else:
+                        messages.append(f"- ({message_id}) {message_content} ")
 
-    for thread in lookback_threads:
-        whole_thread = thread.get('Whole_thread', [])
-        whole_thread_ids = [msg['message_id'] for msg in whole_thread]
-        messages = []
-        if whole_thread_ids:
-            valid_ids_set = valid_ids_set.union(set(whole_thread_ids))
-            for message_id in whole_thread_ids:
-                message_content = illustrated_message(message_id, messages_df)
-                if message_id == (thread.get('topic_id') or thread.get('Topic_ID', 'N/A')):
-                    messages.append(f"- ({message_id}) - **Topic started** :{message_content} ")
-                else:
-                    messages.append(f"- ({message_id}) {message_content} ")
-
-        topic_id = thread.get('topic_id') or thread.get('Topic_ID', 'N/A')
-        actual_date = thread.get('actual_date') or thread.get('Actual_Date', 'N/A')
-        previous_threads_text.append(f"Topic: {topic_id} - {actual_date} \n" + "\n".join(messages))
+            previous_threads_text.append(f"Topic: {thread.topic_id} - {thread.actual_date} \n" + "\n".join(messages))
 
     prmpt = prompts.prompt_addition_step1.format(
         prompt_group_logic=prompts.prompt_group_logic,
@@ -298,12 +484,110 @@ def next_thread_gathering(next_batch_df, lookback_threads, str_interval, save_pa
         log_prefix="Next thread gathering:"
     )
 
-    added_threads_pydantic = [t for t in response.threads if t.status !=ThreadStatus.PERSISTED]
+    added_threads_pydantic = [t for t in response.threads if t.status != ThreadStatus.PERSISTED]
     added_threads = [t.model_dump() for t in added_threads_pydantic]
     cnt_modified = len([t for t in added_threads if t['status']==ThreadStatus.MODIFIED])
     cnt_new = len([t for t in added_threads if t['status']==ThreadStatus.NEW])
 
     logging.info(f"Added {cnt_new} new threads. Modified {cnt_modified} threads created before {str_interval}.")
+
+    # Create/Update Thread objects in database
+    processing_tracker = get_processing_tracker()
+    threads_created = 0
+    threads_updated = 0
+    
+    try:
+        with db_service.get_session() as session:
+            message_to_thread = {}
+            message_to_parent = {}
+            
+            for thread in added_threads_pydantic:
+                thread_id = thread.topic_id
+                
+                # Check if thread already exists
+                from app.models.db_models import Thread
+                existing_thread = session.query(Thread).filter(Thread.topic_id == thread_id).first()
+                
+                if thread.status == ThreadStatus.NEW and not existing_thread:
+                    # Create new Thread object
+                    try:
+                        thread_messages = [str(msg.message_id) for msg in thread.whole_thread]
+                        threads_created += _create_thread_object(
+                            session, 
+                            thread_id, 
+                            thread_messages, 
+                        )
+                        
+                    except Exception as e:
+                        logging.warning(f"Could not create Thread object for {thread_id}: {e}")
+                        
+                elif thread.status == ThreadStatus.MODIFIED and existing_thread:
+                    # Update existing thread
+                    try:
+                        existing_thread.status = 'modified'
+                        existing_thread.updated_at = func.now()
+                        threads_updated += 1
+                        logging.info(f"Updated Thread object for {thread_id}")
+                        
+                    except Exception as e:
+                        logging.warning(f"Could not update Thread object for {thread_id}: {e}")
+                
+                # Update parent_id relationships from LLM analysis (same as first_thread_gathering)
+                for msg in thread.whole_thread:
+                    message_to_thread[str(msg.message_id)] = thread_id
+                    if msg.parent_id:
+                        message_to_parent[str(msg.message_id)] = str(msg.parent_id)
+                    else:
+                        message_to_parent[str(msg.message_id)] = ''
+            # Update message parent_id and thread_id assignments
+            parent_id_updates = 0
+            thread_assignment_updates = 0
+            
+            for message_id_str, thread_id in message_to_thread.items():
+                db_message = session.query(Message).filter(Message.message_id == message_id_str).first()
+                
+                if db_message:
+                    # Update thread assignment
+                    if db_message.thread_id != thread_id:
+                        db_message.thread_id = thread_id
+                        thread_assignment_updates += 1
+                    
+                    # Update parent_id from LLM analysis
+                    llm_parent_id = message_to_parent.get(message_id_str)
+                    if llm_parent_id and llm_parent_id != db_message.parent_id:
+                        old_parent = db_message.parent_id
+                        db_message.parent_id = llm_parent_id
+                        parent_id_updates += 1
+                        logging.info(f"Updated parent_id for {message_id_str}: {old_parent} -> {llm_parent_id}")
+                        
+                    # Record processing step
+                    processing_tracker.record_processing_step(
+                        session=session,
+                        message_id=db_message.message_id,
+                        processing_step=processing_tracker.STEPS['THREAD_GROUPING'],
+                        result={
+                            'assigned_to_thread': thread_id,
+                            'thread_grouping_method': 'llm_incremental_analysis',
+                            'parent_id_updated': llm_parent_id != old_parent if 'old_parent' in locals() else False,
+                            'new_parent_id': llm_parent_id
+                        },
+                        metadata={'batch_prefix': str_interval, 'processing_type': 'incremental_batch'}
+                    )
+            
+            # Recalculate hierarchy if parent_id was updated
+            if parent_id_updates > 0:
+                depth_updates = _recalculate_hierarchy_metadata(session)
+                logging.info(f"Recalculated hierarchy for {depth_updates} messages")
+            ### changes and additions to session are not saved here
+            session.commit()
+            logging.info(f"Next thread gathering database updates:")
+            logging.info(f"  🆕 Created Thread objects: {threads_created}")
+            logging.info(f"  🔄 Updated Thread objects: {threads_updated}")
+            logging.info(f"  🧵 Updated thread assignments: {thread_assignment_updates}")
+            logging.info(f"  🔗 Updated parent_id relationships: {parent_id_updates}")
+            
+    except Exception as e:
+        logging.error(f"Failed to update database during next thread gathering: {e}")
 
     output_filename = f'next_{str_interval}_group.json'
     full_path = os.path.join(save_path, output_filename)

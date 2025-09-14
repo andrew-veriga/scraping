@@ -6,7 +6,7 @@ import pytest
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
-
+from app.models.pydantic_models import SolutionStatus
 from app.services import thread_service
 from app.services import gemini_service
 
@@ -20,8 +20,8 @@ class MockMessage(BaseModel):
 
 class MockThread(BaseModel):
     Topic_ID: str
-    Whole_thread: List[str]
-    Whole_thread_formatted: Optional[List[MockMessage]] = None
+    whole_thread: List[str]
+    whole_thread_formatted: Optional[List[MockMessage]] = None
     status: Optional[str] = None
 
 class MockThreadList(BaseModel):
@@ -33,7 +33,7 @@ class MockTechnicalTopics(BaseModel):
 class MockSolution(BaseModel):
     Topic_ID: str
     Problem_Statement: str
-    Solution: str
+    solution: str
     Status: str
     Actual_Date: datetime
 
@@ -44,7 +44,7 @@ class MockSolutionList(BaseModel):
 
 @pytest.fixture
 def mock_gemini_response_step1():
-    thread = MockThread(Topic_ID="1", Whole_thread=["1", "2", "3"])
+    thread = MockThread(Topic_ID="1", whole_thread=["1", "2", "3"])
     thread_list = MockThreadList(threads=[thread])
     return gemini_service._MockParsedResponse(thread_list)
 
@@ -58,7 +58,7 @@ def mock_gemini_response_step3():
     solution = MockSolution(
         Topic_ID="1",
         Problem_Statement="Problem",
-        Solution="Solution",
+        solution="solution",
         Status=SolutionStatus.RESOLVED,
         Actual_Date=datetime.now()
     )
@@ -91,13 +91,13 @@ def test_illustrated_threads(sample_messages_df):
 
     assert len(enriched_data) == 1
     thread = enriched_data[0]
-    assert 'Whole_thread_formatted' in thread
-    assert len(thread['Whole_thread_formatted']) == 2
-    assert thread['Whole_thread_formatted'][0]['message_id'] == '1'
-    assert thread['Whole_thread_formatted'][0]['author_id'] == '101'
-    assert "How do I stake SUI?" in thread['Whole_thread_formatted'][0]['content']
+    assert 'whole_thread_formatted' in thread
+    assert len(thread['whole_thread_formatted']) == 2
+    assert thread['whole_thread_formatted'][0]['message_id'] == '1'
+    assert thread['whole_thread_formatted'][0]['author_id'] == '101'
+    assert "How do I stake SUI?" in thread['whole_thread_formatted'][0]['content']
 
-def test_filter_technical_topics(sample_messages_df, mock_gemini_response_step2, tmp_path):
+def test_filter_technical_threads(sample_messages_df, mock_gemini_response_step2, tmp_path):
     save_path = str(tmp_path)
     threads_data = [{'topic_id': '1', 'whole_thread': ['1', '2']}, {'topic_id': '4', 'whole_thread': ['4', '5']}]
     input_filename = os.path.join(save_path, "input.json")
@@ -108,7 +108,7 @@ def test_filter_technical_topics(sample_messages_df, mock_gemini_response_step2,
     with patch('app.services.gemini_service.generate_content', return_value=mock_gemini_response_step2) as mock_generate, \
          patch('builtins.open', mock_open(read_data=json.dumps(threads_data))) as mock_file:
 
-        result_path = thread_service.filter_technical_topics(input_filename, "first", sample_messages_df, save_path)
+        result_path = thread_service.filter_technical_threads(input_filename, "first", sample_messages_df, save_path)
 
         mock_generate.assert_called_once()
         assert "first_technical" in os.path.basename(result_path)

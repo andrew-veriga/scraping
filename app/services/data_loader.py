@@ -9,7 +9,7 @@ def load_and_preprocess_data(file_path):
 
     # Fill any potential NaN values in 'Referenced Message ID' with empty strings
     messages_df['Referenced Message ID'] = messages_df['Referenced Message ID'].fillna('')
-
+    
     # Convert 'Message ID' in CSV to string for easier lookup and merging
     messages_df['DateTime'] = pd.to_datetime( messages_df['Unix Timestamp'],unit='s', utc=True)
     messages_df['DatedMessage'] = messages_df.DateTime.astype(str) +" - " + messages_df.Content

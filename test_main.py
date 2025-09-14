@@ -25,7 +25,7 @@ def mock_services(monkeypatch):
 
     # Mock thread_service
     monkeypatch.setattr("app.services.thread_service.first_thread_gathering", MagicMock(return_value="step1.json"))
-    monkeypatch.setattr("app.services.thread_service.filter_technical_topics", MagicMock(return_value="tech.json"))
+    monkeypatch.setattr("app.services.thread_service.filter_technical_threads", MagicMock(return_value="tech.json"))
     monkeypatch.setattr("app.services.thread_service.generalization_solution", MagicMock(return_value="solutions.json"))
     # This function is missing from the provided code, so it must be mocked.
     monkeypatch.setattr("app.services.solution_service.new_solutions_revision_and_add", MagicMock())

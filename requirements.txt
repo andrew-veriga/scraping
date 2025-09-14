@@ -16,3 +16,4 @@ alembic
 asyncpg
 pgvector
 numpy
+pytest

@@ -5,6 +5,7 @@ load_dotenv()
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from app.services import data_loader
+from app.services.processing_hierarchical import process_first_batch_hierarchical, get_hierarchical_processing_status
 from app.utils.file_utils import load_solutions_dict
 from app.utils.analytics import get_analytics_service
 from app.services.database import get_database_service
@@ -58,6 +59,35 @@ def process_first_batch_endpoint():
 def process_next_batches_endpoint():
     return processing.process_next_batches(config)
 
+@app.post("/process-first-batch-hierarchical")
+def process_first_batch_hierarchical_endpoint():
+    """
+    Process the first batch of Discord messages with hierarchical parent-child relationships.
+    
+    This enhanced endpoint:
+    - Loads Discord messages from Excel file
+    - Analyzes parent-child relationships from 'Referenced Message ID' 
+    - Creates hierarchical message structure in database
+    - Returns detailed statistics and validation results
+    """
+    try:
+        return process_first_batch_hierarchical(config)
+    except Exception as e:
+        logging.error(f"Error in hierarchical first batch processing: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/hierarchical-status")
+def get_hierarchical_status():
+    """
+    Get the current status of hierarchical message processing.
+    Returns statistics about messages, threads, hierarchy depth, and recent processing batches.
+    """
+    try:
+        return get_hierarchical_processing_status()
+    except Exception as e:
+        logging.error(f"Error getting hierarchical status: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/solutions")
 def get_solutions():
@@ -72,13 +102,13 @@ def get_solutions():
         logging.error("Error retrieving solutions from /solutions endpoint", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-def iterate_final_threads(thread_data, messages_df):
+def iterate_final_threads(thread_data, db_service):
     """
     Iterates over the final threads and yields formatted markdown output.
     """
     for i, thread in enumerate(thread_data):
-        actual_date = thread.get('actual_date') or thread.get('Actual_Date', 'no date')
-        header = thread.get('header') or thread.get('Header', 'N/A')
+        actual_date = thread.get('actual_date')
+        header = thread.get('header') 
         markdown_output = f"""## {i}. {actual_date} {header}
 
 #### Whole Thread Messages:
@@ -89,7 +119,7 @@ def iterate_final_threads(thread_data, messages_df):
             whole_thread_ids = [t['message_id'] for t in whole_thread]
             for message_id in whole_thread_ids:
 
-                message_content = illustrated_message(message_id, messages_df)
+                message_content = illustrated_message(message_id, db_service)
                 topic_id = thread.get('topic_id') or thread.get('Topic_ID', 'N/A')
                 answer_id = thread.get('answer_id') or thread.get('Answer_ID', 'N/A')
                 if message_id == topic_id:
@@ -101,12 +131,12 @@ def iterate_final_threads(thread_data, messages_df):
             markdown_output += "\n".join(messages)
         else:
             markdown_output += "\n  N/A"
-        label = thread.get('label') or thread.get('Label', 'N/A')
-        solution = thread.get('solution') or thread.get('Solution','')
+        label = thread.get('label') or thread.get('label', 'N/A')
+        solution = thread.get('solution') or thread.get('solution','')
         if label == SolutionStatus.UNRESOLVED:
-            markdown_output += f"\n\n### Solution {label}"
+            markdown_output += f"\n\n### solution {label}"
         else:
-            markdown_output += f"\n\n### Solution {label}: {solution}"
+            markdown_output += f"\n\n### solution {label}: {solution}"
         yield markdown_output
 
 
@@ -121,9 +151,10 @@ def generate_markdown_report():
         if not solutions_dict:
             raise HTTPException(status_code=404, detail="Solutions file not found or is empty. Please run a batch process first.")
 
-        messages_df = data_loader.load_and_preprocess_data(MESSAGES_FILE_PATH)
+        db_service = get_database_service()
+        
 
-        report_sections = list(iterate_final_threads(solutions_dict.values(), messages_df))
+        report_sections = list(iterate_final_threads(solutions_dict.values(), db_service))
         full_report_md = "\n\n---\n\n".join(report_sections)
 
         output_file = os.path.join(SAVE_PATH, "solutions_report.md")

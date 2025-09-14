@@ -10,7 +10,7 @@ import json
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional, Union
 from sqlalchemy.orm import Session
-
+from sqlalchemy import func
 from app.services.database import get_database_service
 from app.models.db_models import (
     Message, Thread, Solution, MessageProcessing, MessageAnnotation, 
@@ -48,7 +48,7 @@ class ProcessingTracker:
             'DUPLICATE': 'duplicate'
         }
     
-    def record_processing_step(self, session: Session, message_id: int, 
+    def record_processing_step(self, session: Session, message_id: str, 
                              processing_step: str, result: Dict[str, Any] = None,
                              confidence_score: float = None, metadata: Dict[str, Any] = None,
                              step_order: int = None) -> Optional[MessageProcessing]:
@@ -69,7 +69,7 @@ class ProcessingTracker:
         """
         try:
             # Get the message to ensure it exists
-            message = session.query(Message).filter(Message.id == message_id).first()
+            message = session.query(Message).filter(Message.message_id == message_id).first()
             if not message:
                 self.logger.error(f"Message with ID {message_id} not found")
                 return None
@@ -104,7 +104,7 @@ class ProcessingTracker:
                 'confidence_score': confidence_score,
                 'step_order': step_order
             }
-            message.last_processed_at = datetime.now(timezone.utc)
+            message.last_processed_at = func.now()
             message.processing_version = self.processing_version
             
             session.flush()
@@ -116,7 +116,7 @@ class ProcessingTracker:
             self.logger.error(f"Failed to record processing step: {e}")
             return None
     
-    def annotate_message(self, session: Session, message_id: int, 
+    def annotate_message(self, session: Session, message_id: str, 
                         annotation_type: str, annotation_value: Any = None,
                         confidence_score: float = None, annotated_by: str = 'gemini_ai') -> Optional[MessageAnnotation]:
         """
@@ -135,7 +135,7 @@ class ProcessingTracker:
         """
         try:
             # Get the message to ensure it exists
-            message = session.query(Message).filter(Message.id == message_id).first()
+            message = session.query(Message).filter(Message.message_id == message_id).first()
             if not message:
                 self.logger.error(f"Message with ID {message_id} not found")
                 return None
@@ -159,7 +159,7 @@ class ProcessingTracker:
             self.logger.error(f"Failed to annotate message: {e}")
             return None
     
-    def record_thread_processing(self, session: Session, thread_id: int,
+    def record_thread_processing(self, session: Session, thread_id: str,
                                processing_step: str, result: Dict[str, Any] = None,
                                confidence_scores: Dict[str, float] = None, 
                                metadata: Dict[str, Any] = None):
@@ -175,7 +175,7 @@ class ProcessingTracker:
             metadata: Additional processing metadata
         """
         try:
-            thread = session.query(Thread).filter(Thread.id == thread_id).first()
+            thread = session.query(Thread).filter(Thread.topic_id == thread_id).first()
             if not thread:
                 self.logger.error(f"Thread with ID {thread_id} not found")
                 return
@@ -217,7 +217,7 @@ class ProcessingTracker:
     
     def record_solution_extraction(self, session: Session, solution_id: int,
                                  extraction_metadata: Dict[str, Any] = None,
-                                 source_message_ids: List[int] = None,
+                                 source_message_ids: List[str] = None,
                                  processing_steps: List[Dict[str, Any]] = None):
         """
         Record solution extraction metadata.
@@ -232,7 +232,7 @@ class ProcessingTracker:
         try:
             solution = session.query(Solution).filter(Solution.id == solution_id).first()
             if not solution:
-                self.logger.error(f"Solution with ID {solution_id} not found")
+                self.logger.error(f"solution with ID {solution_id} not found")
                 return
             
             # Update extraction metadata
@@ -257,11 +257,11 @@ class ProcessingTracker:
         except Exception as e:
             self.logger.error(f"Failed to record solution extraction: {e}")
     
-    def get_message_processing_history(self, session: Session, message_id: int) -> Dict[str, Any]:
+    def get_message_processing_history(self, session: Session, message_id: str) -> Dict[str, Any]:
         """Get complete processing history for a message."""
         try:
             # Get message
-            message = session.query(Message).filter(Message.id == message_id).first()
+            message = session.query(Message).filter(Message.message_id == message_id).first()
             if not message:
                 return {'error': 'Message not found'}
             
@@ -308,10 +308,10 @@ class ProcessingTracker:
             self.logger.error(f"Failed to get message processing history: {e}")
             return {'error': str(e)}
     
-    def get_thread_processing_history(self, session: Session, thread_id: int) -> Dict[str, Any]:
+    def get_thread_processing_history(self, session: Session, thread_id: str) -> Dict[str, Any]:
         """Get complete processing history for a thread."""
         try:
-            thread = session.query(Thread).filter(Thread.id == thread_id).first()
+            thread = session.query(Thread).filter(Thread.topic_id == thread_id).first()
             if not thread:
                 return {'error': 'Thread not found'}
             

@@ -139,7 +139,7 @@ class ModifiedRawThreadList(BaseModel):
         # def validate_label(cls, value):
         #     allowed_labels = ['new', 'modified', 'persisted']
         #     if value not in allowed_labels:
-        #         raise ValueError(f"Label must be one of {allowed_labels}")
+        #         raise ValueError(f"label must be one of {allowed_labels}")
         #     return value
     threads: List[ModifiedRawThread] = Field(description="List of threads")
 
@@ -161,7 +161,7 @@ class ThreadList(BaseModel):
         actual_date: datetime = Field( description="DateTime of the last message in the thread")
         answer_id: Optional[str] = Field( description="ID of solution message")
         # whole_thread: List[str] = Field( description="List of Message IDs of this thread")
-        label: SolutionStatus # str = Field(description="Label indicating the resolution status: 'resolved', 'unresolved','suggestion' or 'outside'")
+        label: SolutionStatus # str = Field(description="label indicating the resolution status: 'resolved', 'unresolved','suggestion' or 'outside'")
         solution: str = Field( description="General description of the solution to the problem derived by the entire conversation. If doesn't exist, 'N/A'")
 
         # @field_validator('label')
@@ -169,7 +169,7 @@ class ThreadList(BaseModel):
         # def validate_label(cls, value):
         #     allowed_labels = ['resolved', 'unresolved', 'suggestion', 'outside']
         #     if value not in allowed_labels:
-        #         raise ValueError(f"Label must be one of {allowed_labels}")
+        #         raise ValueError(f"label must be one of {allowed_labels}")
         #     return value
 
     threads: List[Thread]
@@ -204,7 +204,7 @@ class RevisedList(BaseModel):
         # def validate_label(cls, value):
         #     allowed_labels = ['improved', 'changed', 'persisted']
         #     if value not in allowed_labels:
-        #         raise ValueError(f"Label must be one of {allowed_labels}")
+        #         raise ValueError(f"label must be one of {allowed_labels}")
         #     return value
 
     comparisions: List[RevisedSolution] = Field(..., description="list of classification results")
