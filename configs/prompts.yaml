@@ -54,8 +54,8 @@ prompt_step_3: |
   If there are no any confirmation or a solution message followed by additional unanswered questions, label it as 'suggestion'.
   If there are no answers from other users in the thread, or the answers are irrelevant, label it as 'unresolved'.
   If the answer recommend another internet resource or channel, label it as 'outside'.
-  replicate the Message IDs exactly as they are presented. Do not add, remove, or modify any characters in the IDs. 
-  Derive a general description of the problem and a general description of the solution to the problem if exists.
+  Replicate the Message IDs exactly as they are presented. Do not add, remove, or modify any characters in the IDs. 
+  Derive a general description of the problem and a general description of the solution to the problem if exists. Formulate the descriptions in a clear and concise manner of Frequently Asked Questions.
   Set Actual Date of each thread as a datetime of the last message in the thread.
   Output the information in the list of JSON objects.
 
