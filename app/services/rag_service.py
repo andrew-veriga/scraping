@@ -422,19 +422,19 @@ class RAGService:
             )
             
             session.add(duplicate_record)
-            
+            session.flush()
             # Update duplicate count on original solution
             original_solution = session.query(Solution).filter(Solution.id == original_solution_id).first()
             if original_solution:
                 original_solution.duplicate_count = session.query(SolutionDuplicate).filter(
                     SolutionDuplicate.original_solution_id == original_solution_id
                 ).count() + 1
-            
+                session.flush()
             # Mark the duplicate solution
             duplicate_solution = session.query(Solution).filter(Solution.id == solution_id).first()
             if duplicate_solution:
                 duplicate_solution.is_duplicate = True
-            
+                session.flush()
             session.flush()  # Get the ID without committing
             
             self.logger.info(f"Created duplicate record: solution {solution_id} -> original {original_solution_id} (similarity: {similarity_score:.3f})")
