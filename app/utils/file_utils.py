@@ -18,7 +18,7 @@ def create_dict_from_list(solutions_list):
 def add_or_update_solution(solutions_dict, new_solution):
     """Adds a new solution or updates an existing one in the solutions dictionary."""
     # Support both old and new formats during transition
-    key = new_solution.get('topic_id') or new_solution.get('Topic_ID')
+    key = new_solution.get('topic_id')
     if key:
         solutions_dict[key] = new_solution
         logging.info(f"solution for topic_id {key} added or updated.")

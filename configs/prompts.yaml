@@ -42,9 +42,9 @@ prompt_step_2: |
   error, fail, issue, problem, bug, can't, doesn't work, transaction, wallet, rpc, node, gas, smart contract, bridge, stake, unstake, SDK, API, swap, zklogin.
   Identify a technical discussions, determine their content and present the results in a structured way.
   Analyze the  message of each thread (topic).
-  Categorize a thread as a "technical topic" if its messages contains one or more keywords from the list and it is a question (contains "?" or a problem description) or describes a problem.
+  Categorize a thread as a "technical" if its messages contains one or more keywords from the list and it is a question (contains "?" or a problem description) or describes a problem.
   Ignore irrelevant topics: spam, flood and discussions not directly related to the technical aspects of Sui.
-  Select the technical topics and output the list of 'Topic ID' for technical threads only.
+  Select the technical topics and output the list of 'topic_id' for technical threads only.
 
 prompt_step_3: |
   Now you are in the step 3. Your current task is to generalize the problems and solutions for each technical topic.

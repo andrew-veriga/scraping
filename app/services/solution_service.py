@@ -321,7 +321,7 @@ def _create_duplicate_records(solution_data: dict, similar_solutions: list):
         
         with db_service.get_session() as session:
 
-            topic_id = solution_data.get('topic_id') or solution_data.get('Topic_ID')
+            topic_id = solution_data.get('topic_id') #or solution_data.get('Topic_ID')
             thread = db_service.get_thread_by_topic_id(session, topic_id)
             
             if not thread:
@@ -345,7 +345,15 @@ def _create_duplicate_records(solution_data: dict, similar_solutions: list):
                 solution.is_duplicate = True
                 session.flush()
             
+            # Re-query the most similar solution in the current session to avoid session binding issues
             most_similar_solution, highest_similarity = similar_solutions[0]
+            most_similar_solution_id = most_similar_solution.id
+            
+            # Query the solution again in the current session
+            most_similar_solution = session.query(Solution).filter(Solution.id == most_similar_solution_id).first()
+            if not most_similar_solution:
+                logging.error(f"Most similar solution with ID {most_similar_solution_id} not found in current session")
+                return
             
             duplicate_record = rag_service.create_duplicate_record(
                 session=session,
