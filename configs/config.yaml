@@ -8,10 +8,11 @@ SOLUTIONS_DICT_FILENAME: 'solutions_dict.json'
 # Database configuration
 database:
   url: "${PEERA_DB_URL}"  # Set this in your .env file
-  pool_size: 5
-  max_overflow: 10
-  pool_timeout: 30
-  pool_recycle: 3600
+  pool_size: 10  # Increased from 5
+  max_overflow: 20  # Increased from 10
+  pool_timeout: 60  # Increased from 30
+  pool_recycle: 1800  # Reduced from 3600 (30 minutes)
+  pool_pre_ping: true  # Verify connections before use
   # Connection retry settings
   max_retries: 3
   base_delay: 1.0

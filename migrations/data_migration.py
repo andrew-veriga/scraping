@@ -200,7 +200,7 @@ class DataMigrator:
             return
         
         for order, message_id in enumerate(message_ids):
-            message = self.db_service.get_message_by_message_id(session, str(message_id))
+            message = self.db_service.get_message_by_message_id(str(message_id), session)
             if message:
                 try:
                     thread_message = ThreadMessage(

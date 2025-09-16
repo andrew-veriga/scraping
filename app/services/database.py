@@ -66,11 +66,11 @@ class DatabaseService:
             # Create engine with connection pooling and SSL configuration
             self.engine = create_engine(
                 db_url,
-                pool_size=db_config.get('pool_size', 5),
-                max_overflow=db_config.get('max_overflow', 10),
-                pool_timeout=db_config.get('pool_timeout', 30),
-                pool_recycle=db_config.get('pool_recycle', 3600),
-                pool_pre_ping=True,  # Verify connections before use
+                pool_size=db_config.get('pool_size', 10),
+                max_overflow=db_config.get('max_overflow', 20),
+                pool_timeout=db_config.get('pool_timeout', 60),
+                pool_recycle=db_config.get('pool_recycle', 1800),
+                pool_pre_ping=db_config.get('pool_pre_ping', True),
                 echo=False,  # Set to True for SQL debugging
                 connect_args={
                     'sslmode': db_config.get('ssl_mode', 'prefer'),
@@ -237,9 +237,15 @@ class DatabaseService:
         session.add(message)
         return message
     
-    def get_message_by_message_id(self, session: Session, message_id: str) -> Optional[Message]:
+    def get_message_by_message_id(self, message_id: str, session: Optional[Session] = None) -> Optional[Message]:
         """Get message by Discord message ID."""
-        return session.query(Message).filter(Message.message_id == message_id).first()
+        if session is not None:
+            # Use provided session (for use within existing transactions)
+            return session.query(Message).filter(Message.message_id == message_id).first()
+        else:
+            # Create new session with retry logic
+            with self.get_session() as new_session:
+                return new_session.query(Message).filter(Message.message_id == message_id).first()
     
     def bulk_create_messages(self, messages_data: List[Dict[str, Any]]) -> int:
         """Bulk create messages from DataFrame or list."""
@@ -248,7 +254,7 @@ class DatabaseService:
             for message_data in messages_data:
                 try:
                     # Check if message already exists
-                    existing = self.get_message_by_message_id(session, message_data['message_id'])
+                    existing = self.get_message_by_message_id(message_data['message_id'], session)
                     if not existing:
                         self.create_message(session, message_data)
                         created_count += 1
@@ -275,7 +281,7 @@ class DatabaseService:
                 for message_data in messages_data:
                     try:
                         # Check if message already exists
-                        existing = self.get_message_by_message_id(session, message_data['message_id'])
+                        existing = self.get_message_by_message_id(message_data['message_id'], session)
                         if not existing:
                             # Create message with hierarchical fields
                             message = Message(
@@ -721,6 +727,32 @@ class DatabaseService:
             self.logger.error(f"Health check failed: {e}")
         
         return health_status
+    
+    def cleanup_connections(self):
+        """Force cleanup of all connections in the pool."""
+        try:
+            self.logger.info("Cleaning up database connections...")
+            self.engine.dispose()
+            self.logger.info("Database connections cleaned up successfully")
+        except Exception as e:
+            self.logger.error(f"Failed to cleanup connections: {e}")
+    
+    def get_pool_status(self) -> Dict[str, Any]:
+        """Get detailed connection pool status."""
+        try:
+            pool = self.engine.pool
+            return {
+                'pool_size': pool.size(),
+                'checked_in': pool.checkedin(),
+                'checked_out': pool.checkedout(),
+                'overflow': pool.overflow(),
+                'total_connections': pool.size() + pool.overflow(),
+                'available_connections': pool.checkedin(),
+                'utilization_percent': round((pool.checkedout() / (pool.size() + pool.overflow())) * 100, 2) if (pool.size() + pool.overflow()) > 0 else 0
+            }
+        except Exception as e:
+            self.logger.error(f"Failed to get pool status: {e}")
+            return {'error': str(e)}
 
 
 # Global database service instance

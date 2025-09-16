@@ -117,7 +117,7 @@ def illustrated_message(message_ID, db_service):
         A formatted string representation of the message.
     """
     with db_service.get_session() as session:
-        message = db_service.get_message_by_message_id(session, message_ID)
+        message = db_service.get_message_by_message_id(message_ID, session)
         if message is None:
             return "<empty>"
         author_id = message.author_id
@@ -128,7 +128,7 @@ def illustrated_message(message_ID, db_service):
 
     # Handle replies
         if referenced_message_id:
-            referenced_message = db_service.get_message_by_message_id(session, referenced_message_id)
+            referenced_message = db_service.get_message_by_message_id(referenced_message_id, session)
             referenced_author_id = referenced_message.author_id
             formatted_msg += f" reply to {user_mapping(referenced_author_id)} - "
 

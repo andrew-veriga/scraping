@@ -64,6 +64,42 @@ def health_check():
             "timestamp": pd.Timestamp.now().isoformat()
         }
 
+@app.get("/pool-status")
+def pool_status():
+    """Get detailed connection pool status."""
+    try:
+        db_service = get_database_service()
+        pool_status = db_service.get_pool_status()
+        
+        return {
+            "pool_status": pool_status,
+            "timestamp": pd.Timestamp.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "error": str(e),
+            "timestamp": pd.Timestamp.now().isoformat()
+        }
+
+@app.post("/cleanup-connections")
+def cleanup_connections():
+    """Force cleanup of database connections."""
+    try:
+        db_service = get_database_service()
+        db_service.cleanup_connections()
+        
+        return {
+            "status": "success",
+            "message": "Connections cleaned up successfully",
+            "timestamp": pd.Timestamp.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": pd.Timestamp.now().isoformat()
+        }
+
 @app.post("/full-process")
 def full_process_endpoint():
     return processing.full_process(config)
