@@ -64,13 +64,21 @@ class DatabaseService:
                 raise ValueError("Database URL not found in environment (PEERA_DB_URL) or configuration")
             
             # Create engine with connection pooling and SSL configuration
+            pool_size = db_config.get('pool_size', 10)
+            max_overflow = db_config.get('max_overflow', 20)
+            pool_timeout = db_config.get('pool_timeout', 60)
+            pool_recycle = db_config.get('pool_recycle', 1800)
+            pool_pre_ping = db_config.get('pool_pre_ping', True)
+            
+            self.logger.info(f"Creating database engine with pool_size={pool_size}, max_overflow={max_overflow}")
+            
             self.engine = create_engine(
                 db_url,
-                pool_size=db_config.get('pool_size', 10),
-                max_overflow=db_config.get('max_overflow', 20),
-                pool_timeout=db_config.get('pool_timeout', 60),
-                pool_recycle=db_config.get('pool_recycle', 1800),
-                pool_pre_ping=db_config.get('pool_pre_ping', True),
+                pool_size=pool_size,
+                max_overflow=max_overflow,
+                pool_timeout=pool_timeout,
+                pool_recycle=pool_recycle,
+                pool_pre_ping=pool_pre_ping,
                 echo=False,  # Set to True for SQL debugging
                 connect_args={
                     'sslmode': db_config.get('ssl_mode', 'prefer'),
@@ -78,6 +86,10 @@ class DatabaseService:
                     'application_name': 'discord-sui-analyzer'
                 }
             )
+            
+            # Log pool configuration after creation
+            pool = self.engine.pool
+            self.logger.info(f"Pool created: type={type(pool).__name__}, size={getattr(pool, '_pool_size', 'unknown')}")
             
             # Create session factory
             self.SessionLocal = sessionmaker(bind=self.engine)
@@ -737,28 +749,75 @@ class DatabaseService:
         except Exception as e:
             self.logger.error(f"Failed to cleanup connections: {e}")
     
+    def warmup_pool(self):
+        """Warm up the connection pool by creating the configured number of connections."""
+        try:
+            self.logger.info("Warming up connection pool...")
+            pool = self.engine.pool
+            pool_size = getattr(pool, '_pool_size', 5)
+            
+            # Create connections to fill the pool
+            connections = []
+            for i in range(pool_size):
+                try:
+                    conn = pool.connect()
+                    connections.append(conn)
+                    self.logger.debug(f"Created connection {i+1}/{pool_size}")
+                except Exception as e:
+                    self.logger.warning(f"Failed to create connection {i+1}: {e}")
+                    break
+            
+            # Return connections to the pool
+            for conn in connections:
+                try:
+                    conn.close()
+                except:
+                    pass
+            
+            self.logger.info(f"Pool warmup completed. Created {len(connections)} connections.")
+            return len(connections)
+            
+        except Exception as e:
+            self.logger.error(f"Failed to warmup pool: {e}")
+            return 0
+    
     def get_pool_status(self) -> Dict[str, Any]:
         """Get detailed connection pool status."""
         try:
             pool = self.engine.pool
-            total_connections = pool.size() + pool.overflow()
+            
+            # Get pool configuration
+            pool_size = getattr(pool, '_pool_size', pool.size())
+            max_overflow = getattr(pool, '_max_overflow', 0)
+            
+            # Get current pool state
+            checked_in = pool.checkedin()
             checked_out = pool.checkedout()
-            utilization = round((checked_out / total_connections) * 100, 2) if total_connections > 0 else 0
+            overflow = pool.overflow()
+            
+            # Calculate total connections (base pool + overflow)
+            total_connections = pool_size + max(0, overflow)
+            max_total_connections = pool_size + max_overflow
+            
+            # Calculate utilization based on max possible connections
+            utilization = round((checked_out / max_total_connections) * 100, 2) if max_total_connections > 0 else 0
             
             status = {
-                'pool_size': pool.size(),
-                'checked_in': pool.checkedin(),
+                'pool_size': pool_size,
+                'max_overflow': max_overflow,
+                'checked_in': checked_in,
                 'checked_out': checked_out,
-                'overflow': pool.overflow(),
+                'overflow': overflow,
                 'total_connections': total_connections,
-                'available_connections': pool.checkedin(),
+                'max_total_connections': max_total_connections,
+                'available_connections': checked_in,
                 'utilization_percent': utilization,
                 'status': 'healthy' if utilization < 80 else 'warning' if utilization < 95 else 'critical'
             }
             
             # Log warning if utilization is high
             if utilization > 80:
-                self.logger.warning(f"High connection pool utilization: {utilization}% ({checked_out}/{total_connections})")
+                self.logger.warning(f"High connection pool utilization: {utilization}% ({checked_out}/{max_total_connections})")
             
             return status
         except Exception as e:

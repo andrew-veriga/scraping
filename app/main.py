@@ -100,6 +100,26 @@ def cleanup_connections():
             "timestamp": pd.Timestamp.now().isoformat()
         }
 
+@app.post("/warmup-pool")
+def warmup_pool():
+    """Warm up the connection pool."""
+    try:
+        db_service = get_database_service()
+        connections_created = db_service.warmup_pool()
+        
+        return {
+            "status": "success",
+            "message": f"Pool warmup completed. Created {connections_created} connections.",
+            "connections_created": connections_created,
+            "timestamp": pd.Timestamp.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": pd.Timestamp.now().isoformat()
+        }
+
 @app.post("/full-process")
 def full_process_endpoint():
     return processing.full_process(config)
