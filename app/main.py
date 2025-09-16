@@ -4,10 +4,8 @@ load_dotenv()
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
-from app.services import data_loader
 from app.services.processing_hierarchical import process_first_batch_hierarchical
 from app.utils.file_utils import load_solutions_dict
-from app.utils.analytics import get_analytics_service
 from app.services.database import get_database_service
 from app.models.pydantic_models import SolutionStatus
 
@@ -46,6 +44,25 @@ logging.info(f"Config loaded: {config}")
 MESSAGES_FILE_PATH = config['MESSAGES_FILE_PATH']
 SOLUTIONS_DICT_FILENAME = config['SOLUTIONS_DICT_FILENAME']
 
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint with database status."""
+    try:
+        db_service = get_database_service()
+        db_health = db_service.health_check()
+        
+        return {
+            "status": "healthy" if db_health["status"] == "healthy" else "unhealthy",
+            "database": db_health,
+            "timestamp": pd.Timestamp.now().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": pd.Timestamp.now().isoformat()
+        }
 
 @app.post("/full-process")
 def full_process_endpoint():
@@ -196,11 +213,12 @@ def generate_markdown_report():
         raise HTTPException(status_code=500, detail=f"Error generating markdown report: {str(e)}")
 
 @app.get("/exisiting-markdown-report", response_class=HTMLResponse)
-def generate_html_report_from_existing_markdown_file(report_md_file: str="C:\\VSCode\\withrag\\results\\solutions_report.md") -> HTMLResponse:
+def generate_html_report_from_existing_markdown_file(report_md_file: str=".\\results\\solutions_report.md") -> HTMLResponse:
     """
     Generates an HTML report from a Markdown file.
     """
     try:
+        # file_path = os.path.join(SAVE_PATH, report_md_file)
         with open(report_md_file, 'r', encoding='utf-8') as f:
             full_report_md = f.read()
         md = MarkdownIt()

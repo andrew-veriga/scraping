@@ -1,12 +1,14 @@
 import os
 import yaml
 import logging
+import time
+import random
 from typing import List, Optional, Dict, Any, Generator
 from datetime import datetime, timezone
 import pandas as pd
 from sqlalchemy import create_engine, text, and_, or_, desc, func
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError, OperationalError, DisconnectionError
 from contextlib import contextmanager
 from app.models.pydantic_models import ThreadStatus
 import hashlib
@@ -28,6 +30,11 @@ class DatabaseService:
         self.config = self._load_config(config_path)
         self.engine = None
         self.SessionLocal = None
+        # Load retry configuration from config
+        db_config = self.config.get('database', {})
+        self.max_retries = db_config.get('max_retries', 3)
+        self.base_delay = db_config.get('base_delay', 1.0)
+        self.max_delay = db_config.get('max_delay', 60.0)
         self._initialize_database()
     
     def _load_config(self, config_path: str) -> Dict[str, Any]:
@@ -56,14 +63,20 @@ class DatabaseService:
             if not db_url:
                 raise ValueError("Database URL not found in environment (PEERA_DB_URL) or configuration")
             
-            # Create engine with connection pooling
+            # Create engine with connection pooling and SSL configuration
             self.engine = create_engine(
                 db_url,
                 pool_size=db_config.get('pool_size', 5),
                 max_overflow=db_config.get('max_overflow', 10),
                 pool_timeout=db_config.get('pool_timeout', 30),
                 pool_recycle=db_config.get('pool_recycle', 3600),
-                echo=False  # Set to True for SQL debugging
+                pool_pre_ping=True,  # Verify connections before use
+                echo=False,  # Set to True for SQL debugging
+                connect_args={
+                    'sslmode': db_config.get('ssl_mode', 'prefer'),
+                    'connect_timeout': db_config.get('connect_timeout', 30),
+                    'application_name': 'discord-sui-analyzer'
+                }
             )
             
             # Create session factory
@@ -104,18 +117,110 @@ class DatabaseService:
             self.logger.info("Falling back to JSON storage for embeddings")
             return False
     
+    def _is_connection_error(self, error: Exception) -> bool:
+        """Check if the error is a connection-related error that should trigger a retry."""
+        error_str = str(error).lower()
+        connection_errors = [
+            'ssl syscall error',
+            'eof detected',
+            'connection reset',
+            'connection refused',
+            'connection timeout',
+            'server closed the connection',
+            'connection lost',
+            'database is not accepting connections',
+            'could not connect to server',
+            'connection terminated unexpectedly'
+        ]
+        return any(err in error_str for err in connection_errors)
+    
+    def _calculate_delay(self, attempt: int) -> float:
+        """Calculate exponential backoff delay with jitter."""
+        delay = min(self.base_delay * (2 ** attempt), self.max_delay)
+        jitter = random.uniform(0.1, 0.3) * delay
+        return delay + jitter
+    
+    def _test_connection(self) -> bool:
+        """Test database connection health."""
+        try:
+            with self.engine.connect() as connection:
+                connection.execute(text("SELECT 1"))
+                return True
+        except Exception as e:
+            self.logger.warning(f"Connection health check failed: {e}")
+            return False
+    
+    def _reconnect(self):
+        """Recreate database connection."""
+        try:
+            self.logger.info("Attempting to reconnect to database...")
+            self.engine.dispose()  # Close all existing connections
+            self._initialize_database()
+            self.logger.info("Database reconnection successful")
+        except Exception as e:
+            self.logger.error(f"Failed to reconnect to database: {e}")
+            raise
+    
     @contextmanager
     def get_session(self) -> Generator[Session, None, None]:
-        """Get database session with automatic cleanup."""
-        session = self.SessionLocal()
-        try:
-            yield session
-        except Exception as e:
-            session.rollback()
-            self.logger.error(f"Database session error: {e}")
-            raise
-        finally:
-            session.close()
+        """Get database session with automatic cleanup and retry logic."""
+        last_error = None
+        
+        for attempt in range(self.max_retries + 1):
+            session = None
+            try:
+                # Test connection health before creating session
+                if attempt > 0:
+                    if not self._test_connection():
+                        self._reconnect()
+                
+                session = self.SessionLocal()
+                yield session
+                return  # Success, exit retry loop
+                
+            except (OperationalError, DisconnectionError) as e:
+                last_error = e
+                if session:
+                    try:
+                        session.rollback()
+                        session.close()
+                    except:
+                        pass
+                
+                if self._is_connection_error(e) and attempt < self.max_retries:
+                    delay = self._calculate_delay(attempt)
+                    self.logger.warning(f"Database connection error (attempt {attempt + 1}/{self.max_retries + 1}): {e}")
+                    self.logger.info(f"Retrying in {delay:.2f} seconds...")
+                    time.sleep(delay)
+                    
+                    # Try to reconnect on connection errors
+                    try:
+                        self._reconnect()
+                    except Exception as reconnect_error:
+                        self.logger.error(f"Reconnection failed: {reconnect_error}")
+                        if attempt == self.max_retries:
+                            raise reconnect_error
+                else:
+                    # Not a connection error or max retries reached
+                    break
+                    
+            except Exception as e:
+                last_error = e
+                if session:
+                    try:
+                        session.rollback()
+                        session.close()
+                    except:
+                        pass
+                self.logger.error(f"Database session error: {e}")
+                break
+        
+        # If we get here, all retries failed
+        if last_error:
+            self.logger.error(f"Database operation failed after {self.max_retries + 1} attempts")
+            raise last_error
+        else:
+            raise Exception("Database operation failed for unknown reason")
     
     # Message operations
     def create_message(self, session: Session, message_data: Dict[str, Any]) -> Message:
@@ -554,6 +659,68 @@ class DatabaseService:
             )
         ).delete()
         return expired_count
+    
+    def health_check(self) -> Dict[str, Any]:
+        """Perform comprehensive database health check."""
+        health_status = {
+            'status': 'healthy',
+            'connection_test': False,
+            'pool_status': {},
+            'error': None
+        }
+        
+        try:
+            # Test basic connection
+            health_status['connection_test'] = self._test_connection()
+            
+            # Get connection pool status
+            pool = self.engine.pool
+            pool_status = {}
+            
+            # Get available pool metrics safely
+            try:
+                pool_status['size'] = pool.size()
+            except:
+                pool_status['size'] = 'unknown'
+                
+            try:
+                pool_status['checked_in'] = pool.checkedin()
+            except:
+                pool_status['checked_in'] = 'unknown'
+                
+            try:
+                pool_status['checked_out'] = pool.checkedout()
+            except:
+                pool_status['checked_out'] = 'unknown'
+                
+            try:
+                pool_status['overflow'] = pool.overflow()
+            except:
+                pool_status['overflow'] = 'unknown'
+            
+            # Try to get additional pool info if available
+            try:
+                if hasattr(pool, 'invalidated'):
+                    pool_status['invalidated'] = pool.invalidated
+                elif hasattr(pool, 'invalid'):
+                    pool_status['invalidated'] = pool.invalid()
+                else:
+                    pool_status['invalidated'] = 'not_available'
+            except:
+                pool_status['invalidated'] = 'error'
+            
+            health_status['pool_status'] = pool_status
+            
+            if not health_status['connection_test']:
+                health_status['status'] = 'unhealthy'
+                health_status['error'] = 'Connection test failed'
+                
+        except Exception as e:
+            health_status['status'] = 'unhealthy'
+            health_status['error'] = str(e)
+            self.logger.error(f"Health check failed: {e}")
+        
+        return health_status
 
 
 # Global database service instance

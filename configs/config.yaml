@@ -12,6 +12,13 @@ database:
   max_overflow: 10
   pool_timeout: 30
   pool_recycle: 3600
+  # Connection retry settings
+  max_retries: 3
+  base_delay: 1.0
+  max_delay: 60.0
+  # SSL settings
+  ssl_mode: "prefer"  # prefer, require, disable
+  connect_timeout: 30
 
 # RAG configuration
 rag:
