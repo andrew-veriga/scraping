@@ -6,16 +6,26 @@ from app.models.pydantic_models import RawThreadList, ModifiedRawThreadList, Thr
 import logging
 
 #load_dotenv(dotenv_path)
+from dotenv import load_dotenv
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
-    # Use logging.critical for errors that prevent the app from starting.
-    logging.critical("GEMINI_API_KEY environment variable is not set.")
-    raise EnvironmentError("GEMINI_API_KEY environment variable is not set.")
+load_dotenv() # This loads variables from .env into the environment
+
+# these env vars are set in .env file for local dev
+PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
+LOCATION = os.environ.get("GOOGLE_CLOUD_REGION")
+
+# GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+# if not GEMINI_API_KEY:
+#     # Use logging.critical for errors that prevent the app from starting.
+#     logging.critical("GEMINI_API_KEY environment variable is not set.")
+#     raise EnvironmentError("GEMINI_API_KEY environment variable is not set.")
 
 
-gemini_client = genai.Client(
-    api_key=GEMINI_API_KEY
+gemini_client = genai.Client( 
+    # api_key=GEMINI_API_KEY,
+    project=PROJECT_ID,
+    location=LOCATION,
+    # credentials_path=os.environ.get("GEMINI_API_KEY_PATH")
 )
 model_name = "gemini-2.5-flash"
 
