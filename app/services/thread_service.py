@@ -202,8 +202,6 @@ def filter_technical_threads(filename, prefix: str, save_path):
     with open(filename, 'r') as f:
         threads_json_data = json.load(f)
     
-    from app.utils.file_utils import convert_legacy_format
-    threads_json_data = convert_legacy_format(threads_json_data)
     db_service = get_database_service()
 
     processed_threads = illustrated_threads(threads_json_data, db_service)
