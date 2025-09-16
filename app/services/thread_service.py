@@ -297,8 +297,7 @@ def generalization_solution(filename,prefix: str, save_path):
         technical_threads = json.load(f)
     technical_threads = {t.get('topic_id'): t for t in technical_threads}
 
-    from app.utils.file_utils import convert_legacy_format
-    technical_threads = convert_legacy_format(technical_threads)
+
     valid_ids_set = set()
     text_threads = {}
     for key,t in technical_threads.items(): 
@@ -418,7 +417,7 @@ def next_thread_gathering(next_batch_df, lookback_date, str_interval, save_path,
             if whole_thread_ids:
                 valid_ids_set = valid_ids_set.union(set(whole_thread_ids))
                 for message_id in whole_thread_ids:
-                    message_content = illustrated_message(message_id, db_service)
+                    message_content = illustrated_message(message_id, db_service, session)
                     if message_id == thread.topic_id:
                         messages.append(f"- ({message_id}) - **Topic started** :{message_content} ")
                     else:

@@ -19,7 +19,7 @@ class MockMessage(BaseModel):
     content: str
 
 class MockThread(BaseModel):
-    Topic_ID: str
+    topic_id: str
     whole_thread: List[str]
     whole_thread_formatted: Optional[List[MockMessage]] = None
     status: Optional[str] = None
@@ -31,11 +31,11 @@ class MockTechnicalTopics(BaseModel):
     technical_topics: List[str]
 
 class MockSolution(BaseModel):
-    Topic_ID: str
-    Problem_Statement: str
+    topic_id: str
+    problem_statement: str
     solution: str
-    Status: str
-    Actual_Date: datetime
+    status: str
+    actual_date: datetime
 
 class MockSolutionList(BaseModel):
     threads: List[MockSolution]
@@ -44,7 +44,7 @@ class MockSolutionList(BaseModel):
 
 @pytest.fixture
 def mock_gemini_response_step1():
-    thread = MockThread(Topic_ID="1", whole_thread=["1", "2", "3"])
+    thread = MockThread(topic_id="1", whole_thread=["1", "2", "3"])
     thread_list = MockThreadList(threads=[thread])
     return gemini_service._MockParsedResponse(thread_list)
 
@@ -56,11 +56,11 @@ def mock_gemini_response_step2():
 @pytest.fixture
 def mock_gemini_response_step3():
     solution = MockSolution(
-        Topic_ID="1",
-        Problem_Statement="Problem",
+        topic_id="1",
+        problem_statement="Problem",
         solution="solution",
-        Status=SolutionStatus.RESOLVED,
-        Actual_Date=datetime.now()
+        status=SolutionStatus.RESOLVED,
+        actual_date=datetime.now()
     )
     solution_list = MockSolutionList(threads=[solution])
     return gemini_service._MockParsedResponse(solution_list)

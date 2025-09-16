@@ -317,7 +317,7 @@ def _create_duplicate_records(solution_data: dict, similar_solutions: list):
     """
     try:
         if not similar_solutions:
-            logging.warning(f"No similar solutions provided for duplicate marking of {solution_data.get('topic_id') or solution_data.get('Topic_ID')}")
+            logging.warning(f"No similar solutions provided for duplicate marking of {solution_data.get('topic_id')}")
             return
         
         rag_service = get_rag_service()
@@ -325,7 +325,7 @@ def _create_duplicate_records(solution_data: dict, similar_solutions: list):
         
         with db_service.get_session() as session:
 
-            topic_id = solution_data.get('topic_id') #or solution_data.get('Topic_ID')
+            topic_id = solution_data.get('topic_id')
             thread = db_service.get_thread_by_topic_id(session, topic_id)
             
             if not thread:
@@ -389,7 +389,7 @@ def update_database_with_solutions(solutions_dict: dict):
                 thread = db_service.get_thread_by_topic_id(session, topic_id)
                 if not thread:
                     # Create thread if it doesn't exist
-                    actual_date = solution_data.get('actual_date') or solution_data.get('Actual_Date')
+                    actual_date = solution_data.get('actual_date')
                     if isinstance(actual_date, str):
                         actual_date = pd.to_datetime(actual_date)
                     
@@ -397,7 +397,7 @@ def update_database_with_solutions(solutions_dict: dict):
                         'topic_id': topic_id,
                         'header': solution_data.get('header'),
                         'actual_date': actual_date,
-                        'answer_id': solution_data.get('Answer_ID'),
+                        'answer_id': solution_data.get('answer_id'),
                         'label': solution_data.get('label'),
                         'solution': solution_data.get('solution'),
                         'status': ThreadStatus.NEW,

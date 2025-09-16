@@ -162,7 +162,7 @@ class DataMigrator:
             return existing_thread
         
         # Create new thread
-        actual_date = solution_data.get('Actual_Date')
+        actual_date = solution_data.get('actual_date')
         if isinstance(actual_date, str):
             actual_date = pd.to_datetime(actual_date)
         
@@ -170,7 +170,7 @@ class DataMigrator:
             'topic_id': topic_id,
             'header': solution_data.get('header'),
             'actual_date': actual_date,
-            'answer_id': solution_data.get('Answer_ID'),
+            'answer_id': solution_data.get('answer_id'),
             'label': solution_data.get('label'),
             'solution': solution_data.get('solution'),
             'status': ThreadStatus.PERSISTED,  # These are from existing data

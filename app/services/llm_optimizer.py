@@ -57,15 +57,15 @@ class LLMOptimizer:
             if messages:
                 # Create compact representation
                 thread_data = {
-                    'Topic_ID': thread_id,
-                    'Actual_Date': thread.actual_date.isoformat() if thread.actual_date else None,
+                    'topic_id': thread_id,
+                    'actual_date': thread.actual_date.isoformat() if thread.actual_date else None,
                     'Messages': [
                         {
-                            'Message_ID': msg.message_id,
-                            'Author_ID': msg.author_id,
-                            'Content': msg.content[:200] + '...' if len(msg.content) > 200 else msg.content,  # Truncate long messages
-                            'DateTime': msg.datetime.isoformat() if msg.datetime else None,
-                            'Referenced_ID': msg.referenced_message_id or ''
+                            'message_id': msg.message_id,
+                            'author_id': msg.author_id,
+                            'content': msg.content[:200] + '...' if len(msg.content) > 200 else msg.content,  # Truncate long messages
+                            'datetime': msg.datetime.isoformat() if msg.datetime else None,
+                            'referenced_message_id': msg.referenced_message_id or ''
                         }
                         for msg in messages
                     ]
@@ -167,9 +167,9 @@ class LLMOptimizer:
                         ).order_by(Message.datetime).all()
                         
                         thread_data = {
-                            'Topic_ID': topic_id,
-                            'Actual_Date': thread.actual_date.isoformat() if thread.actual_date else None,
-                            'Answer_ID': thread.answer_id,
+                            'topic_id': topic_id,
+                            'actual_date': thread.actual_date.isoformat() if thread.actual_date else None,
+                            'answer_id': thread.answer_id,
                             'whole_thread': [msg.message_id for msg in messages],
                             'status': thread.status
                         }
@@ -201,7 +201,7 @@ class LLMOptimizer:
                     'operation': 'solution_generation',
                     'batch_type': batch_type,
                     'batch_index': i // self.batch_size,
-                    'thread_ids': [t['Topic_ID'] for t in batch]
+                    'thread_ids': [t['topic_id'] for t in batch]
                 }
                 
                 cached_response = self._get_cached_response(session, cache_key_data, 'solution_generation')

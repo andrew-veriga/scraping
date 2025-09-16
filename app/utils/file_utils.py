@@ -54,12 +54,8 @@ def load_solutions_dict(filename, save_path, from_date=None):
         # Convert datetime strings back to datetime objects and apply filtering
         filtered_solutions_dict = {}
         for topic_id, solution in solutions_dict.items():
-            # if 'Actual_Date' in solution and isinstance(solution['Actual_Date'], str):
-            #     solution['Actual_Date'] = datetime.fromisoformat(solution['Actual_Date'])
-            #     if solution['Actual_Date'] > pd.Timestamp('2025-08-11 00:00:00+0000', tz='UTC'):
-            #         continue
-            # Support both old and new formats during transition
-            actual_date = solution.get('actual_date') or solution.get('Actual_Date')
+           
+            actual_date = solution.get('actual_date')
             if from_date is None or (isinstance(actual_date, datetime) and actual_date.replace(tzinfo=None) >= from_date.replace(tzinfo=None)):
                  filtered_solutions_dict[topic_id] = solution
 
@@ -85,7 +81,7 @@ def get_end_date_from_solutions(solutions_dict):
     # Support both old and new formats during transition
     dates = []
     for s in solutions_dict.values():
-        actual_date = s.get('actual_date') or s.get('Actual_Date')
+        actual_date = s.get('actual_date')
         if actual_date:
             dates.append(pd.Timestamp(actual_date))
     if dates:
@@ -105,18 +101,21 @@ def is_admin(message_ID):
 
 # Map Author IDs to User <N> using all unique author IDs from the entire Messages_df
 
-def illustrated_message(message_ID, db_service):
+def illustrated_message(message_ID, db_service, session=None):
     """
     Formats a message with user mapping and reply information.
     user_mapping: A dictionary mapping Author IDs to formatted user names.
 
     Args:
         message_ID: A pandas Series representing a message row from the dataframe.
+        db_service: Database service instance
+        session: Optional existing database session (to avoid creating new connections)
 
     Returns:
         A formatted string representation of the message.
     """
-    with db_service.get_session() as session:
+    # Use provided session or create new one
+    if session is not None:
         message = db_service.get_message_by_message_id(message_ID, session)
         if message is None:
             return "<empty>"
@@ -126,88 +125,53 @@ def illustrated_message(message_ID, db_service):
         user_mapping = lambda author_id: f'Admin {author_id}' if is_admin(author_id) else f'User {author_id}'
         formatted_msg = f"{message.datetime} {user_mapping(author_id)}: "
 
-    # Handle replies
+        # Handle replies
         if referenced_message_id:
             referenced_message = db_service.get_message_by_message_id(referenced_message_id, session)
-            referenced_author_id = referenced_message.author_id
-            formatted_msg += f" reply to {user_mapping(referenced_author_id)} - "
+            if referenced_message:
+                referenced_author_id = referenced_message.author_id
+                formatted_msg += f" reply to {user_mapping(referenced_author_id)} - "
 
-    # Ensure message_content is a string before using re.sub
-    if message_content is None:
-        message_content = "<empty>"
+        # Ensure message_content is a string before using re.sub
+        if message_content is None:
+            message_content = "<empty>"
+        else:
+            message_content = str(message_content)
+
+        # Handle tagged users using regex to find and replace the pattern <@digits>
+        def replace_tagged_users(match):
+            # Extract the tagged user ID (digits) from the match
+            tagged_user_id = match.group(1)
+            # Replace with the formatted user name using the user_mapping dictionary
+            return f"<tagged {user_mapping(tagged_user_id)}>"
+
+        # Use re.sub with a raw string for the regex pattern
+        message_content = re.sub(r'<@(\d+)>', replace_tagged_users, message_content)
+
+        formatted_msg += message_content
+        return formatted_msg
     else:
-        message_content = str(message_content)
+        # Fallback to creating new session (less efficient)
+        with db_service.get_session() as new_session:
+            return illustrated_message(message_ID, db_service, new_session)
 
-    # Handle tagged users using regex to find and replace the pattern <@digits>
-    def replace_tagged_users(match):
-        # Extract the tagged user ID (digits) from the match
-        tagged_user_id = match.group(1)
-        # Replace with the formatted user name using the user_mapping dictionary
-        return f"<tagged {user_mapping(tagged_user_id)}>"
-
-    # Use re.sub with a raw string for the regex pattern
-    message_content = re.sub(r'<@(\d+)>', replace_tagged_users, message_content)
-
-    formatted_msg += message_content
-    return formatted_msg
-
-def convert_legacy_format(data):
-    """
-    Converts legacy JSON format (Topic_ID, whole_thread, etc.) to new format (topic_id, whole_thread, etc.)
-    Supports both individual dictionaries and lists of dictionaries.
-    """
-    if isinstance(data, list):
-        return [convert_legacy_format(item) for item in data]
-    elif isinstance(data, dict):
-        new_dict = {}
-        for key, value in data.items():
-            # Convert key names
-            if key == 'Topic_ID':
-                new_key = 'topic_id'
-            elif key == 'whole_thread':
-                new_key = 'whole_thread'
-            elif key == 'Answer_ID':
-                new_key = 'answer_id'
-            elif key == 'Actual_Date':
-                new_key = 'actual_date'
-            elif key == 'header':
-                new_key = 'header'
-            elif key == 'label':
-                new_key = 'label'
-            elif key == 'solution':
-                new_key = 'solution'
-            elif key == 'Message_ID':
-                new_key = 'message_id'
-            elif key == 'Author_ID':
-                new_key = 'author_id'
-            elif key == 'Content':
-                new_key = 'content'
-            else:
-                new_key = key.lower()  # Convert other keys to lowercase
-                
-            # Recursively convert nested structures
-            if isinstance(value, (dict, list)):
-                new_dict[new_key] = convert_legacy_format(value)
-            else:
-                new_dict[new_key] = value
-        return new_dict
-    else:
-        return data
 
 def illustrated_threads(threads_json_data, db_service):
     """
     Enriches thread data with full message content for better analysis by the LLM.
     """
-    for thread in threads_json_data:
-        thread['whole_thread_formatted'] = []
-        # Support both old and new formats during transition
-        whole_thread = thread.get('whole_thread') or thread.get('whole_thread', [])
-        for msg in whole_thread:
-            msg_id = msg['message_id']
-            message_content = illustrated_message(msg_id, db_service)
-            thread['whole_thread_formatted'].append({
-                "message_id": str(msg_id),
-                "parent_id": str(msg.get('parent_id', None)),
-                "content": message_content
-            })
+    # Use a single database session for all message lookups to avoid connection pool exhaustion
+    with db_service.get_session() as session:
+        for thread in threads_json_data:
+            thread['whole_thread_formatted'] = []
+            # Support both old and new formats during transition
+            whole_thread = thread.get('whole_thread') or thread.get('whole_thread', [])
+            for msg in whole_thread:
+                msg_id = msg['message_id']
+                message_content = illustrated_message(msg_id, db_service, session)
+                thread['whole_thread_formatted'].append({
+                    "message_id": str(msg_id),
+                    "parent_id": str(msg.get('parent_id', None)),
+                    "content": message_content
+                })
     return threads_json_data

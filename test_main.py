@@ -32,10 +32,10 @@ def mock_services(monkeypatch):
 
     # Mock file_utils
     # Note: get_end_date_from_solutions needs to return a timezone-aware datetime
-    mock_load_solutions = MagicMock(return_value={'1': {'Actual_Date': '2023-01-05T00:00:00+00:00'}})
+    mock_load_solutions = MagicMock(return_value={'1': {'actual_date': '2023-01-05T00:00:00+00:00'}})
     monkeypatch.setattr("app.utils.file_utils.load_solutions_dict", mock_load_solutions)
     monkeypatch.setattr("app.utils.file_utils.save_solutions_dict", MagicMock())
-    monkeypatch.setattr("app.utils.file_utils.create_dict_from_list", MagicMock(return_value={'2': {'Actual_Date': '2023-01-06T00:00:00+00:00'}}))
+    monkeypatch.setattr("app.utils.file_utils.create_dict_from_list", MagicMock(return_value={'2': {'actual_date': '2023-01-06T00:00:00+00:00'}}))
     monkeypatch.setattr("app.utils.file_utils.get_end_date_from_solutions", MagicMock(return_value=pd.Timestamp('2023-01-05 00:00:00+0000', tz='UTC')))
 
     # Mock process_batch itself for the next_batch endpoint test
@@ -112,7 +112,7 @@ def test_get_solutions_success(mock_services):
     """Tests successfully retrieving the solutions."""
     response = client.get("/solutions")
     assert response.status_code == 200
-    assert response.json() == {'1': {'Actual_Date': '2023-01-05T00:00:00+00:00'}}
+    assert response.json() == {'1': {'actual_date': '2023-01-05T00:00:00+00:00'}}
     mock_services["load_solutions"].assert_called_once()
 
 def test_get_solutions_not_found(mock_services):

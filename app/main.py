@@ -185,38 +185,40 @@ def iterate_final_threads(thread_data, db_service):
     """
     Iterates over the final threads and yields formatted markdown output.
     """
-    for i, thread in enumerate(thread_data):
-        actual_date = thread.get('actual_date')
-        header = thread.get('header') 
-        markdown_output = f"""## {i}. {actual_date} {header}
+    # Use a single database session for all message lookups to avoid connection pool exhaustion
+    with db_service.get_session() as session:
+        for i, thread in enumerate(thread_data):
+            actual_date = thread.get('actual_date')
+            header = thread.get('header') 
+            markdown_output = f"""## {i}. {actual_date} {header}
 
 #### Whole Thread Messages:
 """
-        whole_thread = thread.get('whole_thread', [])
-        messages = []
-        if whole_thread:
-            whole_thread_ids = [t['message_id'] for t in whole_thread]
-            for message_id in whole_thread_ids:
+            whole_thread = thread.get('whole_thread', [])
+            messages = []
+            if whole_thread:
+                whole_thread_ids = [t['message_id'] for t in whole_thread]
+                for message_id in whole_thread_ids:
 
-                message_content = illustrated_message(message_id, db_service)
-                topic_id = thread.get('topic_id') or thread.get('Topic_ID', 'N/A')
-                answer_id = thread.get('answer_id') or thread.get('Answer_ID', 'N/A')
-                if message_id == topic_id:
-                    messages.append(f"- ({message_id}) - **Topic started** :{message_content} ")
-                elif message_id == answer_id:
-                    messages.append(f"- ({message_id}) **Answer** : {message_content}")
-                else:
-                    messages.append(f"- ({message_id}) {message_content} ")
-            markdown_output += "\n".join(messages)
-        else:
-            markdown_output += "\n  N/A"
-        label = thread.get('label') or thread.get('label', 'N/A')
-        solution = thread.get('solution') or thread.get('solution','')
-        if label == SolutionStatus.UNRESOLVED:
-            markdown_output += f"\n\n### solution {label}"
-        else:
-            markdown_output += f"\n\n### solution {label}: {solution}"
-        yield markdown_output
+                    message_content = illustrated_message(message_id, db_service, session)
+                    topic_id = thread.get('topic_id') or thread.get('Topic_ID', 'N/A')
+                    answer_id = thread.get('answer_id')
+                    if message_id == topic_id:
+                        messages.append(f"- ({message_id}) - **Topic started** :{message_content} ")
+                    elif message_id == answer_id:
+                        messages.append(f"- ({message_id}) **Answer** : {message_content}")
+                    else:
+                        messages.append(f"- ({message_id}) {message_content} ")
+                markdown_output += "\n".join(messages)
+            else:
+                markdown_output += "\n  N/A"
+            label = thread.get('label') or thread.get('label', 'N/A')
+            solution = thread.get('solution') or thread.get('solution','')
+            if label == SolutionStatus.UNRESOLVED:
+                markdown_output += f"\n\n### solution {label}"
+            else:
+                markdown_output += f"\n\n### solution {label}: {solution}"
+            yield markdown_output
 
 
 @app.get("/markdown-report", response_class=HTMLResponse)

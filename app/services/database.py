@@ -741,15 +741,26 @@ class DatabaseService:
         """Get detailed connection pool status."""
         try:
             pool = self.engine.pool
-            return {
+            total_connections = pool.size() + pool.overflow()
+            checked_out = pool.checkedout()
+            utilization = round((checked_out / total_connections) * 100, 2) if total_connections > 0 else 0
+            
+            status = {
                 'pool_size': pool.size(),
                 'checked_in': pool.checkedin(),
-                'checked_out': pool.checkedout(),
+                'checked_out': checked_out,
                 'overflow': pool.overflow(),
-                'total_connections': pool.size() + pool.overflow(),
+                'total_connections': total_connections,
                 'available_connections': pool.checkedin(),
-                'utilization_percent': round((pool.checkedout() / (pool.size() + pool.overflow())) * 100, 2) if (pool.size() + pool.overflow()) > 0 else 0
+                'utilization_percent': utilization,
+                'status': 'healthy' if utilization < 80 else 'warning' if utilization < 95 else 'critical'
             }
+            
+            # Log warning if utilization is high
+            if utilization > 80:
+                self.logger.warning(f"High connection pool utilization: {utilization}% ({checked_out}/{total_connections})")
+            
+            return status
         except Exception as e:
             self.logger.error(f"Failed to get pool status: {e}")
             return {'error': str(e)}
