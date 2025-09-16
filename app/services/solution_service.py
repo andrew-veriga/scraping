@@ -47,6 +47,10 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
                 continue
             modified_pairs[m] = {'prev': prev_solution_dict[m],ThreadStatus.NEW:new_solution_dict[m]}
         pairs_in_text = []
+        if len(modified_pairs)==0:
+            logging.info("No modified pairs found")
+            return new_solution_dict
+
         for key, p in modified_pairs.items():
             pairs_in_text.append(f"""
 

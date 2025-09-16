@@ -40,16 +40,6 @@ class Message(Base):
     
     # Thread relationship - many messages belong to one thread
     thread_id = Column(String(50), ForeignKey('threads.topic_id'), nullable=True, index=True)
-    order_in_thread = Column(Integer, nullable=True)
-    
-    # Hierarchy metadata
-    depth_level = Column(Integer, default=0, nullable=False)  # 0 for root (topic), 1+ for replies
-    is_root_message = Column(Boolean, default=False, nullable=False, index=True)  # True if this is the thread starter
-    
-    # Processing metadata fields
-    processing_status = Column(JSON, default=lambda: {}, nullable=False)
-    last_processed_at = Column(DateTime(timezone=True), nullable=True)
-    processing_version = Column(String(20), nullable=True)
     
     # Self-referential relationships for message hierarchy (manual join via parent_id)
     parent_message = relationship("Message", remote_side=[message_id], 
@@ -70,11 +60,8 @@ class Message(Base):
     __table_args__ = (
         Index('idx_message_datetime_author', 'datetime', 'author_id'),
         Index('idx_message_referenced', 'referenced_message_id'),
-        Index('idx_message_processed', 'last_processed_at'),
-        Index('idx_message_thread_order', 'thread_id', 'order_in_thread'),
-        Index('idx_message_parent_hierarchy', 'parent_id', 'depth_level'),
-        Index('idx_message_thread_hierarchy', 'thread_id', 'parent_id', 'depth_level'),
-        Index('idx_message_root_messages', 'thread_id', 'is_root_message'),
+        Index('idx_message_thread_id', 'thread_id'),
+        Index('idx_message_parent_id', 'parent_id'),
     )
 
     def __repr__(self):
@@ -83,7 +70,7 @@ class Message(Base):
     @property
     def is_thread_root(self):
         """Check if this message is the root message of its thread (topic starter)"""
-        return self.parent_id is None and self.is_root_message
+        return self.parent_id is None
     
     def get_all_descendants(self, session):
         """Get all descendant messages (children, grandchildren, etc.) recursively"""
@@ -113,8 +100,7 @@ class Message(Base):
         # Find the root message(s) of this thread
         root_messages = session.query(Message).filter(
             Message.thread_id == self.thread_id,
-            Message.parent_id == None,
-            Message.is_root_message == True
+            Message.parent_id == None
         ).order_by(Message.datetime).all()
         
         return root_messages
@@ -137,11 +123,6 @@ class Thread(Base):
     status = Column(String(20), default=ThreadStatus.NEW, index=True)  # new, modified, persisted
     is_technical = Column(Boolean, default=False, index=True)
     is_processed = Column(Boolean, default=False, index=True)
-    
-    # Enhanced processing metadata
-    processing_history = Column(JSON, default=lambda: [], nullable=False)
-    confidence_scores = Column(JSON, default=lambda: {}, nullable=False)
-    processing_metadata = Column(JSON, default=lambda: {}, nullable=False)
     
     # Relationships - one thread has many messages
     # CRITICAL: No cascade delete on messages - messages must NEVER be deleted when thread is deleted
@@ -175,11 +156,6 @@ class Solution(Base):
     created_at = Column(DateTime(timezone=True), default=func.now())
     updated_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now())
     version = Column(Integer, default=1)
-    
-    # Enhanced processing metadata
-    extraction_metadata = Column(JSON, default=lambda: {}, nullable=False)
-    processing_steps = Column(JSON, default=lambda: [], nullable=False)
-    source_messages = Column(JSON, default=lambda: [], nullable=False)  # Array of message IDs used
     
     # Relationships
     thread = relationship("Thread", back_populates="solutions")
@@ -288,13 +264,6 @@ class ProcessingBatch(Base):
     start_date = Column(DateTime(timezone=True), nullable=False)
     end_date = Column(DateTime(timezone=True), nullable=False)
     lookback_date = Column(DateTime(timezone=True), nullable=True)
-    
-    # Processing stats
-    messages_processed = Column(Integer, default=0)
-    threads_created = Column(Integer, default=0)
-    threads_modified = Column(Integer, default=0)
-    technical_threads = Column(Integer, default=0)
-    solutions_added = Column(Integer, default=0)
     
     # Execution info
     started_at = Column(DateTime(timezone=True), default=func.now())

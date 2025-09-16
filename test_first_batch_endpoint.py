@@ -194,34 +194,6 @@ def test_first_batch_endpoint():
         traceback.print_exc()
         return False
 
-def test_status_endpoint():
-    """Test the hierarchical status endpoint"""
-    
-    print("\\n🔍 Testing Hierarchical Status Endpoint")
-    print("-" * 40)
-    
-    try:
-        from app.services.processing_hierarchical import get_hierarchical_processing_status
-        
-        status = get_hierarchical_processing_status()
-        
-        print("✅ Status endpoint working!")
-        print(f"   Database status: {status.get('database_status', 'unknown')}")
-        
-        if 'message_statistics' in status:
-            ms = status['message_statistics']
-            print(f"   📝 Messages: {ms.get('total_messages', 0)} total ({ms.get('root_messages', 0)} roots, {ms.get('reply_messages', 0)} replies)")
-        
-        if 'thread_statistics' in status:
-            ts = status['thread_statistics']
-            print(f"   🧵 Threads: {ts.get('total_threads', 0)} total")
-        
-        return True
-        
-    except Exception as e:
-        print(f"❌ Status test failed: {e}")
-        return False
-
 def main():
     """Run all tests"""
     
@@ -231,12 +203,10 @@ def main():
     # Test the processing endpoint
     processing_success = test_first_batch_endpoint()
     
-    # Test the status endpoint  
-    status_success = test_status_endpoint()
-    
+
     print("\\n" + "=" * 70)
     
-    if processing_success and status_success:
+    if processing_success:
         print("🎉 ALL TESTS PASSED!")
         print("✅ Hierarchical first batch endpoint is working correctly")
         print("🚀 Ready to process real Discord data with parent-child relationships!")

@@ -52,7 +52,7 @@ class LLMOptimizer:
             # Get messages for this thread (limit to most relevant)
             messages = session.query(Message).join(ThreadMessage).filter(
                 ThreadMessage.thread_id == thread.topic_id
-            ).order_by(ThreadMessage.order_in_thread).limit(max_messages_per_thread).all()
+            ).order_by(Message.datetime).limit(max_messages_per_thread).all()
             
             if messages:
                 # Create compact representation
@@ -164,7 +164,7 @@ class LLMOptimizer:
                         # Get messages for this thread
                         messages = db_session.query(Message).join(ThreadMessage).filter(
                             ThreadMessage.thread_id == thread.topic_id
-                        ).order_by(ThreadMessage.order_in_thread).all()
+                        ).order_by(Message.datetime).all()
                         
                         thread_data = {
                             'Topic_ID': topic_id,

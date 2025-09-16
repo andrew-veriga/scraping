@@ -181,10 +181,7 @@ class DatabaseService:
                                 datetime=message_data['datetime'],
                                 dated_message=message_data['dated_message'],
                                 referenced_message_id=message_data.get('referenced_message_id'),
-                                thread_id=message_data.get('thread_id'),
-                                order_in_thread=message_data.get('order_in_thread', 0),
-                                depth_level=message_data.get('depth_level', 0),
-                                is_root_message=message_data.get('is_root_message', False)
+                                thread_id=message_data.get('thread_id')
                             )
                             session.add(message)
                             created_count += 1
@@ -255,13 +252,13 @@ class DatabaseService:
         """Get all messages for a thread in order (using direct relationship)."""
         return session.query(Message).filter(
             Message.thread_id == thread_id
-        ).order_by(Message.order_in_thread).all()
+        ).order_by(Message.datetime).all()
     
     def get_thread_root_message(self, session: Session, thread_id: str) -> Optional[Message]:
         """Get the root message for a thread."""
         return session.query(Message).filter(
             Message.thread_id == thread_id,
-            Message.is_root_message == True
+            Message.parent_id == None
         ).first()
     
     # solution operations
@@ -302,12 +299,7 @@ class DatabaseService:
             batch_type=batch_data['batch_type'],
             start_date=batch_data['start_date'],
             end_date=batch_data['end_date'],
-            lookback_date=batch_data.get('lookback_date'),
-            messages_processed=batch_data.get('messages_processed', 0),
-            threads_created=batch_data.get('threads_created', 0),
-            threads_modified=batch_data.get('threads_modified', 0),
-            technical_threads=batch_data.get('technical_threads', 0),
-            solutions_added=batch_data.get('solutions_added', 0)
+            lookback_date=batch_data.get('lookback_date')
         )
         session.add(batch)
         return batch
@@ -318,9 +310,6 @@ class DatabaseService:
         if batch:
             batch.completed_at = func.now()
             batch.status = 'completed'
-            for key, value in stats.items():
-                if hasattr(batch, key):
-                    setattr(batch, key, value)
     
     def get_latest_processing_date(self, session: Session) -> Optional[datetime]:
         """Get the latest processing date from completed batches."""

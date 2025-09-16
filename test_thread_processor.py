@@ -108,7 +108,7 @@ def test_filter_technical_threads(sample_messages_df, mock_gemini_response_step2
     with patch('app.services.gemini_service.generate_content', return_value=mock_gemini_response_step2) as mock_generate, \
          patch('builtins.open', mock_open(read_data=json.dumps(threads_data))) as mock_file:
 
-        result_path = thread_service.filter_technical_threads(input_filename, "first", sample_messages_df, save_path)
+        result_path = thread_service.filter_technical_threads(input_filename, "first", save_path)
 
         mock_generate.assert_called_once()
         assert "first_technical" in os.path.basename(result_path)

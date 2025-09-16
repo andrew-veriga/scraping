@@ -94,19 +94,6 @@ class ProcessingTracker:
             )
             
             session.add(processing_record)
-            
-            # Update message processing status
-            if not message.processing_status:
-                message.processing_status = {}
-            
-            message.processing_status[processing_step] = {
-                'completed_at': datetime.now(timezone.utc).isoformat(),
-                'confidence_score': confidence_score,
-                'step_order': step_order
-            }
-            message.last_processed_at = func.now()
-            message.processing_version = self.processing_version
-            
             session.flush()
             
             self.logger.info(f"Recorded processing step '{processing_step}' for message {message_id}")
@@ -165,6 +152,7 @@ class ProcessingTracker:
                                metadata: Dict[str, Any] = None):
         """
         Record processing information for a thread.
+        This method is kept for compatibility but no longer stores redundant data.
         
         Args:
             session: Database session
@@ -180,33 +168,7 @@ class ProcessingTracker:
                 self.logger.error(f"Thread with ID {thread_id} not found")
                 return
             
-            # Update processing history
-            if not thread.processing_history:
-                thread.processing_history = []
-            
-            history_entry = {
-                'step': processing_step,
-                'timestamp': datetime.now(timezone.utc).isoformat(),
-                'result': result or {},
-                'metadata': metadata or {},
-                'version': self.processing_version
-            }
-            thread.processing_history.append(history_entry)
-            
-            # Update confidence scores
-            if confidence_scores:
-                if not thread.confidence_scores:
-                    thread.confidence_scores = {}
-                thread.confidence_scores.update({
-                    k: float(v) for k, v in confidence_scores.items()
-                })
-            
-            # Update processing metadata
-            if metadata:
-                if not thread.processing_metadata:
-                    thread.processing_metadata = {}
-                thread.processing_metadata.update(metadata)
-            
+            # Only update the basic thread status - detailed processing info is stored in MessageProcessing
             thread.updated_at = datetime.now(timezone.utc)
             session.flush()
             
@@ -221,6 +183,7 @@ class ProcessingTracker:
                                  processing_steps: List[Dict[str, Any]] = None):
         """
         Record solution extraction metadata.
+        This method is kept for compatibility but no longer stores redundant data.
         
         Args:
             session: Database session
@@ -235,20 +198,7 @@ class ProcessingTracker:
                 self.logger.error(f"solution with ID {solution_id} not found")
                 return
             
-            # Update extraction metadata
-            if extraction_metadata:
-                if not solution.extraction_metadata:
-                    solution.extraction_metadata = {}
-                solution.extraction_metadata.update(extraction_metadata)
-            
-            # Update source messages
-            if source_message_ids:
-                solution.source_messages = source_message_ids
-            
-            # Update processing steps
-            if processing_steps:
-                solution.processing_steps = processing_steps
-            
+            # Only update the basic solution timestamp - detailed metadata is stored in MessageProcessing
             solution.updated_at = datetime.now(timezone.utc)
             session.flush()
             
@@ -277,9 +227,6 @@ class ProcessingTracker:
             
             return {
                 'message_id': message.message_id,
-                'processing_status': message.processing_status,
-                'last_processed_at': message.last_processed_at.isoformat() if message.last_processed_at else None,
-                'processing_version': message.processing_version,
                 'processing_steps': [
                     {
                         'step': ps.processing_step,
@@ -317,9 +264,6 @@ class ProcessingTracker:
             
             return {
                 'thread_id': thread.topic_id,
-                'processing_history': thread.processing_history,
-                'confidence_scores': thread.confidence_scores,
-                'processing_metadata': thread.processing_metadata,
                 'status': thread.status,
                 'is_technical': thread.is_technical,
                 'is_processed': thread.is_processed,
@@ -374,9 +318,7 @@ class ProcessingTracker:
         try:
             # Message processing stats
             total_messages = session.query(Message).count()
-            processed_messages = session.query(Message).filter(
-                Message.last_processed_at.isnot(None)
-            ).count()
+            processed_messages = session.query(MessageProcessing).distinct(MessageProcessing.message_id).count()
             
             # Step counts
             step_counts = {}

@@ -5,7 +5,7 @@ load_dotenv()
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from app.services import data_loader
-from app.services.processing_hierarchical import process_first_batch_hierarchical, get_hierarchical_processing_status
+from app.services.processing_hierarchical import process_first_batch_hierarchical
 from app.utils.file_utils import load_solutions_dict
 from app.utils.analytics import get_analytics_service
 from app.services.database import get_database_service
@@ -76,19 +76,6 @@ def process_first_batch_hierarchical_endpoint():
         logging.error(f"Error in hierarchical first batch processing: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/hierarchical-status")
-def get_hierarchical_status():
-    """
-    Get the current status of hierarchical message processing.
-    Returns statistics about messages, threads, hierarchy depth, and recent processing batches.
-    """
-    try:
-        return get_hierarchical_processing_status()
-    except Exception as e:
-        logging.error(f"Error getting hierarchical status: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.get("/solutions")
 def get_solutions():
     """Retrieves the processed solutions dictionary."""
@@ -101,6 +88,45 @@ def get_solutions():
     except Exception as e:
         logging.error("Error retrieving solutions from /solutions endpoint", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+def generate_html_template(html_body: str) -> str:
+    """
+    Generates a complete HTML document with embedded CSS styles for the solutions report.
+    
+    Args:
+        html_body: The rendered HTML body content from markdown
+        
+    Returns:
+        Complete HTML document as a string
+    """
+    return f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Solutions Report</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            line-height: 1.5;
+            color: #24292e;
+            background-color: #fff;
+            padding: 20px 45px;
+            max-width: 800px;
+            margin: 0 auto;
+        }}
+        h1, h2, h3, h4 {{ border-bottom: 1px solid #eaecef; padding-bottom: .3em; }}
+        code {{ background-color: rgba(27,31,35,.05); border-radius: 3px; padding: .2em .4em; }}
+        ul {{ padding-left: 2em; }}
+    </style>
+</head>
+<body>
+    <h1>Solutions Report</h1>
+    {html_body}
+</body>
+</html>
+"""
+
 
 def iterate_final_threads(thread_data, db_service):
     """
@@ -161,38 +187,27 @@ def generate_markdown_report():
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(full_report_md)
         logging.info(f"Markdown report generated and saved to {output_file}")
+        return generate_html_report_from_existing_markdown_file(output_file)
+    
 
-        md = MarkdownIt()
-        html_body = md.render(full_report_md)
 
-        html_content = f"""
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Solutions Report</title>
-    <style>
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-            line-height: 1.5;
-            color: #24292e;
-            background-color: #fff;
-            padding: 20px 45px;
-            max-width: 800px;
-            margin: 0 auto;
-        }}
-        h1, h2, h3, h4 {{ border-bottom: 1px solid #eaecef; padding-bottom: .3em; }}
-        code {{ background-color: rgba(27,31,35,.05); border-radius: 3px; padding: .2em .4em; }}
-        ul {{ padding-left: 2em; }}
-    </style>
-</head>
-<body>
-    <h1>Solutions Report</h1>
-    {html_body}
-</body>
-</html>
-"""
-        return HTMLResponse(content=html_content)
     except Exception as e:
         logging.error(f"Error generating markdown report: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error generating markdown report: {str(e)}")
+
+@app.get("/exisiting-markdown-report", response_class=HTMLResponse)
+def generate_html_report_from_existing_markdown_file(report_md_file: str="C:\\VSCode\\withrag\\results\\solutions_report.md") -> HTMLResponse:
+    """
+    Generates an HTML report from a Markdown file.
+    """
+    try:
+        with open(report_md_file, 'r', encoding='utf-8') as f:
+            full_report_md = f.read()
+        md = MarkdownIt()
+        html_body = md.render(full_report_md)
+        html_content = generate_html_template(html_body)
+        return HTMLResponse(content=html_content)
+    except Exception as e:
+        logging.error(f"Error generating HTML report: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error generating HTML report: {str(e)}")
+    

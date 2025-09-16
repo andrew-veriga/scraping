@@ -17,54 +17,13 @@ from app.utils.file_utils import *
 
 def _recalculate_hierarchy_metadata(session):
     """
-    Recalculate depth_level and is_root_message for all messages after parent_id updates.
-    Returns number of messages with updated depth levels.
+    This function is no longer needed as depth_level and is_root_message fields
+    have been removed from the Message model. Hierarchy information is now
+    calculated dynamically using parent_id and thread_id relationships.
+    Returns 0 as no updates are needed.
     """
-    from collections import defaultdict, deque
-    
-    # Get all messages
-    messages = session.query(Message).all()
-    message_dict = {msg.message_id: msg for msg in messages}
-    
-    # Track updates
-    depth_updates = 0
-    
-    # Calculate depth for each message using BFS
-    processed = set()
-    
-    for message in messages:
-        if message.message_id in processed:
-            continue
-            
-        # Find root of this message's chain
-        current = message
-        path = []
-        while current and current.message_id not in processed:
-            if current.message_id in [m.message_id for m in path]:  # Circular reference
-                break
-            path.append(current)
-            parent = message_dict.get(current.parent_id) if current.parent_id else None
-            current = parent
-            
-        # Calculate depths from the root
-        if path:
-            # If we found a root or hit a processed message, calculate depths
-            start_depth = 0
-            if current and current.message_id in processed:
-                start_depth = current.depth_level + 1
-                
-            for i, msg in enumerate(reversed(path)):
-                new_depth = start_depth + i
-                new_is_root = (new_depth == 0)
-                
-                if msg.depth_level != new_depth or msg.is_root_message != new_is_root:
-                    msg.depth_level = new_depth
-                    msg.is_root_message = new_is_root
-                    depth_updates += 1
-                    
-                processed.add(msg.message_id)
-    
-    return depth_updates
+    # No-op function for backward compatibility
+    return 0
 
 def _create_thread_object(session, thread_id, thread_messages):
     """
@@ -209,11 +168,11 @@ def first_thread_gathering(logs_df, prefix, save_path):
                         metadata={'batch_prefix': prefix, 'processing_type': 'first_batch'}
                     )
             
-            # Recalculate hierarchy metadata after LLM updates
-            if parent_id_updates > 0:
-                logging.info("🔄 Recalculating hierarchy metadata after LLM parent_id updates...")
-                depth_updates = _recalculate_hierarchy_metadata(session)
-                logging.info(f"  📏 Updated depth levels for {depth_updates} messages")
+            # # Recalculate hierarchy metadata after LLM updates
+            # if parent_id_updates > 0:
+            #     logging.info("🔄 Recalculating hierarchy metadata after LLM parent_id updates...")
+            #     depth_updates = _recalculate_hierarchy_metadata(session)
+            #     logging.info(f"  📏 Updated depth levels for {depth_updates} messages")
             
             session.commit()
             logging.info(f"Thread gathering completed:")

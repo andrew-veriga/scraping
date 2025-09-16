@@ -16,7 +16,7 @@ from app.services import data_loader_hierarchical, thread_service, solution_serv
 from app.services.database import get_database_service
 from app.models.pydantic_models import SolutionStatus
 from app.models.db_models import ProcessingBatch
-from app.utils.file_utils import create_dict_from_list
+from app.utils.file_utils import create_dict_from_list, save_solutions_dict
 import numpy as np
 
 
@@ -83,16 +83,16 @@ def process_first_batch_hierarchical(config: Dict[str, Any]) -> Dict[str, Any]:
     
     try:
         # Extract configuration
-        messages_file_path = config['MESSAGES_FILE_PATH']
-        save_path = config['SAVE_PATH']
+        MESSAGES_FILE_PATH = config['MESSAGES_FILE_PATH']
         interval_first = config.get('INTERVAL_FIRST', 2)  # days for first batch
-        
+        SOLUTIONS_DICT_FILENAME = config['SOLUTIONS_DICT_FILENAME']
+        SAVE_PATH = config['SAVE_PATH']
         
         # Initialize result statistics
         result_stats = {
             'status': 'processing',
             'start_time': datetime.now(timezone.utc),
-            'messages_file': messages_file_path,
+            'messages_file': MESSAGES_FILE_PATH,
             'data_loading': {},
             'hierarchy_analysis': {},
             'database_operations': {},
@@ -102,7 +102,7 @@ def process_first_batch_hierarchical(config: Dict[str, Any]) -> Dict[str, Any]:
         
         # Step 1: Load and preprocess Discord data
         try:
-            messages_df = data_loader_hierarchical.load_and_preprocess_data(messages_file_path)
+            messages_df = data_loader_hierarchical.load_and_preprocess_data(MESSAGES_FILE_PATH)
             result_stats['data_loading'] = {
                 'status': 'success',
                 'total_messages_loaded': int(len(messages_df)),
@@ -131,22 +131,22 @@ def process_first_batch_hierarchical(config: Dict[str, Any]) -> Dict[str, Any]:
             result_stats['hierarchy_analysis'] = {'status': 'failed', 'error': str(e)}
             raise HTTPException(status_code=500, detail=f"Failed to analyze hierarchy: {e}")
         
-        # Step 3: Validate hierarchy integrity
-        logging.info("🛡️ Step 3: Validating message hierarchy integrity...")
-        try:
-            validation_results = data_loader_hierarchical.validate_message_hierarchy(hierarchical_df)
-            result_stats['validation_results'] = validation_results
+        # # Step 3: Validate hierarchy integrity
+        # logging.info("🛡️ Step 3: Validating message hierarchy integrity...")
+        # try:
+        #     validation_results = data_loader_hierarchical.validate_message_hierarchy(hierarchical_df)
+        #     result_stats['validation_results'] = validation_results
             
-            if not validation_results['valid']:
-                logging.warning(f"⚠️ Hierarchy validation found {len(validation_results['issues'])} issues")
-                for issue in validation_results['issues']:
-                    logging.warning(f"   - {issue}")
-            else:
-                logging.info("✅ Hierarchy validation passed")
+        #     if not validation_results['valid']:
+        #         logging.warning(f"⚠️ Hierarchy validation found {len(validation_results['issues'])} issues")
+        #         for issue in validation_results['issues']:
+        #             logging.warning(f"   - {issue}")
+        #     else:
+        #         logging.info("✅ Hierarchy validation passed")
                 
-        except Exception as e:
-            logging.error(f"❌ Failed to validate hierarchy: {e}")
-            result_stats['validation_results'] = {'valid': False, 'error': str(e)}
+        # except Exception as e:
+        #     logging.error(f"❌ Failed to validate hierarchy: {e}")
+        #     result_stats['validation_results'] = {'valid': False, 'error': str(e)}
         
         # Step 4: Filter messages for first batch (based on time interval)
         start_date = hierarchical_df['DateTime'].min().normalize()
@@ -163,11 +163,11 @@ def process_first_batch_hierarchical(config: Dict[str, Any]) -> Dict[str, Any]:
         logging.info("🤖 Step 6: LLM Thread Gathering - Grouping messages into conversation threads...")
         try:
             str_interval = f"{start_date.date()}-{end_date.date()}"
-            step1_output_filename = thread_service.first_thread_gathering(first_batch_df, f"first_{str_interval}", save_path)
+            step1_output_filename = thread_service.first_thread_gathering(first_batch_df, f"first_{str_interval}", SAVE_PATH)
             result_stats['llm_thread_gathering'] = {
                 'status': 'success',
                 'output_file': step1_output_filename,
-                'messages_processed': len(first_batch_df)
+                'total_messages': len(first_batch_df)
             }
             logging.info(f"✅ LLM thread gathering completed")
             
@@ -180,8 +180,7 @@ def process_first_batch_hierarchical(config: Dict[str, Any]) -> Dict[str, Any]:
         logging.info("🔬 Step 7: Filtering technical topics...")
         try:
             # Get messages dataframe for full context (not just first batch)
-            full_messages_df = data_loader_hierarchical.load_and_preprocess_data(messages_file_path)
-            technical_filename = thread_service.filter_technical_threads(step1_output_filename, f"first_{str_interval}", full_messages_df, save_path)
+            technical_filename = thread_service.filter_technical_threads(step1_output_filename, f"first_{str_interval}", SAVE_PATH)
             result_stats['technical_filtering'] = {
                 'status': 'success',
                 'output_file': technical_filename
@@ -196,7 +195,7 @@ def process_first_batch_hierarchical(config: Dict[str, Any]) -> Dict[str, Any]:
         # Step 8: solution Generalization
         logging.info("💡 Step 8: Extracting and generalizing solutions...")
         try:
-            solutions_filename = thread_service.generalization_solution(technical_filename, f"first_{str_interval}", save_path)
+            solutions_filename = thread_service.generalization_solution(technical_filename, f"first_{str_interval}", SAVE_PATH)
             
             # Load solutions from file and convert to dict format
             import json
@@ -221,7 +220,7 @@ def process_first_batch_hierarchical(config: Dict[str, Any]) -> Dict[str, Any]:
         try:
             # Check for duplicates using RAG
             final_solutions_dict = solution_service.check_in_rag_and_save({}, solutions_dict)
-            
+            save_solutions_dict(final_solutions_dict, SOLUTIONS_DICT_FILENAME, SAVE_PATH)
             # Update database with solutions (replaces JSON file storage)
             solution_service.update_database_with_solutions(final_solutions_dict)
             
@@ -247,10 +246,6 @@ def process_first_batch_hierarchical(config: Dict[str, Any]) -> Dict[str, Any]:
                     'batch_type': 'first_hierarchical',  # Shorter name to fit column limit
                     'start_date': start_date,
                     'end_date': end_date,
-                    'messages_processed': len(first_batch_df),
-                    'threads_created': len(final_solutions_dict),
-                    'technical_threads': len([s for s in final_solutions_dict.values() if s.get('label') != SolutionStatus.UNRESOLVED]),
-                    'solutions_added': len([s for s in final_solutions_dict.values() if s.get('solution')]),
                     'lookback_date': None
                 }
                 processing_batch = db_service.create_processing_batch(session, batch_data)
@@ -271,7 +266,6 @@ def process_first_batch_hierarchical(config: Dict[str, Any]) -> Dict[str, Any]:
             'total_processing_time': (datetime.now(timezone.utc) - result_stats['start_time']).total_seconds(),
             'messages_in_first_batch': int(len(first_batch_df)),
             'threads_in_first_batch': int(first_batch_df['thread_id'].nunique()),
-            'hierarchy_max_depth': int(first_batch_df['depth_level'].max()),
             'llm_threads_created': len(final_solutions_dict) if 'final_solutions_dict' in locals() else 0,
             'technical_threads': len([s for s in final_solutions_dict.values() if s.get('label') != SolutionStatus.UNRESOLVED]) if 'final_solutions_dict' in locals() else 0,
             'solutions_extracted': len([s for s in final_solutions_dict.values() if s.get('solution')]) if 'final_solutions_dict' in locals() else 0,
@@ -281,7 +275,6 @@ def process_first_batch_hierarchical(config: Dict[str, Any]) -> Dict[str, Any]:
         # Log final summary
         logging.info("🎉 Complete first batch hierarchical processing finished successfully!")
         logging.info(f"   📊 Processed {result_stats['processing_summary']['messages_in_first_batch']} messages")
-        logging.info(f"   🌳 Maximum conversation depth: {result_stats['processing_summary']['hierarchy_max_depth']}")
         logging.info(f"   🤖 LLM threads created: {result_stats['processing_summary']['llm_threads_created']}")
         logging.info(f"   🔬 Technical threads: {result_stats['processing_summary']['technical_threads']}")
         logging.info(f"   💡 Solutions extracted: {result_stats['processing_summary']['solutions_extracted']}")
@@ -299,7 +292,7 @@ def process_first_batch_hierarchical(config: Dict[str, Any]) -> Dict[str, Any]:
                 "Monitor processing status via hierarchical-status endpoint"
             ]
         }
-        
+        save_solutions_dict(solutions_dict, SOLUTIONS_DICT_FILENAME, SAVE_PATH)
         # Convert all numpy types to native Python types for JSON serialization
         return convert_numpy_types(response)
         
@@ -314,76 +307,3 @@ def process_first_batch_hierarchical(config: Dict[str, Any]) -> Dict[str, Any]:
             status_code=500, 
             detail=f"Unexpected error in first batch processing: {str(e)}"
         )
-
-
-def get_hierarchical_processing_status() -> Dict[str, Any]:
-    """
-    Get the current status of hierarchical processing.
-    Returns information about messages, threads, and hierarchy in the database.
-    """
-    
-    try:
-        db_service = get_database_service()
-        
-        with db_service.get_session() as session:
-            # Get message statistics
-            from app.models.db_models import Message, Thread, Solution
-            
-            total_messages = session.query(Message).count()
-            root_messages = session.query(Message).filter(Message.is_root_message == True).count()
-            reply_messages = total_messages - root_messages
-            
-            # Get thread statistics  
-            total_threads = session.query(Thread).count()
-            
-            # Get depth statistics
-            if total_messages > 0:
-                max_depth = session.query(func.max(Message.depth_level)).scalar() or 0
-                avg_depth = session.query(func.avg(Message.depth_level)).scalar() or 0
-            else:
-                max_depth = avg_depth = 0
-            
-            # Get solution statistics
-            total_solutions = session.query(Solution).count()
-            
-            # Get recent processing batches
-            recent_batches = session.query(ProcessingBatch).order_by(
-                ProcessingBatch.started_at.desc()
-            ).limit(5).all()
-            
-            return {
-                "database_status": "connected",
-                "message_statistics": {
-                    "total_messages": total_messages,
-                    "root_messages": root_messages,
-                    "reply_messages": reply_messages,
-                    "hierarchy_depth": {
-                        "maximum": max_depth,
-                        "average": round(avg_depth, 2)
-                    }
-                },
-                "thread_statistics": {
-                    "total_threads": total_threads,
-                    "messages_per_thread_avg": round(total_messages / total_threads, 2) if total_threads > 0 else 0
-                },
-                "solution_statistics": {
-                    "total_solutions": total_solutions
-                },
-                "recent_processing": [
-                    {
-                        "batch_id": batch.id,
-                        "type": batch.batch_type,
-                        "started_at": batch.started_at.isoformat(),
-                        "status": batch.status,
-                        "messages_processed": batch.messages_processed
-                    }
-                    for batch in recent_batches
-                ]
-            }
-            
-    except Exception as e:
-        logging.error(f"Failed to get processing status: {e}")
-        return {
-            "database_status": "error",
-            "error": str(e)
-        }

@@ -50,8 +50,7 @@ def process_first_batch(config):
             batch_data = {
                 'batch_type': 'first_batch',
                 'start_date': start_date,
-                'end_date': end_date,
-                'messages_processed': len(messages_df)
+                'end_date': end_date
             }
             processing_batch = db_service.create_processing_batch(session, batch_data)
             session.commit()
@@ -72,9 +71,7 @@ def process_first_batch(config):
         
         with db_service.get_session() as session:
             batch_stats = {
-                'threads_created': len(solutions_dict),
-                'technical_threads': len([s for s in solutions_dict.values() if s.get('label') != SolutionStatus.UNRESOLVED]),
-                'solutions_added': len([s for s in solutions_dict.values() if s.get('solution')])
+                'status': 'completed'
             }
             db_service.complete_processing_batch(session, batch_id, batch_stats)
             session.commit()
@@ -106,8 +103,7 @@ def process_batch(solutions_dict, lookback_date:pd.Timestamp, next_start_date: p
             'batch_type': 'incremental_batch',
             'start_date': next_start_date,
             'end_date': next_end_date,
-            'lookback_date': lookback_date,
-            'messages_processed': len(next_batch_df)
+            'lookback_date': lookback_date
         }
         processing_batch = db_service.create_processing_batch(session, batch_data)
         session.commit()
@@ -132,10 +128,7 @@ def process_batch(solutions_dict, lookback_date:pd.Timestamp, next_start_date: p
         new_solution_count = len(solutions_dict) - initial_solution_count
 
         batch_stats = {
-            'threads_created': new_solution_count,
-            'threads_modified': len(solutions_dict) - new_solution_count,  # Approximate
-            'technical_threads': len([s for s in solutions_dict.values() if s.get('label') != SolutionStatus.UNRESOLVED]),
-            'solutions_added': len([s for s in solutions_dict.values() if s.get('solution')])
+            'status': 'completed'
         }
         db_service.complete_processing_batch(session, batch_id, batch_stats)
         session.commit()

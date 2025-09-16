@@ -60,10 +60,7 @@ def analyze_message_hierarchy(messages_df: pd.DataFrame) -> Tuple[pd.DataFrame, 
     
     # Initialize hierarchy fields
     df['parent_id'] = ''
-    df['depth_level'] = 0
-    df['is_root_message'] = False
     df['thread_id'] = ''
-    df['order_in_thread'] = 0
     
     # Build message lookup for fast access
     message_lookup = df.set_index('Message ID').to_dict('index')
@@ -74,7 +71,6 @@ def analyze_message_hierarchy(messages_df: pd.DataFrame) -> Tuple[pd.DataFrame, 
         'root_messages': 0,
         'reply_messages': 0,
         'threads_identified': 0,
-        'max_depth': 0,
         'orphaned_replies': 0
     }
     
@@ -90,19 +86,18 @@ def analyze_message_hierarchy(messages_df: pd.DataFrame) -> Tuple[pd.DataFrame, 
         else:
             # This is a root message (no parent, thread starter)
             df.loc[df['Message ID'] == message_id, 'parent_id'] = None
-            df.loc[df['Message ID'] == message_id, 'is_root_message'] = True
             df.loc[df['Message ID'] == message_id, 'thread_id'] = message_id  # Use message_id as thread_id
             thread_stats['root_messages'] += 1
     
-    # Second pass: Calculate depth levels and assign thread IDs
-    def calculate_depth_and_thread(message_id: str, visited: set = None) -> Tuple[int, str]:
-        """Recursively calculate depth and find root thread ID"""
+    # Second pass: Assign thread IDs to all messages
+    def find_thread_id(message_id: str, visited: set = None) -> str:
+        """Recursively find root thread ID"""
         if visited is None:
             visited = set()
         
         if message_id in visited:
             # Circular reference detection
-            return 0, message_id
+            return message_id
         
         visited.add(message_id)
         
@@ -111,30 +106,16 @@ def analyze_message_hierarchy(messages_df: pd.DataFrame) -> Tuple[pd.DataFrame, 
         
         if not parent_id or parent_id not in message_lookup:
             # This is a root message
-            return 0, message_id
+            return message_id
         else:
-            # This is a reply - get parent's depth and thread
-            parent_depth, thread_id = calculate_depth_and_thread(parent_id, visited.copy())
-            return parent_depth + 1, thread_id
+            # This is a reply - get parent's thread
+            return find_thread_id(parent_id, visited.copy())
     
-    # Apply depth calculation and thread assignment
+    # Apply thread assignment
     for idx, row in df.iterrows():
         message_id = row['Message ID']
-        depth, thread_id = calculate_depth_and_thread(message_id)
-        
-        df.loc[df['Message ID'] == message_id, 'depth_level'] = depth
+        thread_id = find_thread_id(message_id)
         df.loc[df['Message ID'] == message_id, 'thread_id'] = thread_id
-        
-        # Update max depth
-        thread_stats['max_depth'] = max(thread_stats['max_depth'], depth)
-    
-    # Third pass: Calculate order within threads
-    thread_groups = df.groupby('thread_id')
-    for thread_id, thread_messages in thread_groups:
-        # Sort messages within thread by timestamp
-        sorted_messages = thread_messages.sort_values('DateTime')
-        for order, (idx, _) in enumerate(sorted_messages.iterrows(), 1):
-            df.loc[df['Message ID'] == sorted_messages.loc[idx, 'Message ID'], 'order_in_thread'] = order
     
     # Update statistics
     thread_stats['threads_identified'] = df['thread_id'].nunique()
@@ -146,7 +127,6 @@ def analyze_message_hierarchy(messages_df: pd.DataFrame) -> Tuple[pd.DataFrame, 
     logging.info(f"  🌳 Root messages: {thread_stats['root_messages']}")
     logging.info(f"  💬 Reply messages: {thread_stats['reply_messages']}")
     logging.info(f"  📝 Threads identified: {thread_stats['threads_identified']}")
-    logging.info(f"  📏 Maximum depth: {thread_stats['max_depth']}")
     logging.info(f"  ⚠️  Orphaned replies: {thread_stats['orphaned_replies']}")
     
     return df, thread_stats
@@ -164,9 +144,7 @@ def load_messages_to_database_hierarchical(messages_df: pd.DataFrame) -> Dict[st
             'total_messages': len(messages_df),
             'new_messages_created': 0,
             'existing_messages_skipped': 0,
-            'threads_created': 0,
-            'root_messages': 0,
-            'reply_messages': 0
+            'threads_created': 0
         }
         
         logging.info(f"Loading {len(messages_df)} messages with hierarchy into database...")
@@ -179,16 +157,13 @@ def load_messages_to_database_hierarchical(messages_df: pd.DataFrame) -> Dict[st
             # Prepare message data with proper null handling
             message_data = {
                 'message_id': str(row['Message ID']),
-                'parent_id': str(row.get('parent_id','')),# if pd.notna(row['parent_id']) and row['parent_id'] else None,
+                'parent_id': str(row.get('parent_id','')) if pd.notna(row.get('parent_id')) and row.get('parent_id') else None,
                 'author_id': str(row['Author ID']),
                 'content': str(row['Content']),
-                'datetime': row['DateTime'],# pd.to_datetime(df['Unix Timestamp'], unit='s'),
+                'datetime': row['DateTime'],
                 'dated_message': str(row['DatedMessage']),
                 'referenced_message_id': str(row['Referenced Message ID']) if pd.notna(row['Referenced Message ID']) and row['Referenced Message ID'] else None,
-                'thread_id': '',#str(row['thread_id']) if pd.notna(row['thread_id']) and row['thread_id'] else None,
-                'order_in_thread': 0,#int(row['order_in_thread']),
-                'depth_level': 0,#int(row['depth_level']),
-                'is_root_message': False#bool(row['is_root_message'])
+                'thread_id': str(row['thread_id']) if pd.notna(row.get('thread_id')) and row.get('thread_id') else None
             }
             messages_data.append(message_data)
             
@@ -222,9 +197,6 @@ def load_messages_to_database_hierarchical(messages_df: pd.DataFrame) -> Dict[st
         logging.info("Hierarchical message loading complete:")
         logging.info(f"  ✅ New messages created: {stats['new_messages_created']}")
         logging.info(f"  ⏭️  Existing messages skipped: {stats['existing_messages_skipped']}")
-        # logging.info(f"  🧵 Threads created: {stats['threads_created']} (will be created by LLM)")
-        # logging.info(f"  🌳 Root messages: {stats['root_messages']}")
-        # logging.info(f"  💬 Reply messages: {stats['reply_messages']}")
         
         return stats
         
@@ -286,27 +258,24 @@ def validate_message_hierarchy(messages_df: pd.DataFrame) -> Dict[str, Any]:
         validation['issues'].append(f"Circular references detected in messages: {circular_refs}")
         validation['valid'] = False
     
-    # Check 3: Depth levels are consistent with parent relationships
-    depth_inconsistencies = []
+    # Check 3: Thread IDs are consistent with parent relationships
+    thread_inconsistencies = []
     for _, row in messages_df.iterrows():
         if row['parent_id']:
             parent_row = messages_df[messages_df['Message ID'] == row['parent_id']]
             if not parent_row.empty:
-                parent_depth = parent_row.iloc[0]['depth_level']
-                expected_depth = parent_depth + 1
-                if row['depth_level'] != expected_depth:
-                    depth_inconsistencies.append(f"Message {row['Message ID']} has depth {row['depth_level']}, expected {expected_depth}")
+                parent_thread = parent_row.iloc[0]['thread_id']
+                if row['thread_id'] != parent_thread:
+                    thread_inconsistencies.append(f"Message {row['Message ID']} has thread {row['thread_id']}, expected {parent_thread}")
     
-    if depth_inconsistencies:
-        validation['warnings'].extend(depth_inconsistencies)
+    if thread_inconsistencies:
+        validation['warnings'].extend(thread_inconsistencies)
     
     # Gather statistics
     validation['statistics'] = {
         'total_messages': len(messages_df),
-        'root_messages': len(messages_df[messages_df['is_root_message'] == True]),
+        'root_messages': len(messages_df[messages_df['parent_id'].isna() | (messages_df['parent_id'] == '')]),
         'threads': messages_df['thread_id'].nunique(),
-        'max_depth': messages_df['depth_level'].max(),
-        'avg_depth': messages_df['depth_level'].mean(),
         'orphaned_replies': len(messages_df[
             (messages_df['parent_id'] != '') & 
             (~messages_df['parent_id'].isin(messages_df['Message ID']))
