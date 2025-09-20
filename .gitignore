@@ -17,9 +17,6 @@ visual/.next/
 visual/out/
 
 
-# dependencies
-visual/node_modules
-
 # testing
 visual/coverage
 
