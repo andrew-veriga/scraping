@@ -2,24 +2,25 @@ SAVE_PATH: '.\results'
 INTERVAL_FIRST: 2
 INTERVAL_NEXT: 1
 INTERVAL_BACK: 2
-MESSAGES_FILE_PATH: 'data\discord_messages.xlsx'
+MESSAGES_FILE_PATH: 'data\discord_messages_names_pics.xlsx'
+NEXT_BATCH_FILE_PATH: 'data\discord_messages_names_pics.xlsx'
 SOLUTIONS_DICT_FILENAME: 'solutions_dict.json'
 
 # Database configuration
 database:
   url: "${PEERA_DB_URL}"  # Set this in your .env file
-  pool_size: 10  # Increased from 5
-  max_overflow: 20  # Increased from 10
-  pool_timeout: 60  # Increased from 30
+  pool_size: 20  # Increased for heavy processing
+  max_overflow: 30  # Increased for burst capacity
+  pool_timeout: 120  # Increased timeout for complex operations
   pool_recycle: 1800  # Reduced from 3600 (30 minutes)
   pool_pre_ping: true  # Verify connections before use
   # Connection retry settings
-  max_retries: 3
-  base_delay: 1.0
-  max_delay: 60.0
+  max_retries: 5  # Increased retry attempts
+  base_delay: 2.0  # Increased base delay
+  max_delay: 120.0  # Increased max delay
   # SSL settings
   ssl_mode: "prefer"  # prefer, require, disable
-  connect_timeout: 30
+  connect_timeout: 60  # Increased connection timeout
 
 # RAG configuration
 rag:

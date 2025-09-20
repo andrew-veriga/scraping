@@ -5,45 +5,41 @@ system_prompt: |
   2) Identify technical topics within these threads using a predefined list of keywords and phrases.
   3) For each technical topic, generalize the problems and solutions discussed, and classify the resolution status.
   4) Compare new solutions with previous versions to evaluate improvements.
+  Replicate the Message IDs exactly as they are presented. Do not add, remove, or modify any characters in the IDs. 
+  Output the information in the list of JSON objects.
 
-prompt_group_logic: |
+prompt_gathering_logic: |
   The first step is to analyze the CSV table with flat list of messages from the  Discord Channel 'Sui Blockchain Support'.
   Your task is group all messages into threads hierarchically following the Gathering Logic:
-  a) The first message in a topic must contain a question (contains "?"), a description of the problem or a request, and must have an empty "Referenced Message ID" field. This is the beginning of a new topic and is the root of a hierarchically structured thread, parent_id is empty;
+  a) The first message in a topic must contain a question (contains "?"), or a description of the problem or a request for a solution to the problem, and must have an empty "Referenced Message ID" field. This is the beginning of a new topic and is the root of a hierarchically structured thread, parent_id is empty;
   b) the field Referenced Message ID define the message as a reply to referenced message. The reply must continue the existing thread and be a child node in the hierarchical structure of the thread, parent_id is equal to 'Referenced Message ID';
-  c) consider a subsequent message from the same author for relatively short time interval with empty field Referenced Message ID as a continuation of the conversation if they likely are the addition clarifications, details, or context to the original question or problem statement, parent_id of such message is equal to the Message ID of the previous message from the same author;
+  c) consider a subsequent message from the same author for relatively short time interval (less than 30 minutes) with empty field Referenced Message ID as a continuation of the conversation if they likely are the addition clarifications, details, or context to the original question or problem statement. parent_id of such message is equal to the Message ID of the previous message from the same author;
   d) if message from the same author repeating the same question consider the message as a reminder and a follow-up of the conversation, parent_id of such message is equal to the Message ID of the previous message from the same author;
   e) if a new author's message with an empty "Referenced Message ID" field is meaningfully similar to a recent message (several minutes have passed), answers a question asked, or reports the same issue, consider the subsequent message part of the same conversation, parent_id of such message is equal to the Message ID of the recent message;
   f) if a message contains a tag, defined like '<@(\d+)>', where tagged an author by 'Author ID', that author asked the question in the conversation and this message seems to be an answer to the author's question, set parent_id of such message is equal to the Message ID of the most recent message from the tagged author and consider the message as a follow-up for the conversation;
   Assign a unique identifier to each thread equal to the Message ID of the first message in this thread (topic) and all other messages in the thread must have parent_id equals to the Message ID of some message in the thread.
-  
-prompt_start_step_1: |
-  {prompt_group_logic}
-  Output the information in the list of JSON objects.
 
 prompt_addition_step1: |
-  
-  {prompt_group_logic}
   Also you already have gathered threads from previous days:
   {JSON_prev}
   The previous threads was gathered early by using the same Gatheing Logic.
   Your next task is:
   find new messages from csv that have 'Referenced Message ID' and non yet gathered in the new threads,
   find corresponding Message ID in message lists of previous threads from JSON and add found messages in there as a continue of conversations;
+  Set actual_date of each thread as a datetime of the last message in the whole thread.
   Find other messages that fit mentioned Gatheing Logic. Each message must belong to only one topic.
   Finally prepare output:
   Only threads fully gathered from CSV table could get status 'new'.
   Only threads contained both previous messages from json data and new messages from CSV table could get status 'modified'.
-  threads contained only previous messages from json data should get status ThreadStatus.PERSISTED.
-  Output only threads with the status of 'new' or 'modified' to the JSON object list.
+  threads contained only previous messages from json data should get status 'persisted'.
 
 prompt_step_2: |
-  Now you are in the step 2. Your current task is to define a list of keywords and phrases that are typical for technical issues in the context of the Sui blockchain. The list should include:
+  Now you are in the step 2. Your current task is to define a list of keywords and phrases that are typical for technical issues in the context of the Sui blockchain. The list should include but not limited to:
   error, fail, issue, problem, bug, can't, doesn't work, transaction, wallet, rpc, node, gas, smart contract, bridge, stake, unstake, SDK, API, swap, zklogin.
   Identify a technical discussions, determine their content and present the results in a structured way.
-  Analyze the  message of each thread (topic).
-  Categorize a thread as a "technical" if its messages contains one or more keywords from the list and it is a question (contains "?" or a problem description) or describes a problem.
-  Ignore irrelevant topics: spam, flood and discussions not directly related to the technical aspects of Sui.
+  Analyze the  message of each thread (topic) and categorize them as 'technical' or 'irrelevant':
+  Categorize a thread as a 'technical' if its messages contains one or more keywords from the list and it is a question (contains "?" or a problem description) or describes a problem.
+  Categorize a thread as 'irrelevant': spam, flood and discussions not directly related to the technical aspects of Sui.
   Select the technical topics and output the list of 'topic_id' for technical threads only.
 
 prompt_step_3: |
@@ -51,14 +47,62 @@ prompt_step_3: |
   In each thread find a message that is a solution or answer to the problem or question posed.
   As a guide, consider the solution message to be the message from another user (not the topic author) that contains an explanation, instruction or recommendation.
   If there are messages with thanks or other confirmations of the verified solution, label it as 'resolved'.
-  If there are no any confirmation or a solution message followed by additional unanswered questions, label it as 'suggestion'.
+  If there are no any confirmation to the problem is resolved or the answer is followed by further unanswered questions, or the answer is a temporary solution to a specific case, label it as a 'suggestion'.
   If there are no answers from other users in the thread, or the answers are irrelevant, label it as 'unresolved'.
   If the answer recommend another internet resource or channel, label it as 'outside'.
-  Replicate the Message IDs exactly as they are presented. Do not add, remove, or modify any characters in the IDs. 
   Derive a general description of the problem and a general description of the solution to the problem if exists. 
-  Formulate the descriptions in a clear and concise manner of Frequently Asked Questions, where the question is the problem and the answer is the solution.
-  Set actual_date of each thread as a datetime of the last message in the thread.
-  Output the information in the list of JSON objects.
+  Formulate your descriptions clearly and in a FAQ style: the header is in the form of a question and the solution is in the form of an answer to the question.
+  Do not use evaluative or comparative characteristics like 'best', 'better', 'worst' or 'worse' in the wording of the decision.
+  
+  Examples for some specific labeling:
+  1) If input such as:
+      "whole_thread_formatted": [
+      {
+        "message_id": "1397468283199815751",
+        "parent_id": "None",
+        "content": "2025-07-23 06:40:02  auckes: I swapped the USDC on the Sui Bridge from SUI to OPTIMISM, signed the first transaction, the tokens were burned, and the second transaction was not allowed to be signed because the site was reloaded, did I lose money?"
+      },
+      {
+        "message_id": "1397472351632883772",
+        "parent_id": "1397468283199815751",
+        "content": "2025-07-23 06:56:12  Admin LukeG: reply to auckes - No you didn't.  Please try the steps here and let me know if it works:\nhttps://discord.com/channels/916379725201563759/1245105348646273134/1397455399354892338"
+      },
+      {
+        "message_id": "1397472559922155531",
+        "parent_id": "1397472351632883772",
+        "content": "2025-07-23 06:57:02  auckes: Thanks, i got my usdc on optimism"
+      }
+    ]
+  }
+  then output generalization of the solution should contain:
+  "header": "Funds lost after a failed cross-chain swap on Sui Bridge due to site reload.",
+  "solution": "If a cross-chain swap on Sui Bridge fails after tokens are burned but before the second transaction is signed (e.g., due to a site reload), the funds are not lost. Follow the specific recovery steps provided in the linked Discord channel to retrieve the tokens.",
+  "label": "outside"
+
+  2) If input such as:
+    "whole_thread_formatted": [
+      {
+        "message_id": "1398216567354953839",
+        "parent_id": "None",
+        "content": "2025-07-25 08:13:27  henrik: Hi! I want to send USDT or USDC to my Slush wallet, or any other of common cryptos, how?"
+      },
+      {
+        "message_id": "1398218556247773244",
+        "parent_id": "1398216567354953839",
+        "content": "2025-07-25 08:21:21  Admin LukeG: reply to henrik - Hey! This depends on where you're sending them from. If from another blockchain network you need to use a bridge like Portalbridge (<https://portalbridge.com/>) to bridge USDC in and if you're using a centralised exchange a lot of them support withdrawal of USDC or Sui on Sui directly."
+      }
+    ]
+  }
+  then output generalization of the solution should contain:
+  "header": "How to send USDT or USDC to a Slush wallet or other common cryptos?",
+  "solution": "To send USDT or USDC to a Slush wallet: if from another blockchain, use a bridge like Portalbridge (portalbridge.com) to bridge USDC in. If from a centralized exchange, many support direct withdrawal of USDC or Sui on Sui.",
+  "label": "resolved"
+
+prompt_step_4: |
+  Now you are in the step 4. Your current task is to evaluate the improvement of each solution.
+  If the versions of two problem statements are similar, and the new version of the solution is significantly improved over the previous version, mark them as "improved".
+  If the new version of the problem statement is significantly different from the previous version, label them as "changed".
+  If both of a problem statement and the solution have minor changes in the new version, label them as "minor".
 
 revision_prompt: |
   Now you are in the step 4. You have a list of two versions of problem statement and solution with its status:

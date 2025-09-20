@@ -21,8 +21,19 @@ except ImportError:
         return JSON
 
 Base = declarative_base()
-
-
+class Author(Base):
+    """Discord author model"""
+    __tablename__ = 'authors'
+    author_id = Column(String(50), primary_key=True)
+    author_name = Column(String(50), nullable=False)
+    author_type = Column(String(50), nullable=False)
+    
+    # One-to-many relationship: one author has many messages
+    messages = relationship("Message", back_populates="author", cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f"<Author(author_id='{self.author_id}', name='{self.author_name}', type='{self.author_type}')>"
+    
 class Message(Base):
     """Discord message model with hierarchical parent-child relationships"""
     __tablename__ = 'messages'
@@ -32,10 +43,9 @@ class Message(Base):
     # Hierarchical parent-child relationship within a thread (no FK constraint for flexibility)
     parent_id = Column(String(50), nullable=True, index=True)
     
-    author_id = Column(String(50), nullable=False, index=True)
+    author_id = Column(String(50), ForeignKey('authors.author_id'), nullable=False, index=True)
     content = Column(Text, nullable=False)
     datetime = Column(DateTime(timezone=True), nullable=False, index=True)
-    dated_message = Column(Text, nullable=False)
     referenced_message_id = Column(String(50), nullable=True, index=True)
     
     # Thread relationship - many messages belong to one thread
@@ -48,6 +58,9 @@ class Message(Base):
     child_messages = relationship("Message", 
                                  primaryjoin="Message.message_id==foreign(Message.parent_id)",
                                  back_populates="parent_message")
+    
+    # Author relationship - many messages belong to one author
+    author = relationship("Author", back_populates="messages")
     
     # Thread relationship
     thread = relationship("Thread", back_populates="messages")

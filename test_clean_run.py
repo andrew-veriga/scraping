@@ -81,7 +81,7 @@ def run_single_clean_test():
                     author_id="user_original",
                     content="Original question about Sui development",
                     datetime=datetime.now(timezone.utc),
-                    dated_message="Original question",
+                    referenced_message_id=None,
                     depth_level=0,
                     is_root_message=True,
                     order_in_thread=1
@@ -94,7 +94,7 @@ def run_single_clean_test():
                     author_id="helper_1",
                     content="Here's some initial guidance...",
                     datetime=datetime.now(timezone.utc),
-                    dated_message="Initial help",
+                    referenced_message_id=None,
                     depth_level=1,
                     is_root_message=False,
                     order_in_thread=2
@@ -107,8 +107,7 @@ def run_single_clean_test():
                     author_id="expert_solver",
                     content="Here's the complete solution with code examples...",
                     datetime=datetime.now(timezone.utc),
-                    dated_message="Complete solution",
-                    depth_level=2,
+                    referenced_message_id=None,
                     is_root_message=False,
                     order_in_thread=3
                 ),
@@ -120,8 +119,7 @@ def run_single_clean_test():
                     author_id="user_original",
                     content="Perfect! That worked exactly as needed. Thank you!",
                     datetime=datetime.now(timezone.utc),
-                    dated_message="Confirmation",
-                    depth_level=3,
+                    referenced_message_id=None,
                     is_root_message=False,
                     order_in_thread=4
                 ),
@@ -133,8 +131,7 @@ def run_single_clean_test():
                     author_id="additional_helper",
                     content="Also consider this alternative approach...",
                     datetime=datetime.now(timezone.utc),
-                    dated_message="Alternative approach",
-                    depth_level=1,
+                    referenced_message_id=None,
                     is_root_message=False,
                     order_in_thread=5
                 )

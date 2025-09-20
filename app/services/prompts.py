@@ -27,7 +27,6 @@ load_prompts()
 
 # These will be formatted when used, not here
 
-prompt_start_step_1 = _prompts.get('prompt_start_step_1', '')
 prompt_addition_step1 = _prompts.get('prompt_addition_step1', '')  
 
 revision_prompt = _prompts.get('revision_prompt', '')

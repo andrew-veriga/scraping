@@ -98,7 +98,7 @@ class LLMOptimizer:
                 contents=[
                     logs_csv,
                     gemini_service.system_prompt,
-                    gemini_service.prompt_start_step_1
+                    gemini_service.prompt_gathering_logic
                 ],
                 config=gemini_service.config_step1,
             )

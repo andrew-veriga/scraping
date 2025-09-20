@@ -4,6 +4,7 @@ from datetime import datetime
 import pandas as pd
 import logging
 import re
+from sqlalchemy import text
 
 def create_dict_from_list(solutions_list):
     """Converts a list of solution dictionaries to a dictionary keyed by topic_id."""
@@ -89,76 +90,101 @@ def get_end_date_from_solutions(solutions_dict):
         return latest_date
     return None
 
-def is_admin(message_ID):
-    if message_ID in [
-        '862550907349893151',
-        '466815633347313664',
-        '997105563123064892',
-        '457962750644060170'
-    ]:
-        return True
-    return False
+
 
 # Map Author IDs to User <N> using all unique author IDs from the entire Messages_df
 
 def illustrated_message(message_ID, db_service, session=None):
     """
-    Formats a message with user mapping and reply information.
-    user_mapping: A dictionary mapping Author IDs to formatted user names.
-
+    Formats a message with user mapping and reply information using the database view.
+    
     Args:
-        message_ID: A pandas Series representing a message row from the dataframe.
+        message_ID: A string representing the message ID.
         db_service: Database service instance
         session: Optional existing database session (to avoid creating new connections)
 
     Returns:
-        A formatted string representation of the message.
+        A formatted string representation of the message from the illustrated_messages view.
     """
     # Use provided session or create new one
     if session is not None:
-        message = db_service.get_message_by_message_id(message_ID, session)
-        if message is None:
+        try:
+            # Query the illustrated_messages view for the specific message
+            result = session.execute(
+                text("SELECT illustrated_message FROM illustrated_messages WHERE message_id = :message_id"),
+                {"message_id": str(message_ID)}
+            )
+            
+            row = result.fetchone()
+            if row:
+                return row[0]  # Return the illustrated_message field
+            else:
+                return "<empty>"
+                
+        except Exception as e:
+            logging.error(f"Error querying illustrated_messages view for message {message_ID}: {e}")
             return "<empty>"
-        author_id = message.author_id
-        referenced_message_id = message.referenced_message_id
-        message_content = message.content
-        user_mapping = lambda author_id: f'Admin {author_id}' if is_admin(author_id) else f'User {author_id}'
-        formatted_msg = f"{message.datetime} {user_mapping(author_id)}: "
-
-        # Handle replies
-        if referenced_message_id:
-            referenced_message = db_service.get_message_by_message_id(referenced_message_id, session)
-            if referenced_message:
-                referenced_author_id = referenced_message.author_id
-                formatted_msg += f" reply to {user_mapping(referenced_author_id)} - "
-
-        # Ensure message_content is a string before using re.sub
-        if message_content is None:
-            message_content = "<empty>"
-        else:
-            message_content = str(message_content)
-
-        # Handle tagged users using regex to find and replace the pattern <@digits>
-        def replace_tagged_users(match):
-            # Extract the tagged user ID (digits) from the match
-            tagged_user_id = match.group(1)
-            # Replace with the formatted user name using the user_mapping dictionary
-            return f"<tagged {user_mapping(tagged_user_id)}>"
-
-        # Use re.sub with a raw string for the regex pattern
-        message_content = re.sub(r'<@(\d+)>', replace_tagged_users, message_content)
-
-        formatted_msg += message_content
-        return formatted_msg
     else:
         # Fallback to creating new session (less efficient)
         with db_service.get_session() as new_session:
             return illustrated_message(message_ID, db_service, new_session)
 
 
+def bulk_illustrated_messages(message_ids, db_service, session=None):
+    """
+    Retrieves illustrated messages for a list of message IDs using bulk query for better performance.
+    
+    Args:
+        message_ids: List of message IDs to retrieve illustrated messages for
+        db_service: Database service instance
+        session: Optional existing database session (to avoid creating new connections)
+    
+    Returns:
+        Dictionary mapping message_id to illustrated_message content
+    """
+    if not message_ids:
+        return {}
+    
+    # Use provided session or create new one
+    if session is not None:
+        try:
+            # Create a parameterized query with IN clause
+            placeholders = ','.join([f':msg_id_{i}' for i in range(len(message_ids))])
+            query = f"""
+                SELECT message_id, illustrated_message 
+                FROM illustrated_messages 
+                WHERE message_id IN ({placeholders})
+            """
+            
+            # Create parameters dictionary
+            params = {f'msg_id_{i}': msg_id for i, msg_id in enumerate(message_ids)}
+            
+            # Execute the bulk query
+            result = session.execute(text(query), params)
+            
+            # Create a dictionary mapping message_id to illustrated_message
+            illustrated_messages_dict = {row[0]: row[1] for row in result}
+            
+            return illustrated_messages_dict
+                
+        except Exception as e:
+            logging.error(f"Error bulk querying illustrated_messages: {e}")
+            # Fallback to individual queries if bulk query fails
+            illustrated_messages_dict = {}
+            for msg_id in message_ids:
+                message_content = illustrated_message(msg_id, db_service, session)
+                illustrated_messages_dict[str(msg_id)] = message_content
+            return illustrated_messages_dict
+    else:
+        # Fallback to creating new session (less efficient)
+        with db_service.get_session() as new_session:
+            return bulk_illustrated_messages(message_ids, db_service, new_session)
+
+
 def illustrated_threads(threads_json_data, db_service):
     """
     Enriches thread data with full message content for better analysis by the LLM.
+    Uses bulk query to the illustrated_messages view for better performance.
     """
     # Use a single database session for all message lookups to avoid connection pool exhaustion
     with db_service.get_session() as session:
@@ -166,12 +192,24 @@ def illustrated_threads(threads_json_data, db_service):
             thread['whole_thread_formatted'] = []
             # Support both old and new formats during transition
             whole_thread = thread.get('whole_thread') or thread.get('whole_thread', [])
+            
+            if not whole_thread:
+                continue
+                
+            # Extract all message IDs from the thread
+            message_ids = [msg['message_id'] for msg in whole_thread]
+            
+            # Use the new function to get illustrated messages
+            illustrated_messages_dict = bulk_illustrated_messages(message_ids, db_service, session)
+            
+            # Fill the whole_thread_formatted with the results
             for msg in whole_thread:
-                msg_id = msg['message_id']
-                message_content = illustrated_message(msg_id, db_service, session)
+                msg_id = str(msg['message_id'])
+                message_content = illustrated_messages_dict.get(msg_id, "<empty>")
                 thread['whole_thread_formatted'].append({
-                    "message_id": str(msg_id),
+                    "message_id": msg_id,
                     "parent_id": str(msg.get('parent_id', None)),
                     "content": message_content
                 })
+                    
     return threads_json_data

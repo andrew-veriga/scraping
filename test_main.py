@@ -19,7 +19,6 @@ def mock_services(monkeypatch):
         'Author ID': ['101', '102', '101'],
         'Content': ['a', 'b', 'c'],
         'Referenced Message ID': ['', '1', ''],
-        'DatedMessage': ['msg1', 'msg2', 'msg3']
     }))
     monkeypatch.setattr("app.services.data_loader.load_and_preprocess_data", mock_load_data)
 

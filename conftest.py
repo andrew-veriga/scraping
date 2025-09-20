@@ -27,7 +27,6 @@ def sample_messages_df():
     df = pd.DataFrame(data)
     # Replicate preprocessing from data_loader
     df['DateTime'] = pd.to_datetime(df['Unix Timestamp'], unit='s')
-    df['DatedMessage'] = df.DateTime.astype(str) + " - " + df.Content
     df = df.drop(columns=['Unix Timestamp'])
     df['Referenced Message ID'] = df['Referenced Message ID'].fillna('')
     return df

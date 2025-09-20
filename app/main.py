@@ -4,7 +4,7 @@ load_dotenv()
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
-from app.services.processing_hierarchical import process_first_batch_hierarchical
+from app.processing import process_first_batch
 from app.utils.file_utils import load_solutions_dict
 from app.services.database import get_database_service
 from app.models.pydantic_models import SolutionStatus
@@ -19,6 +19,62 @@ import logging
 from markdown_it import MarkdownIt
 from app.utils.file_utils import illustrated_message, illustrated_threads
 from app import processing, monitoring
+
+def build_message_hierarchy(whole_thread):
+    """Build hierarchical structure from whole_thread messages."""
+    logging.info(f"build_message_hierarchy called with {len(whole_thread) if whole_thread else 0} messages")
+    
+    if not whole_thread:
+        logging.info("No messages in whole_thread, returning empty hierarchy")
+        return []
+    
+    # Create a map of message_id to message data
+    message_map = {msg['message_id']: msg for msg in whole_thread}
+    logging.info(f"Created message_map with {len(message_map)} messages")
+    
+    # Find root messages (those with parent_id = null)
+    root_messages = [msg for msg in whole_thread if msg.get('parent_id') is None]
+    logging.info(f"Found {len(root_messages)} root messages")
+    
+    def build_children(parent_id):
+        children = []
+        for msg in whole_thread:
+            if msg.get('parent_id') == parent_id:
+                child_node = {
+                    'id': msg['message_id'],
+                    'type': 'message',
+                    'data': {
+                        'message_id': msg['message_id'],
+                        'parent_id': msg.get('parent_id'),
+                        'content': f"Message {msg['message_id']}",  # Placeholder content
+                        'author_id': 'unknown',
+                        'datetime': 'unknown'
+                    },
+                    'children': build_children(msg['message_id']),
+                    'expanded': False
+                }
+                children.append(child_node)
+        return children
+    
+    # Build hierarchy starting from root messages
+    hierarchy = []
+    for root_msg in root_messages:
+        root_node = {
+            'id': root_msg['message_id'],
+            'type': 'message',
+            'data': {
+                'message_id': root_msg['message_id'],
+                'parent_id': root_msg.get('parent_id'),
+                'content': f"Message {root_msg['message_id']}",  # Placeholder content
+                'author_id': 'unknown',
+                'datetime': 'unknown'
+            },
+            'children': build_children(root_msg['message_id']),
+            'expanded': False
+        }
+        hierarchy.append(root_node)
+    
+    return hierarchy
 
 with open("configs/config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
@@ -71,11 +127,16 @@ def pool_status():
         db_service = get_database_service()
         pool_status = db_service.get_pool_status()
         
+        # Add warning if pool is in critical state
+        if pool_status.get('status') == 'critical':
+            logging.error(f"CRITICAL: Connection pool status: {pool_status}")
+        
         return {
             "pool_status": pool_status,
             "timestamp": pd.Timestamp.now().isoformat()
         }
     except Exception as e:
+        logging.error(f"Failed to get pool status: {e}")
         return {
             "error": str(e),
             "timestamp": pd.Timestamp.now().isoformat()
@@ -132,22 +193,7 @@ def process_first_batch_endpoint():
 def process_next_batches_endpoint():
     return processing.process_next_batches(config)
 
-@app.post("/process-first-batch-hierarchical")
-def process_first_batch_hierarchical_endpoint():
-    """
-    Process the first batch of Discord messages with hierarchical parent-child relationships.
-    
-    This enhanced endpoint:
-    - Loads Discord messages from Excel file
-    - Analyzes parent-child relationships from 'Referenced Message ID' 
-    - Creates hierarchical message structure in database
-    - Returns detailed statistics and validation results
-    """
-    try:
-        return process_first_batch_hierarchical(config)
-    except Exception as e:
-        logging.error(f"Error in hierarchical first batch processing: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/solutions")
 def get_solutions():
@@ -160,6 +206,239 @@ def get_solutions():
         raise HTTPException(status_code=404, detail="Solutions file not found. Please run a batch process first.")
     except Exception as e:
         logging.error("Error retrieving solutions from /solutions endpoint", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+# API endpoints for visual interface
+@app.get("/threads")
+def get_threads(limit: int = 100, offset: int = 0, status: str = None, technical: bool = None, source: str = "file"):
+    """Get threads with optional filtering. source can be 'file' or 'database'."""
+    try:
+        if source == "file":
+            # Load from solutions_dict.json
+            solutions_dict = load_solutions_dict(SOLUTIONS_DICT_FILENAME, SAVE_PATH)
+            thread_data = []
+            
+            for topic_id, thread_info in solutions_dict.items():
+                # Build hierarchical structure from whole_thread
+                whole_thread = thread_info.get('whole_thread', [])
+                logging.info(f"Processing thread {topic_id}, whole_thread length: {len(whole_thread)}")
+                messages_hierarchy = build_message_hierarchy(whole_thread)
+                logging.info(f"Built hierarchy for thread {topic_id}, hierarchy length: {len(messages_hierarchy)}")
+                
+                thread_dict = {
+                    'topic_id': topic_id,
+                    'header': thread_info.get('header', ''),
+                    'actual_date': thread_info.get('actual_date', ''),
+                    'answer_id': thread_info.get('answer_id', ''),
+                    'label': thread_info.get('label', ''),
+                    'solution': thread_info.get('solution', ''),
+                    'whole_thread': whole_thread,
+                    'messages_hierarchy': messages_hierarchy,  # New hierarchical structure
+                    'status': thread_info.get('label', ''),
+                    'is_technical': False,  # Default value
+                    'is_processed': True,   # Default value
+                    'created_at': thread_info.get('actual_date', ''),
+                    'updated_at': thread_info.get('actual_date', ''),
+                }
+                thread_data.append(thread_dict)
+            
+            # Apply filters
+            if status:
+                thread_data = [t for t in thread_data if t['label'] == status]
+            
+            # Apply pagination
+            thread_data = thread_data[offset:offset + limit]
+            
+            return thread_data
+        else:
+            # Load from database (original logic)
+            db_service = get_database_service()
+            with db_service.get_session() as session:
+                query = session.query(Thread)
+                
+                if status:
+                    query = query.filter(Thread.status == status)
+                if technical is not None:
+                    query = query.filter(Thread.is_technical == technical)
+                
+                threads = query.offset(offset).limit(limit).all()
+                
+                # Convert to dict format
+                thread_data = []
+                for thread in threads:
+                    thread_dict = {
+                        'topic_id': thread.topic_id,
+                        'header': thread.header,
+                        'actual_date': thread.actual_date.isoformat() if thread.actual_date else None,
+                        'answer_id': thread.answer_id,
+                        'label': thread.label,
+                        'solution': thread.solution,
+                        'status': thread.status,
+                        'is_technical': thread.is_technical,
+                        'is_processed': thread.is_processed,
+                        'created_at': thread.created_at.isoformat() if thread.created_at else None,
+                        'updated_at': thread.updated_at.isoformat() if thread.updated_at else None,
+                    }
+                    thread_data.append(thread_dict)
+                
+                return thread_data
+    except Exception as e:
+        logging.error(f"Error fetching threads: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/threads/{thread_id}")
+def get_thread(thread_id: str):
+    """Get a specific thread by ID."""
+    try:
+        db_service = get_database_service()
+        with db_service.get_session() as session:
+            thread = db_service.get_thread_by_topic_id(thread_id, session)
+            if not thread:
+                raise HTTPException(status_code=404, detail="Thread not found")
+            
+            # Get messages for this thread
+            messages = db_service.get_thread_messages(session, thread_id)
+            
+            thread_dict = {
+                'topic_id': thread.topic_id,
+                'header': thread.header,
+                'actual_date': thread.actual_date.isoformat() if thread.actual_date else None,
+                'answer_id': thread.answer_id,
+                'label': thread.label,
+                'solution': thread.solution,
+                'status': thread.status,
+                'is_technical': thread.is_technical,
+                'is_processed': thread.is_processed,
+                'created_at': thread.created_at.isoformat() if thread.created_at else None,
+                'updated_at': thread.updated_at.isoformat() if thread.updated_at else None,
+                'messages': [
+                    {
+                        'message_id': msg.message_id,
+                        'parent_id': msg.parent_id,
+                        'author_id': msg.author_id,
+                        'content': msg.content,
+                        'datetime': msg.datetime.isoformat() if msg.datetime else None,
+                        'thread_id': msg.thread_id,
+                        'referenced_message_id': msg.referenced_message_id,
+                    }
+                    for msg in messages
+                ]
+            }
+            
+            return thread_dict
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error fetching thread {thread_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/threads/{thread_id}")
+def update_thread(thread_id: str, updates: dict):
+    """Update a thread."""
+    try:
+        db_service = get_database_service()
+        with db_service.get_session() as session:
+            thread = db_service.update_thread(session, thread_id, updates)
+            if not thread:
+                raise HTTPException(status_code=404, detail="Thread not found")
+            
+            return {
+                'topic_id': thread.topic_id,
+                'header': thread.header,
+                'actual_date': thread.actual_date.isoformat() if thread.actual_date else None,
+                'answer_id': thread.answer_id,
+                'label': thread.label,
+                'solution': thread.solution,
+                'status': thread.status,
+                'is_technical': thread.is_technical,
+                'is_processed': thread.is_processed,
+                'updated_at': thread.updated_at.isoformat() if thread.updated_at else None,
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error updating thread {thread_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/threads/{thread_id}")
+def delete_thread(thread_id: str):
+    """Delete a thread."""
+    try:
+        db_service = get_database_service()
+        with db_service.get_session() as session:
+            thread = db_service.get_thread_by_topic_id(thread_id, session)
+            if not thread:
+                raise HTTPException(status_code=404, detail="Thread not found")
+            
+            session.delete(thread)
+            session.commit()
+            
+            return {"message": "Thread deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error deleting thread {thread_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/messages/{message_id}")
+def get_message(message_id: str):
+    """Get a specific message by ID."""
+    try:
+        db_service = get_database_service()
+        with db_service.get_session() as session:
+            message = db_service.get_message_by_message_id(message_id, session)
+            if not message:
+                raise HTTPException(status_code=404, detail="Message not found")
+            
+            return {
+                'message_id': message.message_id,
+                'parent_id': message.parent_id,
+                'author_id': message.author_id,
+                'content': message.content,
+                'datetime': message.datetime.isoformat() if message.datetime else None,
+                'thread_id': message.thread_id,
+                'referenced_message_id': message.referenced_message_id,
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error fetching message {message_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/threads/hierarchy")
+def perform_hierarchy_operation(operation: dict):
+    """Perform hierarchy operations like move, merge, split."""
+    try:
+        operation_type = operation.get('operation')
+        source_id = operation.get('source_id')
+        target_id = operation.get('target_id')
+        data = operation.get('data', {})
+        
+        db_service = get_database_service()
+        
+        # This is a placeholder for hierarchy operations
+        # You would implement the actual logic based on the operation type
+        with db_service.get_session() as session:
+            if operation_type == 'move_conversation':
+                # Implement conversation move logic
+                pass
+            elif operation_type == 'move_message':
+                # Implement message move logic
+                pass
+            elif operation_type == 'merge_threads':
+                # Implement thread merge logic
+                pass
+            elif operation_type == 'split_conversation':
+                # Implement conversation split logic
+                pass
+            else:
+                raise HTTPException(status_code=400, detail=f"Unknown operation: {operation_type}")
+            
+            return {"message": f"Operation {operation_type} completed successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Error performing hierarchy operation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 def generate_html_template(html_body: str) -> str:

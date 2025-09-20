@@ -97,7 +97,6 @@ The tests verify that the following redundant fields have been removed:
 - `author_id`
 - `content`
 - `datetime`
-- `dated_message`
 - `referenced_message_id`
 - `thread_id`
 

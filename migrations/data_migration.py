@@ -93,7 +93,6 @@ class DataMigrator:
                     'author_id': str(row['Author ID']),
                     'content': str(row['Content']),
                     'datetime': pd.to_datetime(row['DateTime']),
-                    'dated_message': str(row['DatedMessage']),
                     'referenced_message_id': str(row.get('Referenced Message ID', '')) if pd.notna(row.get('Referenced Message ID')) else ''
                 }
                 messages_data.append(message_data)

@@ -108,7 +108,7 @@ def test_first_batch_endpoint():
     print("=" * 60)
     
     try:
-        from app.services.processing_hierarchical import process_first_batch_hierarchical
+        from app.processing import process_first_batch
         
         # Create test Excel file
         excel_file = create_test_excel_file()
@@ -130,7 +130,7 @@ def test_first_batch_endpoint():
             print(f"   Processing interval: {test_config['INTERVAL_FIRST']} days")
             
             # Call the processing function
-            result = process_first_batch_hierarchical(test_config)
+            result = process_first_batch(test_config)
             
             print("\\n✅ Processing completed successfully!")
             print(f"   Status: {result['status']}")

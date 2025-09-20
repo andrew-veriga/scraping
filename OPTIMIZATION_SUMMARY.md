@@ -41,7 +41,7 @@
 **Обновленные файлы:**
 - `app/models/db_models.py` - удалены избыточные поля
 - `app/services/database.py` - обновлены методы работы с БД
-- `app/services/data_loader_hierarchical.py` - упрощена логика иерархии
+- `app/services/data_loader.py` - упрощена логика иерархии
 - `app/services/processing_tracker.py` - убраны избыточные обновления
 - `app/services/processing_hierarchical.py` - обновлена статистика
 - `app/services/thread_service.py` - убрано создание избыточных аннотаций

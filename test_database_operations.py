@@ -84,7 +84,6 @@ class TestDatabaseOperations:
             author_id="user_123",
             content="I'm having trouble deploying a Sui node on Ubuntu 22.04. Can anyone help?",
             datetime=datetime.now(timezone.utc),
-            dated_message="2024-01-01 10:00 - I'm having trouble deploying...",
             thread_id="thread_001",
             parent_id=None,  # No parent - this is the root
             depth_level=0,
@@ -99,7 +98,6 @@ class TestDatabaseOperations:
             author_id="helper_456",
             content="Sure! First, make sure you have Docker installed. What's your current setup?",
             datetime=datetime.now(timezone.utc),
-            dated_message="2024-01-01 10:05 - Sure! First, make sure...",
             thread_id="thread_001",
             parent_id="msg_001",  # Reply to root message
             depth_level=1,
@@ -114,7 +112,6 @@ class TestDatabaseOperations:
             author_id="user_123", 
             content="I have Docker installed. Using Ubuntu 22.04 with 8GB RAM.",
             datetime=datetime.now(timezone.utc),
-            dated_message="2024-01-01 10:07 - I have Docker installed...",
             thread_id="thread_001",
             parent_id="msg_002",  # Reply to helper's message
             depth_level=2,
@@ -129,7 +126,6 @@ class TestDatabaseOperations:
             author_id="expert_789",
             content="Check the official documentation first: https://docs.sui.io/",
             datetime=datetime.now(timezone.utc),
-            dated_message="2024-01-01 10:10 - Check the official documentation...",
             thread_id="thread_001",
             parent_id="msg_001",  # Another reply to root
             depth_level=1,
@@ -250,49 +246,49 @@ class TestDatabaseOperations:
             Message(
                 message_id="msg_100", thread_id="thread_002", parent_id=None,
                 author_id="user1", content="Need help with multi-sig wallet",
-                datetime=datetime.now(timezone.utc), dated_message="Help needed",
+                datetime=datetime.now(timezone.utc),
                 depth_level=0, is_root_message=True, order_in_thread=1
             ),
             # Reply A
             Message(
                 message_id="msg_101", thread_id="thread_002", parent_id="msg_100",
                 author_id="user2", content="What's your current configuration?",
-                datetime=datetime.now(timezone.utc), dated_message="Configuration question",
+                datetime=datetime.now(timezone.utc),
                 depth_level=1, is_root_message=False, order_in_thread=2
             ),
             # Reply A1
             Message(
                 message_id="msg_102", thread_id="thread_002", parent_id="msg_101",
                 author_id="user1", content="Using 2-of-3 setup with hardware wallets",
-                datetime=datetime.now(timezone.utc), dated_message="Configuration details",
+                datetime=datetime.now(timezone.utc),
                 depth_level=2, is_root_message=False, order_in_thread=3
             ),
             # Reply A2
             Message(
                 message_id="msg_103", thread_id="thread_002", parent_id="msg_101",
                 author_id="user3", content="Try updating your wallet software first",
-                datetime=datetime.now(timezone.utc), dated_message="Update suggestion",
+                datetime=datetime.now(timezone.utc),
                 depth_level=2, is_root_message=False, order_in_thread=4
             ),
             # Reply A2a
             Message(
                 message_id="msg_104", thread_id="thread_002", parent_id="msg_103",
                 author_id="user1", content="That worked! Thanks!",
-                datetime=datetime.now(timezone.utc), dated_message="Success confirmation",
+                datetime=datetime.now(timezone.utc),
                 depth_level=3, is_root_message=False, order_in_thread=5
             ),
             # Reply B
             Message(
                 message_id="msg_105", thread_id="thread_002", parent_id="msg_100",
                 author_id="user4", content="Also check the transaction fees",
-                datetime=datetime.now(timezone.utc), dated_message="Fee suggestion", 
+                datetime=datetime.now(timezone.utc), 
                 depth_level=1, is_root_message=False, order_in_thread=6
             ),
             # Reply B1
             Message(
                 message_id="msg_106", thread_id="thread_002", parent_id="msg_105",
                 author_id="user1", content="Fees look normal to me",
-                datetime=datetime.now(timezone.utc), dated_message="Fee response",
+                datetime=datetime.now(timezone.utc),
                 depth_level=2, is_root_message=False, order_in_thread=7
             )
         ]

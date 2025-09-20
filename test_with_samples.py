@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 # Add the app directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'app'))
 
-from app.models.db_models import Base, Message, Thread, Solution
+from app.models.db_models import Base, Message, Thread, Solution, Author
 from test_data_samples import TestDataGenerator
 
 # Load environment variables

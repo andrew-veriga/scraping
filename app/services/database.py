@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from app.models.db_models import (
-    Base, Message, Thread, Solution, SolutionDuplicate,
+    Base, Author, Message, Thread, Solution, SolutionDuplicate,
     SolutionEmbedding, SolutionSimilarity, ProcessingBatch, LLMCache,
     MessageProcessing, MessageAnnotation, ProcessingPipeline
 )
@@ -177,16 +177,27 @@ class DatabaseService:
     def get_session(self) -> Generator[Session, None, None]:
         """Get database session with automatic cleanup and retry logic."""
         last_error = None
+        session_start_time = time.time()
+        session_timeout = 300  # 5 minutes timeout per session
         
         for attempt in range(self.max_retries + 1):
             session = None
             try:
+                # Check if session has been running too long
+                if time.time() - session_start_time > session_timeout:
+                    self.logger.warning(f"Session timeout exceeded ({session_timeout}s), forcing cleanup")
+                    break
+                
                 # Test connection health before creating session
                 if attempt > 0:
                     if not self._test_connection():
                         self._reconnect()
                 
                 session = self.SessionLocal()
+                
+                # Set session timeout
+                session.execute(text("SET statement_timeout = '300s'"))  # 5 minutes per statement
+                
                 yield session
                 return  # Success, exit retry loop
                 
@@ -243,7 +254,6 @@ class DatabaseService:
             author_id=message_data['author_id'],
             content=message_data['content'],
             datetime=message_data['datetime'],
-            dated_message=message_data['dated_message'],
             referenced_message_id=message_data.get('referenced_message_id', '')
         )
         session.add(message)
@@ -284,6 +294,36 @@ class DatabaseService:
         
         return created_count
     
+    def bulk_create_authors(self, authors_data: List[Dict[str, Any]]) -> int:
+        """Bulk create authors from list of dictionaries."""
+        created_count = 0
+        with self.get_session() as session:
+            for author_data in authors_data:
+                try:
+                    # Check if author already exists
+                    existing = session.query(Author).filter_by(author_id=author_data['author_id']).first()
+                    if not existing:
+                        author = Author(
+                            author_id=author_data['author_id'],
+                            author_name=author_data['author_name'],
+                            author_type=author_data['author_type']
+                        )
+                        session.add(author)
+                        created_count += 1
+                except IntegrityError:
+                    session.rollback()
+                    continue
+            
+            try:
+                session.commit()
+                self.logger.info(f"Created {created_count} new authors")
+            except Exception as e:
+                session.rollback()
+                self.logger.error(f"Failed to bulk create authors: {e}")
+                raise
+        
+        return created_count
+    
     def bulk_create_messages_hierarchical(self, messages_data: List[Dict[str, Any]]) -> int:
         """Bulk create messages with hierarchical structure (no FK constraints on parent_id)."""
         created_count = 0
@@ -302,7 +342,6 @@ class DatabaseService:
                                 author_id=message_data['author_id'],
                                 content=message_data['content'],
                                 datetime=message_data['datetime'],
-                                dated_message=message_data['dated_message'],
                                 referenced_message_id=message_data.get('referenced_message_id'),
                                 thread_id=message_data.get('thread_id')
                             )
@@ -818,11 +857,28 @@ class DatabaseService:
             # Log warning if utilization is high
             if utilization > 80:
                 self.logger.warning(f"High connection pool utilization: {utilization}% ({checked_out}/{max_total_connections})")
+                
+            # Auto-recovery: If pool is critically exhausted, try to clean up
+            if utilization > 95:
+                self.logger.error(f"CRITICAL: Connection pool nearly exhausted: {utilization}%")
+                self._emergency_pool_cleanup()
             
             return status
         except Exception as e:
             self.logger.error(f"Failed to get pool status: {e}")
             return {'error': str(e)}
+    
+    def _emergency_pool_cleanup(self):
+        """Emergency cleanup when pool is critically exhausted."""
+        try:
+            self.logger.warning("Performing emergency connection pool cleanup...")
+            # Force close all connections and recreate the pool
+            self.engine.dispose()
+            self._initialize_database()
+            self.logger.info("Emergency pool cleanup completed")
+        except Exception as e:
+            self.logger.error(f"Emergency pool cleanup failed: {e}")
+            raise
 
 
 # Global database service instance

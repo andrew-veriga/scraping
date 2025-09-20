@@ -69,12 +69,9 @@ def test_basic_structure():
                 author_id="test_user",
                 content="This is a test root message",
                 datetime=datetime.now(timezone.utc),
-                dated_message="Test message",
                 thread_id="test_thread_001",
                 parent_id=None,
-                depth_level=0,
-                is_root_message=True,
-                order_in_thread=1
+                referenced_message_id=None
             )
             session.add(root_msg)
             
@@ -84,12 +81,9 @@ def test_basic_structure():
                 author_id="test_helper",
                 content="This is a test reply",
                 datetime=datetime.now(timezone.utc),
-                dated_message="Test reply",
                 thread_id="test_thread_001",
                 parent_id="msg_001",
-                depth_level=1,
-                is_root_message=False,
-                order_in_thread=2
+                referenced_message_id=None
             )
             session.add(reply_msg)
             

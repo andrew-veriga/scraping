@@ -15,16 +15,6 @@ from app.models.db_models import Message
 from app.utils.file_utils import *
 
 
-def _recalculate_hierarchy_metadata(session):
-    """
-    This function is no longer needed as depth_level and is_root_message fields
-    have been removed from the Message model. Hierarchy information is now
-    calculated dynamically using parent_id and thread_id relationships.
-    Returns 0 as no updates are needed.
-    """
-    # No-op function for backward compatibility
-    return 0
-
 def _create_thread_object(session, thread_id, thread_messages):
     """
     Create a new Thread object in the database if it doesn't already exist.
@@ -88,7 +78,7 @@ def first_thread_gathering(logs_df, prefix, save_path):
         contents=[
             logs_csv,
             prompts.system_prompt,
-            prompts.prompt_start_step_1.format(prompt_group_logic=prompts.prompt_group_logic)
+            prompts.prompt_gathering_logic
             ],
         config=gemini_service.config_step1,
         valid_ids_set=valid_ids_set,
@@ -226,7 +216,14 @@ def filter_technical_threads(filename, prefix: str, save_path):
             for thread in processed_threads:
                 thread_id = thread.get('topic_id') or thread.get('Topic_ID')
                 is_technical = thread_id in response.technical_topics
-                
+                if is_technical:
+                    processing_tracker.annotate_message(
+                        session=session,
+                        message_id=thread_id,
+                        annotation_type=processing_tracker.ANNOTATION_TYPES['TECHNICAL'],
+                        annotation_value={'thread_id': thread_id, 'indicators': thread.get('technical_indicators', [])},
+                        annotated_by='gemini_ai'
+                    )
                 # Update Thread object with technical classification
                 from app.models.db_models import Thread
                 db_thread = session.query(Thread).filter(Thread.topic_id == thread_id).first()
@@ -260,14 +257,6 @@ def filter_technical_threads(filename, prefix: str, save_path):
                             metadata={'batch_prefix': prefix}
                         )
                         
-                        if is_technical:
-                            processing_tracker.annotate_message(
-                                session=session,
-                                message_id=db_message.message_id,
-                                annotation_type=processing_tracker.ANNOTATION_TYPES['TECHNICAL'],
-                                annotation_value={'thread_id': thread_id, 'indicators': thread.get('technical_indicators', [])},
-                                annotated_by='gemini_ai'
-                            )
             
             session.commit()
             logging.info(f"Technical filtering completed:")
@@ -400,40 +389,68 @@ def next_thread_gathering(next_batch_df, lookback_date, str_interval, save_path,
     Gather next batch of messages into raw threads for processing
     """
     prompts.reload_prompts()
-    
-    next_batch_csv = next_batch_df.to_csv(index=False)
-
-    previous_threads_text = []
+   
     valid_ids_set = set(next_batch_df['Message ID'].astype(str))
     db_service = get_database_service()
+    illustrated_messages_dict = bulk_illustrated_messages(valid_ids_set, db_service)
+    next_batch_df['Content'] = next_batch_df['Message ID'].map(illustrated_messages_dict)
+     # Define the columns you want to keep
+    columns_to_keep =  ['Message ID', 'Content', 'Referenced Message ID']
+    
+    # Filter the DataFrame
+    filtered_df = next_batch_df[columns_to_keep]
+    
+    # Export to CSV
+    next_batch_csv = filtered_df.to_csv(index=False)
+    previous_threads_text = []
     with db_service.get_session() as session:
         lookback_threads = db_service.get_latest_threads_from_actual_date(session, lookback_date)
+        # Convert SQLAlchemy Thread objects to dictionaries
+        lookback_threads_dict = []
         for thread in lookback_threads:
-            whole_thread = thread.messages
-            whole_thread_ids = [msg.message_id for msg in whole_thread]
-            messages = []
-            if whole_thread_ids:
-                valid_ids_set = valid_ids_set.union(set(whole_thread_ids))
-                for message_id in whole_thread_ids:
-                    message_content = illustrated_message(message_id, db_service, session)
-                    if message_id == thread.topic_id:
-                        messages.append(f"- ({message_id}) - **Topic started** :{message_content} ")
-                    else:
-                        messages.append(f"- ({message_id}) {message_content} ")
+            thread_dict = {
+                'topic_id': thread.topic_id,
+                'header': thread.header,
+                'actual_date': thread.actual_date.isoformat() if thread.actual_date else None,
+                'answer_id': thread.answer_id,
+                'label': thread.label,
+                'solution': thread.solution,
+                'status': thread.status,
+                'is_technical': thread.is_technical,
+                'is_processed': thread.is_processed,
+                'whole_thread': [{'message_id': msg.message_id, 'parent_id': msg.parent_id} for msg in thread.messages]
+            }
+            lookback_threads_dict.append(thread_dict)
+            valid_ids_set.update([msg.message_id for msg in thread.messages])
 
-            previous_threads_text.append(f"Topic: {thread.topic_id} - {thread.actual_date} \n" + "\n".join(messages))
+        previous_threads = illustrated_threads(lookback_threads_dict, db_service)
+        # for thread in lookback_threads:
+        #     illustrated_thread = illustrated_threads(lookback_threads, db_service)
+        #     whole_thread = thread.messages
+        #     whole_thread_ids = [msg.message_id for msg in whole_thread]
+        #     messages = []
+        #     if whole_thread_ids:
+        #         valid_ids_set = valid_ids_set.union(set(whole_thread_ids))
+        #         for message_id in whole_thread_ids:
+        #             message_content = illustrated_message(message_id, db_service, session)
+        #             if message_id == thread.topic_id:
+        #                 messages.append(f"- ({message_id}) - **Topic started** :{message_content} ")
+        #             else:
+        #                 messages.append(f"- ({message_id}) {message_content} ")
 
-    prmpt = prompts.prompt_addition_step1.format(
-        prompt_group_logic=prompts.prompt_group_logic,
-        JSON_prev="\n".join(previous_threads_text)
-    )
+        #     previous_threads_text.append(f"Topic: {thread.topic_id} - {thread.actual_date} \n" + "\n".join(messages))
+
+    
+    text_previous_threads = [json.dumps(thread, indent=2) for thread in previous_threads]
+    
 
     logging.info(f"Next step 1. Processing next {len(next_batch_df)} raw messages...")
     response = gemini_service.generate_content(
         contents=[
             prompts.system_prompt,
             next_batch_csv,
-            prmpt
+            prompts.prompt_gathering_logic,
+            prompts.prompt_addition_step1.format(JSON_prev="\n".join(text_previous_threads))
             ],
         config=gemini_service.config_addition_step1,
         valid_ids_set=valid_ids_set,
@@ -530,10 +547,6 @@ def next_thread_gathering(next_batch_df, lookback_date, str_interval, save_path,
                         metadata={'batch_prefix': str_interval, 'processing_type': 'incremental_batch'}
                     )
             
-            # Recalculate hierarchy if parent_id was updated
-            if parent_id_updates > 0:
-                depth_updates = _recalculate_hierarchy_metadata(session)
-                logging.info(f"Recalculated hierarchy for {depth_updates} messages")
             ### changes and additions to session are not saved here
             session.commit()
             logging.info(f"Next thread gathering database updates:")

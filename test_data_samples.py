@@ -32,8 +32,7 @@ class TestDataGenerator:
                     author_id="user_newbie_123",
                     content="Hi everyone! I'm trying to deploy a Sui validator node on Ubuntu 22.04 but getting connection errors. The node starts but can't sync with the network. Error: 'Connection refused on port 9000'. Any ideas?",
                     datetime=datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-15 10:00 - Hi everyone! I'm trying to deploy...",
-                    depth_level=0,
+                    referenced_message_id=None,
                     is_root_message=True,
                     order_in_thread=1
                 ),
@@ -45,7 +44,6 @@ class TestDataGenerator:
                     author_id="helper_dev_456",
                     content="Sounds like a firewall issue. Did you open the required ports? Sui needs 9000-9184 to be open.",
                     datetime=datetime(2024, 1, 15, 10, 5, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-15 10:05 - Sounds like a firewall issue...",
                     depth_level=1,
                     is_root_message=False,
                     order_in_thread=2
@@ -58,7 +56,6 @@ class TestDataGenerator:
                     author_id="expert_validator_789", 
                     content="Yes, firewall is the issue. Run these commands:\\n```bash\\nsudo ufw allow 9000:9184/tcp\\nsudo ufw allow 9000:9184/udp\\nsudo systemctl restart sui-node\\n```\\nAlso make sure your genesis.blob file is up to date.",
                     datetime=datetime(2024, 1, 15, 10, 10, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-15 10:10 - Yes, firewall is the issue...",
                     depth_level=2,
                     is_root_message=False,
                     order_in_thread=3
@@ -71,7 +68,6 @@ class TestDataGenerator:
                     author_id="user_newbie_123",
                     content="Perfect! That solved it completely. Node is now syncing properly. Thanks so much! 🙏",
                     datetime=datetime(2024, 1, 15, 10, 25, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-15 10:25 - Perfect! That solved it completely...",
                     depth_level=3,
                     is_root_message=False,
                     order_in_thread=4
@@ -84,7 +80,6 @@ class TestDataGenerator:
                     author_id="senior_dev_999",
                     content="For future reference, you can also check node logs with `docker logs sui-node-container` to diagnose network issues faster.",
                     datetime=datetime(2024, 1, 15, 10, 30, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-15 10:30 - For future reference...",
                     depth_level=1,
                     is_root_message=False,
                     order_in_thread=5
@@ -121,7 +116,6 @@ class TestDataGenerator:
                     author_id="move_dev_alice",
                     content="I'm building a custom token contract in Move and need to implement transfer logic with additional validation. The standard transfer doesn't meet my requirements. How do I override the default behavior?",
                     datetime=datetime(2024, 1, 16, 14, 30, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-16 14:30 - I'm building a custom token contract...",
                     depth_level=0,
                     is_root_message=True,
                     order_in_thread=1
@@ -134,7 +128,6 @@ class TestDataGenerator:
                     author_id="move_expert_bob",
                     content="What kind of additional validation do you need? Is it amount limits, time restrictions, or something else?",
                     datetime=datetime(2024, 1, 16, 14, 35, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-16 14:35 - What kind of additional validation...",
                     depth_level=1,
                     is_root_message=False,
                     order_in_thread=2
@@ -147,7 +140,6 @@ class TestDataGenerator:
                     author_id="move_dev_alice", 
                     content="I need to implement daily transfer limits per address and also require approval from a secondary signer for transfers above 1000 tokens.",
                     datetime=datetime(2024, 1, 16, 14, 40, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-16 14:40 - I need to implement daily transfer limits...",
                     depth_level=2,
                     is_root_message=False,
                     order_in_thread=3
@@ -160,7 +152,6 @@ class TestDataGenerator:
                     author_id="move_expert_bob",
                     content="You'll need to create a custom transfer function with state tracking. Here's the approach:\\n\\n```move\\nstruct TransferLimits has key {\\n    daily_limits: Table<address, u64>,\\n    last_reset: u64\\n}\\n\\npublic fun custom_transfer(\\n    from: &signer,\\n    to: address, \\n    amount: u64,\\n    approver: Option<&signer>\\n) {\\n    // Check daily limit\\n    // Require approver for large transfers\\n    // Update state\\n}\\n```\\n\\nYou'll also need to implement time-based limit resets.",
                     datetime=datetime(2024, 1, 16, 14, 50, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-16 14:50 - You'll need to create a custom transfer function...",
                     depth_level=3,
                     is_root_message=False,
                     order_in_thread=4
@@ -173,7 +164,6 @@ class TestDataGenerator:
                     author_id="move_dev_alice",
                     content="Thanks! Quick question - how do I handle the time-based reset efficiently without running into gas limits?",
                     datetime=datetime(2024, 1, 16, 15, 0, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-16 15:00 - Thanks! Quick question...",
                     depth_level=4,
                     is_root_message=False,
                     order_in_thread=5
@@ -186,7 +176,6 @@ class TestDataGenerator:
                     author_id="gas_optimizer_carol",
                     content="Use lazy evaluation! Only reset limits when they're actually checked, not proactively. Store the last reset timestamp and calculate if reset is needed during the transfer call.",
                     datetime=datetime(2024, 1, 16, 15, 5, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-16 15:05 - Use lazy evaluation!...",
                     depth_level=5,
                     is_root_message=False,
                     order_in_thread=6
@@ -223,7 +212,6 @@ class TestDataGenerator:
                     author_id="confused_dev_dave",
                     content="I'm seeing weird behavior where objects become inaccessible after adding dynamic fields. The object exists on-chain but I can't reference it in subsequent transactions. Has anyone encountered this?",
                     datetime=datetime(2024, 1, 17, 9, 15, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-17 09:15 - I'm seeing weird behavior...",
                     depth_level=0,
                     is_root_message=True,
                     order_in_thread=1
@@ -236,7 +224,6 @@ class TestDataGenerator:
                     author_id="debugger_eve",
                     content="Can you share the transaction hash and the specific operations you're performing? Also, what's the object type?",
                     datetime=datetime(2024, 1, 17, 9, 30, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-17 09:30 - Can you share the transaction hash...",
                     depth_level=1,
                     is_root_message=False,
                     order_in_thread=2
@@ -249,7 +236,6 @@ class TestDataGenerator:
                     author_id="confused_dev_dave",
                     content="Object type is a custom NFT struct. TX hash: 0xabc123def456. I'm adding a dynamic field for metadata, then trying to transfer the NFT in the next transaction but getting 'object not found'.",
                     datetime=datetime(2024, 1, 17, 9, 45, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-17 09:45 - Object type is a custom NFT struct...",
                     depth_level=2,
                     is_root_message=False,
                     order_in_thread=3
@@ -262,7 +248,6 @@ class TestDataGenerator:
                     author_id="investigator_frank",
                     content="I'll check the transaction. This might be related to object wrapping behavior when dynamic fields are added. Are you using the correct object ID after the modification?",
                     datetime=datetime(2024, 1, 17, 10, 0, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-17 10:00 - I'll check the transaction...",
                     depth_level=3,
                     is_root_message=False,
                     order_in_thread=4
@@ -275,7 +260,6 @@ class TestDataGenerator:
                     author_id="investigator_frank",
                     content="Looking at the TX, the object ID does change after dynamic field addition. This might be expected behavior but poorly documented. Let me dig into the Sui docs...",
                     datetime=datetime(2024, 1, 17, 11, 0, 0, tzinfo=timezone.utc),
-                    dated_message="2024-01-17 11:00 - Looking at the TX...",
                     depth_level=4,
                     is_root_message=False,
                     order_in_thread=5

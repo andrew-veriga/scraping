@@ -52,7 +52,6 @@ def test_get_latest_solution_date():
         #     datetime=test_date,
         #     author_id="test_user",
         #     thread_id="test_thread_1",
-        #     dated_message="Test message",
         #     depth_level=0,
         #     is_root_message=True,
         #     order_in_thread=1
