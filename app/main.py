@@ -46,9 +46,9 @@ def build_message_hierarchy(whole_thread):
                     'data': {
                         'message_id': msg['message_id'],
                         'parent_id': msg.get('parent_id'),
-                        'content': f"Message {msg['message_id']}",  # Placeholder content
-                        'author_id': 'unknown',
-                        'datetime': 'unknown'
+                        'content': msg.get('content', f"Message {msg['message_id']}"),
+                        'author_id': msg.get('author_id', 'unknown'),
+                        'datetime': msg.get('datetime', 'unknown')
                     },
                     'children': build_children(msg['message_id']),
                     'expanded': False
@@ -65,9 +65,9 @@ def build_message_hierarchy(whole_thread):
             'data': {
                 'message_id': root_msg['message_id'],
                 'parent_id': root_msg.get('parent_id'),
-                'content': f"Message {root_msg['message_id']}",  # Placeholder content
-                'author_id': 'unknown',
-                'datetime': 'unknown'
+                'content': root_msg.get('content', f"Message {root_msg['message_id']}"),
+                'author_id': root_msg.get('author_id', 'unknown'),
+                'datetime': root_msg.get('datetime', 'unknown')
             },
             'children': build_children(root_msg['message_id']),
             'expanded': False
