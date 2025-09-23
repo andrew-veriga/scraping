@@ -1,36 +1,29 @@
-SAVE_PATH: '.\results'
+INTERVAL_BACK: 2
 INTERVAL_FIRST: 2
 INTERVAL_NEXT: 1
-INTERVAL_BACK: 2
-MESSAGES_FILE_PATH: 'data\discord_messages_names_pics.xlsx'
-NEXT_BATCH_FILE_PATH: 'data\discord_messages_names_pics.xlsx'
-SOLUTIONS_DICT_FILENAME: 'solutions_dict.json'
-
-# Database configuration
+LATEST_SOLUTION_DATE: '2025-08-10T16:45:05+00:00'
+MESSAGES_FILE_PATH: data\discord_messages_names_pics.xlsx
+NEXT_BATCH_FILE_PATH: data\discord_messages_names_pics.xlsx
+SAVE_PATH: .\results
+SOLUTIONS_DICT_FILENAME: solutions_dict.json
 database:
-  url: "${PEERA_DB_URL}"  # Set this in your .env file
-  pool_size: 20  # Increased for heavy processing
-  max_overflow: 30  # Increased for burst capacity
-  pool_timeout: 120  # Increased timeout for complex operations
-  pool_recycle: 1800  # Reduced from 3600 (30 minutes)
-  pool_pre_ping: true  # Verify connections before use
-  # Connection retry settings
-  max_retries: 5  # Increased retry attempts
-  base_delay: 2.0  # Increased base delay
-  max_delay: 120.0  # Increased max delay
-  # SSL settings
-  ssl_mode: "prefer"  # prefer, require, disable
-  connect_timeout: 60  # Increased connection timeout
-
-# RAG configuration
-rag:
-  similarity_threshold: 0.85
-  embedding_model: "text-embedding-004"
-  embedding_dimension: 768
-  max_similar_results: 5
-
-# LLM optimization configuration
+  base_delay: 2.0
+  connect_timeout: 60
+  max_delay: 120.0
+  max_overflow: 30
+  max_retries: 5
+  pool_pre_ping: true
+  pool_recycle: 1800
+  pool_size: 20
+  pool_timeout: 120
+  ssl_mode: prefer
+  url: ${PEERA_DB_URL}
 llm:
   batch_size: 10
-  max_context_length: 8000
   cache_ttl: 3600
+  max_context_length: 8000
+rag:
+  embedding_dimension: 768
+  embedding_model: text-embedding-004
+  max_similar_results: 5
+  similarity_threshold: 0.85

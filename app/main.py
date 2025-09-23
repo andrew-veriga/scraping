@@ -20,11 +20,12 @@ from markdown_it import MarkdownIt
 from app.utils.file_utils import illustrated_message, illustrated_threads
 from app import processing, monitoring
 
-def build_message_hierarchy(whole_thread):
+def build_message_hierarchy(thread_data):
     """Build hierarchical structure from whole_thread messages."""
+    whole_thread = thread_data.get('whole_thread', [])
     logging.info(f"build_message_hierarchy called with {len(whole_thread) if whole_thread else 0} messages")
     
-    if not whole_thread:
+    if not whole_thread or len(whole_thread) == 0:
         logging.info("No messages in whole_thread, returning empty hierarchy")
         return []
     
@@ -32,9 +33,49 @@ def build_message_hierarchy(whole_thread):
     message_map = {msg['message_id']: msg for msg in whole_thread}
     logging.info(f"Created message_map with {len(message_map)} messages")
     
-    # Find root messages (those with parent_id = null)
-    root_messages = [msg for msg in whole_thread if msg.get('parent_id') is None]
-    logging.info(f"Found {len(root_messages)} root messages")
+    import collections
+        
+    try:
+        # Find root messages (those with parent_id = null)
+        root_message = [msg for msg in whole_thread if msg.get('parent_id') is None]
+        if not root_message or len(root_message) == 0: # If no explicit root, take the first message as root??? TODO: it's not correct, whole_thread[0] may not be the root
+            root_message = {'message_id': whole_thread[0]['message_id'], 'parent_id': None}
+        else:
+            root_message = root_message[0]
+
+        queues = [collections.deque([root_message])]    
+        for msg in whole_thread:
+            if msg.get('parent_id') is not None:
+                if msg['parent_id'] not in [q[-1]['message_id'] for q in queues]:
+                    q = collections.deque()
+                    queues.append(q)
+                    q.append(msg)
+                else: # find the queue with this parent_id
+                    for q in queues:
+                        if q[-1]['message_id'] == msg['parent_id']:
+                            q.append(msg)
+                            break
+        for q in queues:
+            logging.info(f"Queue with root {q[0]['message_id']} has {len(q)} messages")
+
+
+            # parents = [msg['parent_id'] for msg in whole_thread ]
+            # parents = list(set(parents)) # Unique parent IDs
+
+            # nodes = {parent_id: [leaf for leaf in whole_thread if leaf['parent_id'] == parent_id] for parent_id in parents}
+            # nodes['root'] = root_message
+            # for parent_id, children in nodes.items():
+            #     if len(children) == 1: #then expand it and reassign its parent to up level
+            #         children[0]['expanded'] = True  # Expand single-child nodes by default
+            #         single_child = children[0]
+            #         # reassign parent_id to up level
+            #         message_map[single_child['message_id']]['parent_id'] = parent_id 
+
+            # for k, v in nodes.items():
+            #     logging.info(f"Node {k} has {len(v)} children")
+    except Exception as e:
+        logging.error(f"Error finding root message: {e}", exc_info=True)
+        return []
     
     def build_children(parent_id):
         children = []
@@ -58,21 +99,20 @@ def build_message_hierarchy(whole_thread):
     
     # Build hierarchy starting from root messages
     hierarchy = []
-    for root_msg in root_messages:
-        root_node = {
-            'id': root_msg['message_id'],
-            'type': 'message',
-            'data': {
-                'message_id': root_msg['message_id'],
-                'parent_id': root_msg.get('parent_id'),
-                'content': root_msg.get('content', f"Message {root_msg['message_id']}"),
-                'author_id': root_msg.get('author_id', 'unknown'),
-                'datetime': root_msg.get('datetime', 'unknown')
-            },
-            'children': build_children(root_msg['message_id']),
-            'expanded': False
-        }
-        hierarchy.append(root_node)
+    root_node = {
+        'id': root_message['message_id'],
+        'type': 'message',
+        'data': {
+            'message_id': root_message['message_id'],
+            'parent_id': root_message.get('parent_id'),
+            'content': root_message.get('content', f"Message {root_message['message_id']}"),
+            'author_id': root_message.get('author_id', 'unknown'),
+            'datetime': root_message.get('datetime', 'unknown')
+        },
+        'children': build_children(root_message['message_id']),
+        'expanded': False
+    }
+    hierarchy.append(root_node)
     
     return hierarchy
 
@@ -222,7 +262,7 @@ def get_threads(limit: int = 100, offset: int = 0, status: str = None, technical
                 # Build hierarchical structure from whole_thread
                 whole_thread = thread_info.get('whole_thread', [])
                 logging.info(f"Processing thread {topic_id}, whole_thread length: {len(whole_thread)}")
-                messages_hierarchy = build_message_hierarchy(whole_thread)
+                messages_hierarchy = build_message_hierarchy(thread_info)
                 logging.info(f"Built hierarchy for thread {topic_id}, hierarchy length: {len(messages_hierarchy)}")
                 
                 thread_dict = {

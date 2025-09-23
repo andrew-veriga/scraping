@@ -4,7 +4,13 @@ import pandas as pd
 from fastapi import HTTPException
 from app.services import data_loader, thread_service, solution_service
 import json
-from app.utils.file_utils import load_solutions_dict, save_solutions_dict, create_dict_from_list
+from app.utils.file_utils import (
+    load_solutions_dict,
+    save_solutions_dict,
+    create_dict_from_list,
+    get_latest_normalized_date,
+    set_latest_solution_date
+    )
 from app.services.database import get_database_service
 from app.models.pydantic_models import SolutionStatus
 from datetime import datetime, timezone
@@ -167,6 +173,7 @@ def process_first_batch(config: Dict[str, Any]) -> Dict[str, Any]:
         start_date = messages_df['DateTime'].min().normalize()
         end_date = start_date + pd.Timedelta(days=INTERVAL_FIRST)
         first_batch_df = messages_df[messages_df['DateTime'] < end_date].copy()
+        set_latest_solution_date(config, new_date=start_date- pd.Timedelta(days=1))
         
         logging.info(f"📅 Step 2: Processing first {INTERVAL_FIRST} days: {start_date.date()} to {end_date.date()}")
         logging.info(f"   First batch contains {len(first_batch_df)} messages from {len(messages_df)} total")
@@ -246,7 +253,7 @@ def process_first_batch(config: Dict[str, Any]) -> Dict[str, Any]:
         try:
             logging.info("🔍 Step 8: RAG duplicate checking and database storage...")
             solutions_dict = solution_service.check_in_rag_and_save({}, first_solutions_dict)
-            save_solutions_dict(solutions_dict, SOLUTIONS_DICT_FILENAME, SAVE_PATH)
+            save_solutions_dict(solutions_dict, config)
             solution_service.update_database_with_solutions(solutions_dict)
             logging.info(f"✅ RAG processing completed - {len(solutions_dict)} unique solutions saved to database")
             
@@ -342,7 +349,7 @@ def process_batch(solutions_dict, lookback_date:pd.Timestamp, next_start_date: p
     
     solutions_dict = solution_service.check_in_rag_and_save(solutions_dict, adding_solutions_dict)
     
-    save_solutions_dict(solutions_dict, config['SOLUTIONS_DICT_FILENAME'], save_path=config['SAVE_PATH'])
+    save_solutions_dict(solutions_dict, config)
     
     solution_service.update_database_with_solutions(adding_solutions_dict)
     
@@ -357,6 +364,7 @@ def process_batch(solutions_dict, lookback_date:pd.Timestamp, next_start_date: p
         logging.info(f"Completed processing batch {batch_id} with stats: {batch_stats}")
     
     return True
+
 
 def process_next_batches(config):
     try:
@@ -378,18 +386,14 @@ def process_next_batches(config):
             messages_df = loading_result['messages_df']
         else:
             messages_df, _ = data_loader.load_and_preprocess_data(MESSAGES_FILE_PATH)
-        
-
-        
 
         solutions_dict = load_solutions_dict(SOLUTIONS_DICT_FILENAME, SAVE_PATH)
         
         # Get latest solution date from database instead of file
-        db_service = get_database_service()
-        with db_service.get_session() as session:
-            latest_solution_date = db_service.get_latest_solution_date(session)
-        if latest_solution_date:
-            next_end_date = latest_solution_date
+
+        latest_normalized_date = get_latest_normalized_date(config)
+        if latest_normalized_date:
+            next_end_date = latest_normalized_date
         else:
             next_end_date = messages_df['DateTime'].min().normalize() + pd.Timedelta(days=INTERVAL_FIRST)
 
@@ -400,7 +404,7 @@ def process_next_batches(config):
 
             if next_start_date > messages_df['DateTime'].max():
                 break
-            logging.info("-" * 60)
+            logging.info("##" * 60)
             logging.info(f"Processing batch. Lookback: {lookback_date}, Start: {next_start_date}, End: {next_end_date}")
             if not process_batch(solutions_dict, lookback_date, next_start_date, next_end_date, messages_df, config):
                 logging.info(f"No messages in the interval: {next_start_date} to {next_end_date}")

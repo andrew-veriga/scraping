@@ -480,17 +480,6 @@ class DatabaseService:
         ).order_by(desc(ProcessingBatch.end_date)).first()
         return batch.end_date if batch else None
     
-    def get_latest_solution_date(self, session: Session) -> Optional[datetime]:
-        """Get the latest datetime from threads, normalized and incremented by one day."""
-        thread = session.query(Thread).filter(
-            Thread.actual_date.is_not(None)
-        ).order_by(desc(Thread.actual_date)).first()
-        if thread:
-            # Convert to pandas timestamp, normalize, and add one day
-            
-            latest_date = pd.Timestamp(thread.actual_date).normalize() + pd.Timedelta(days=1)
-            return latest_date.to_pydatetime()
-        return None
     
     def get_latest_threads_from_actual_date(self, session: Session, lookback_date: datetime) -> List[Thread]:
         """Get all threads with actual_date >= lookback_date."""

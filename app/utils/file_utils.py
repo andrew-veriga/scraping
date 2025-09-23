@@ -30,12 +30,34 @@ def add_new_solutions_to_dict(solutions_dict, new_solutions_list):
         add_or_update_solution(solutions_dict, new_solution)
     logging.info(f"Added/updated {len(new_solutions_list)} solutions to the dictionary.")
 
-def save_solutions_dict(solutions_dict, filename, save_path):
+import yaml
+def get_latest_normalized_date(config) -> datetime:
+    """Get the latest datetime from config, normalized and incremented by one day."""
+    latest_date = pd.Timestamp(config['LATEST_SOLUTION_DATE']).normalize() + pd.Timedelta(days=1)
+    return latest_date.to_pydatetime()
+
+def set_latest_solution_date(config, new_date: datetime)->dict:
+    """Set the latest solution date in config to the new_date, normalized."""
+    config['LATEST_SOLUTION_DATE'] = new_date.isoformat()
+    # with open("configs/config.yaml", "r") as f:
+    #     saved_config = yaml.safe_load(f)
+        # saved_config['LATEST_SOLUTION_DATE'] = new_date.isoformat()
+    with open("configs/config.yaml", "w") as f:
+        yaml.safe_dump(config, f)
+    logging.info(f"Updated LATEST_SOLUTION_DATE in config to {new_date.isoformat()}")
+    return config
+
+def save_solutions_dict(solutions_dict, config):
     """Saves the solutions dictionary to a JSON file."""
-    full_path = os.path.join(save_path,filename)
+    filename = config['SOLUTIONS_DICT_FILENAME']
+    save_path = config['SAVE_PATH']
+    full_path = os.path.join(save_path, filename)
     with open(full_path, 'w') as f:
         json.dump(solutions_dict, f, indent=2, default=convert_datetime_to_str)
     logging.info(f"Solutions dictionary saved to {full_path}")
+    # Update latest solution date in config
+    latest_date = get_latest_date_from_solutions(solutions_dict)
+    set_latest_solution_date(config, new_date=latest_date)
     return full_path
 
 def convert_datetime_to_str(obj):
@@ -75,7 +97,7 @@ def load_solutions_dict(filename, save_path, from_date=None):
         logging.error(f"Error converting datetime string in {full_path}: {e}")
         return solutions_dict # Return partially loaded data if conversion fails for some entries
 
-def get_end_date_from_solutions(solutions_dict):
+def get_latest_date_from_solutions(solutions_dict):
     """Extracts the latest actual_date from the solutions dictionary."""
     if not solutions_dict:
         return None
@@ -86,7 +108,7 @@ def get_end_date_from_solutions(solutions_dict):
         if actual_date:
             dates.append(pd.Timestamp(actual_date))
     if dates:
-        latest_date = max(dates).normalize() + pd.Timedelta(days=1)
+        latest_date = max(dates)#.normalize() + pd.Timedelta(days=1)
         return latest_date
     return None
 
@@ -189,24 +211,24 @@ def illustrated_threads(threads_json_data, db_service):
     # Use a single database session for all message lookups to avoid connection pool exhaustion
     with db_service.get_session() as session:
         for thread in threads_json_data:
-            thread['whole_thread_formatted'] = []
             # Support both old and new formats during transition
             whole_thread = thread.get('whole_thread') or thread.get('whole_thread', [])
             
-            if not whole_thread:
+            if not whole_thread or len(whole_thread) == 0:
                 continue
-                
+
             # Extract all message IDs from the thread
             message_ids = [msg['message_id'] for msg in whole_thread]
             
             # Use the new function to get illustrated messages
             illustrated_messages_dict = bulk_illustrated_messages(message_ids, db_service, session)
+            thread['whole_thread'] = []
             
-            # Fill the whole_thread_formatted with the results
+            # Fill the whole_thread with the results
             for msg in whole_thread:
                 msg_id = str(msg['message_id'])
                 message_content = illustrated_messages_dict.get(msg_id, "<empty>")
-                thread['whole_thread_formatted'].append({
+                thread['whole_thread'].append({
                     "message_id": msg_id,
                     "parent_id": str(msg.get('parent_id', None)),
                     "content": message_content

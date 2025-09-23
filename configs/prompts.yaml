@@ -15,7 +15,7 @@ prompt_gathering_logic: |
   b) the field Referenced Message ID define the message as a reply to referenced message. The reply must continue the existing thread and be a child node in the hierarchical structure of the thread, parent_id is equal to 'Referenced Message ID';
   c) consider a subsequent message from the same author for relatively short time interval (less than 30 minutes) with empty field Referenced Message ID as a continuation of the conversation if they likely are the addition clarifications, details, or context to the original question or problem statement. parent_id of such message is equal to the Message ID of the previous message from the same author;
   d) if message from the same author repeating the same question consider the message as a reminder and a follow-up of the conversation, parent_id of such message is equal to the Message ID of the previous message from the same author;
-  e) if a new author's message with an empty "Referenced Message ID" field is meaningfully similar to a recent message (several minutes have passed), answers a question asked, or reports the same issue, consider the subsequent message part of the same conversation, parent_id of such message is equal to the Message ID of the recent message;
+  e) if a message doesn't have"Referenced Message ID" field and doesn't have tag < # someone>, is meaningfully similar to a recent message(several minutes have passed), answers a question asked in that message, or reports the same issue as that message, consider this message part of the same conversation, assign parent_id of this message is equal to the Message ID of that recent message what is answered or elaborated;
   f) if a message contains a tag, defined like '<@(\d+)>', where tagged an author by 'Author ID', that author asked the question in the conversation and this message seems to be an answer to the author's question, set parent_id of such message is equal to the Message ID of the most recent message from the tagged author and consider the message as a follow-up for the conversation;
   Assign a unique identifier to each thread equal to the Message ID of the first message in this thread (topic) and all other messages in the thread must have parent_id equals to the Message ID of some message in the thread.
 
@@ -56,7 +56,7 @@ prompt_step_3: |
   
   Examples for some specific labeling:
   1) If input such as:
-      "whole_thread_formatted": [
+      "whole_thread": [
       {
         "message_id": "1397468283199815751",
         "parent_id": "None",
@@ -80,7 +80,7 @@ prompt_step_3: |
   "label": "outside"
 
   2) If input such as:
-    "whole_thread_formatted": [
+    "whole_thread": [
       {
         "message_id": "1398216567354953839",
         "parent_id": "None",
@@ -97,12 +97,6 @@ prompt_step_3: |
   "header": "How to send USDT or USDC to a Slush wallet or other common cryptos?",
   "solution": "To send USDT or USDC to a Slush wallet: if from another blockchain, use a bridge like Portalbridge (portalbridge.com) to bridge USDC in. If from a centralized exchange, many support direct withdrawal of USDC or Sui on Sui.",
   "label": "resolved"
-
-prompt_step_4: |
-  Now you are in the step 4. Your current task is to evaluate the improvement of each solution.
-  If the versions of two problem statements are similar, and the new version of the solution is significantly improved over the previous version, mark them as "improved".
-  If the new version of the problem statement is significantly different from the previous version, label them as "changed".
-  If both of a problem statement and the solution have minor changes in the new version, label them as "minor".
 
 revision_prompt: |
   Now you are in the step 4. You have a list of two versions of problem statement and solution with its status:

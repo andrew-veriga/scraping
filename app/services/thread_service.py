@@ -206,7 +206,7 @@ def filter_technical_threads(filename, prefix: str, save_path):
         config=gemini_service.config_step2,
     )
 
-    technical_threads = [thread for thread in processed_threads if (thread.get('topic_id') or thread.get('Topic_ID')) in response.technical_topics]
+    technical_threads = [thread for thread in processed_threads if thread.get('topic_id') in response.technical_topics]
     logging.info(f"{prefix} step 2. Selected {len(response.technical_topics)} technical topics from {len(processed_threads)} threads")
 
     try:
@@ -290,7 +290,7 @@ def generalization_solution(filename,prefix: str, save_path):
     for key,t in technical_threads.items(): 
         whole_thread = t.get('whole_thread', [])
         valid_ids_set = valid_ids_set.union(set([msg['message_id'] for msg in whole_thread]))
-        text_threads[key] = t['whole_thread_formatted']
+        text_threads[key] = t['whole_thread']
 
     processing_tracker = get_processing_tracker()
     db_service = get_database_service()

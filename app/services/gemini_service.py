@@ -25,8 +25,8 @@ gemini_client = genai.Client(
     # api_key=GEMINI_API_KEY,
     project=PROJECT_ID,
     location=LOCATION,
-    # credentials_path=os.environ.get("GEMINI_API_KEY_PATH")
-)
+    )
+
 model_name = "gemini-2.5-flash"
 
 

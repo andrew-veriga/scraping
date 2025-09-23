@@ -20,8 +20,7 @@ class MockMessage(BaseModel):
 
 class MockThread(BaseModel):
     topic_id: str
-    whole_thread: List[str]
-    whole_thread_formatted: Optional[List[MockMessage]] = None
+    whole_thread: Optional[List[MockMessage]] = None
     status: Optional[str] = None
 
 class MockThreadList(BaseModel):
@@ -91,11 +90,11 @@ def test_illustrated_threads(sample_messages_df):
 
     assert len(enriched_data) == 1
     thread = enriched_data[0]
-    assert 'whole_thread_formatted' in thread
-    assert len(thread['whole_thread_formatted']) == 2
-    assert thread['whole_thread_formatted'][0]['message_id'] == '1'
-    assert thread['whole_thread_formatted'][0]['author_id'] == '101'
-    assert "How do I stake SUI?" in thread['whole_thread_formatted'][0]['content']
+    assert 'whole_thread' in thread
+    assert len(thread['whole_thread']) == 2
+    assert thread['whole_thread'][0]['message_id'] == '1'
+    assert thread['whole_thread'][0]['author_id'] == '101'
+    assert "How do I stake SUI?" in thread['whole_thread'][0]['content']
 
 def test_filter_technical_threads(sample_messages_df, mock_gemini_response_step2, tmp_path):
     save_path = str(tmp_path)
@@ -122,7 +121,7 @@ def test_filter_technical_threads(sample_messages_df, mock_gemini_response_step2
 
 def test_generalization_solution(mock_gemini_response_step3, tmp_path):
     save_path = str(tmp_path)
-    technical_threads = [{'topic_id': '1', 'whole_thread_formatted': [{'message_id': '1', 'author_id': '101', 'content': '...'}]}]
+    technical_threads = [{'topic_id': '1', 'whole_thread': [{'message_id': '1', 'author_id': '101', 'content': '...'}]}]
     input_filename = os.path.join(save_path, "tech_input.json")
     with open(input_filename, 'w') as f:
         json.dump(technical_threads, f)
