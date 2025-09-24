@@ -10,30 +10,6 @@ venv/
 results/
 TODO.md
 CLAUDE.md
-
-# Next.js / React (visual directory)
-visual/node_modules/
-visual/.next/
-visual/out/
-
-
-# testing
-visual/coverage
-
-# production
-visual/build
-visual/dist
-visual/public/build
-visual/public/dist
-
-# misc
-.DS_Store
-visual/.env
-visual/.env.*
-visual/npm-debug.log*
-visual/yarn-debug.log*
-visual/yarn-error.log*
-visual/.idea
-visual/.vscode
-
+data/
+images/
 

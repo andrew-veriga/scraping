@@ -381,3 +381,27 @@ class LLMCache(Base):
     
     def __repr__(self):
         return f"<LLMCache(id={self.id}, type='{self.request_type}', accessed={self.access_count} times)>"
+
+
+class IllustratedMessage(Base):
+    """Database view for illustrated messages, extending the Message model with an illustrated_message column."""
+    __tablename__ = 'illustrated_messages'
+    __table_args__ = {'extend_existing': True} # Use extend_existing for views
+
+    message_id = Column(String(50), primary_key=True)
+    parent_id = Column(String(50), nullable=True, index=True)
+    author_id = Column(String(50), ForeignKey('authors.author_id'), nullable=False, index=True)
+    content = Column(Text, nullable=False)
+    datetime = Column(DateTime(timezone=True), nullable=False, index=True)
+    referenced_message_id = Column(String(50), nullable=True, index=True)
+    thread_id = Column(String(50), ForeignKey('threads.topic_id'), nullable=True, index=True)
+    
+    # Additional column from the view
+    illustrated_message = Column(Text, nullable=True)
+
+    # Relationships (can be added if needed, similar to Message)
+    author = relationship("Author", foreign_keys=[author_id], primaryjoin="IllustratedMessage.author_id == Author.author_id", viewonly=True)
+    thread = relationship("Thread", foreign_keys=[thread_id], primaryjoin="IllustratedMessage.thread_id == Thread.topic_id", viewonly=True)
+
+    def __repr__(self):
+        return f"<IllustratedMessage(message_id='{self.message_id}', thread_id='{self.thread_id}', illustrated_message='{self.illustrated_message[:50]}...')>"

@@ -21,7 +21,7 @@ load_dotenv()
 from app.models.db_models import (
     Base, Author, Message, Thread, Solution, SolutionDuplicate,
     SolutionEmbedding, SolutionSimilarity, ProcessingBatch, LLMCache,
-    MessageProcessing, MessageAnnotation, ProcessingPipeline
+    MessageProcessing, MessageAnnotation, ProcessingPipeline, IllustratedMessage
 )
 
 class DatabaseService:
@@ -410,18 +410,26 @@ class DatabaseService:
         return query.order_by(Thread.actual_date).all()
     
     # Thread-Message relationship operations (now direct with hierarchical structure)
-    def get_thread_messages(self, session: Session, thread_id: str) -> List[Message]:
+    def get_thread_messages(self, session: Session, thread_id: str) -> List[IllustratedMessage]:
         """Get all messages for a thread in order (using direct relationship)."""
-        return session.query(Message).filter(
-            Message.thread_id == thread_id
-        ).order_by(Message.datetime).all()
-    
-    def get_thread_root_message(self, session: Session, thread_id: str) -> Optional[Message]:
+        return session.query(IllustratedMessage).filter(
+            IllustratedMessage.thread_id == thread_id
+        ).order_by(IllustratedMessage.datetime).all()
+
+    def get_thread_root_message(self, session: Session, thread_id: str) -> Optional[IllustratedMessage]:
         """Get the root message for a thread."""
-        return session.query(Message).filter(
-            Message.thread_id == thread_id,
-            Message.parent_id == None
+        return session.query(IllustratedMessage).filter(
+            IllustratedMessage.thread_id == thread_id,
+            IllustratedMessage.parent_id == None
         ).first()
+    
+    def get_illustrated_message_by_message_id(self, message_id: str, session: Optional[Session] = None) -> Optional[IllustratedMessage]:
+        """Get illustrated message by Discord message ID from the view."""
+        if session is not None:
+            return session.query(IllustratedMessage).filter(IllustratedMessage.message_id == message_id).first()
+        else:
+            with self.get_session() as new_session:
+                return new_session.query(IllustratedMessage).filter(IllustratedMessage.message_id == message_id).first()
     
     # solution operations
     def create_solution(self, session: Session, solution_data: Dict[str, Any]) -> Solution:

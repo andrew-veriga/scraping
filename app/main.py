@@ -37,7 +37,7 @@ def build_message_hierarchy(thread_data):
         
     try:
         # Find root messages (those with parent_id = null)
-        root_message = [msg for msg in whole_thread if msg.get('parent_id') is None]
+        root_message = [msg for msg in whole_thread if msg.get('parent_id') == 'None' or msg.get('parent_id') is None]
         if not root_message or len(root_message) == 0: # If no explicit root, take the first message as root??? TODO: it's not correct, whole_thread[0] may not be the root
             root_message = {'message_id': whole_thread[0]['message_id'], 'parent_id': None}
         else:
@@ -88,8 +88,6 @@ def build_message_hierarchy(thread_data):
                         'message_id': msg['message_id'],
                         'parent_id': msg.get('parent_id'),
                         'content': msg.get('content', f"Message {msg['message_id']}"),
-                        'author_id': msg.get('author_id', 'unknown'),
-                        'datetime': msg.get('datetime', 'unknown')
                     },
                     'children': build_children(msg['message_id']),
                     'expanded': False
@@ -105,9 +103,7 @@ def build_message_hierarchy(thread_data):
         'data': {
             'message_id': root_message['message_id'],
             'parent_id': root_message.get('parent_id'),
-            'content': root_message.get('content', f"Message {root_message['message_id']}"),
-            'author_id': root_message.get('author_id', 'unknown'),
-            'datetime': root_message.get('datetime', 'unknown')
+            'content': root_message.get('content', f"Message {root_message['message_id']}")
         },
         'children': build_children(root_message['message_id']),
         'expanded': False
@@ -250,7 +246,7 @@ def get_solutions():
 
 # API endpoints for visual interface
 @app.get("/threads")
-def get_threads(limit: int = 100, offset: int = 0, status: str = None, technical: bool = None, source: str = "file"):
+def get_threads(limit: int = 10, offset: int = 0, status: str = None, technical: bool = None, source: str = "file"):
     """Get threads with optional filtering. source can be 'file' or 'database'."""
     try:
         if source == "file":
@@ -332,7 +328,7 @@ def get_thread(thread_id: str):
     try:
         db_service = get_database_service()
         with db_service.get_session() as session:
-            thread = db_service.get_thread_by_topic_id(thread_id, session)
+            thread = db_service.get_thread_by_topic_id(session,thread_id)
             if not thread:
                 raise HTTPException(status_code=404, detail="Thread not found")
             
@@ -369,7 +365,7 @@ def get_thread(thread_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logging.error(f"Error fetching thread {thread_id}: {e}")
+        logging.error(f"Error fetching thread {thread_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.put("/threads/{thread_id}")
@@ -406,7 +402,7 @@ def delete_thread(thread_id: str):
     try:
         db_service = get_database_service()
         with db_service.get_session() as session:
-            thread = db_service.get_thread_by_topic_id(thread_id, session)
+            thread = db_service.get_thread_by_topic_id(session, thread_id)
             if not thread:
                 raise HTTPException(status_code=404, detail="Thread not found")
             
@@ -453,7 +449,24 @@ def perform_hierarchy_operation(operation: dict):
         source_id = operation.get('source_id')
         target_id = operation.get('target_id')
         data = operation.get('data', {})
-        
+
+        if operation == 'update_message_parent':
+            message_id = data.get('messageId') or source_id
+            new_parent_id = data.get('newParentId') or target_id
+            
+            # Update the message's parent_id in your database
+            # This is the core functionality you need to implement
+            update_message_parent_id(message_id, new_parent_id)
+            
+            return {
+                "success": True,
+                "message": f"Updated parent_id for message {message_id} to {new_parent_id}",
+                "data": {
+                    "message_id": message_id,
+                    "new_parent_id": new_parent_id
+                }
+            }
+
         db_service = get_database_service()
         
         # This is a placeholder for hierarchy operations
@@ -534,12 +547,14 @@ def iterate_final_threads(thread_data, db_service):
 #### Whole Thread Messages:
 """
             whole_thread = thread.get('whole_thread', [])
+            db_messages = db_service.get_thread_messages(session, thread.get('topic_id'))
+ 
             messages = []
-            if whole_thread:
-                whole_thread_ids = [t['message_id'] for t in whole_thread]
-                for message_id in whole_thread_ids:
+            if db_messages:
+                for db_message in db_messages:
+                    message_id = db_message.message_id
 
-                    message_content = illustrated_message(message_id, db_service, session)
+                    message_content = db_message.illustrated_message or db_message.content or "N/A"
                     topic_id = thread.get('topic_id') or thread.get('Topic_ID', 'N/A')
                     answer_id = thread.get('answer_id')
                     if message_id == topic_id:
