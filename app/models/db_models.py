@@ -47,6 +47,7 @@ class Message(Base):
     content = Column(Text, nullable=False)
     datetime = Column(DateTime(timezone=True), nullable=False, index=True)
     referenced_message_id = Column(String(50), nullable=True, index=True)
+    attachments = Column(Text, nullable=True)
     
     # Thread relationship - many messages belong to one thread
     thread_id = Column(String(50), ForeignKey('threads.topic_id'), nullable=True, index=True)
@@ -394,6 +395,7 @@ class IllustratedMessage(Base):
     content = Column(Text, nullable=False)
     datetime = Column(DateTime(timezone=True), nullable=False, index=True)
     referenced_message_id = Column(String(50), nullable=True, index=True)
+    attachments = Column(Text, nullable=True)
     thread_id = Column(String(50), ForeignKey('threads.topic_id'), nullable=True, index=True)
     
     # Additional column from the view

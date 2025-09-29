@@ -12,6 +12,7 @@ CREATE OR REPLACE VIEW public.illustrated_messages
     m.datetime,
     m.referenced_message_id,
     m.parent_id,
+    m.attachments,
     m.thread_id,
     a.author_id,
     a.author_name,

@@ -13,3 +13,5 @@ CLAUDE.md
 data/
 images/
 
+configs/dict_uploaded_images.yaml
+cache_list_backup.json

@@ -4,6 +4,8 @@ pandas
 openpyxl
 google-genai
 google-api-core
+google-cloud
+google-cloud-storage
 pydantic
 rapidfuzz
 python-dotenv

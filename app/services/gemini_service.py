@@ -4,9 +4,10 @@ from google import genai
 from google.genai import types #import GenerationConfig, ThinkingConfig
 from app.models.pydantic_models import RawThreadList, ModifiedRawThreadList, ThreadList, TechnicalTopics, RevisedList
 import logging
-
+from google.cloud import storage
 #load_dotenv(dotenv_path)
 from dotenv import load_dotenv
+import yaml
 
 load_dotenv() # This loads variables from .env into the environment
 
@@ -27,19 +28,26 @@ gemini_client = genai.Client(
     location=LOCATION,
     )
 
-model_name = "gemini-2.5-flash"
+with open("configs/config.yaml", 'r') as stream:
+    config = yaml.safe_load(stream)
+model_name = config['llm']['model_name']
 
+gcs_bucket = storage.Client().bucket(config['images']['gcs_bucket_name'])
 
 config_step1 = types.GenerateContentConfig( 
     seed=42,
     temperature=1.0,
     response_mime_type="application/json",
+    media_resolution=types.MediaResolution.MEDIA_RESOLUTION_LOW,
+    response_modalities=["TEXT"],
     thinking_config=types.ThinkingConfig(thinking_budget=2000),
     response_schema=RawThreadList
     )
 config_addition_step1 = types.GenerateContentConfig(
     seed=42,
     temperature=1.0,
+    media_resolution=types.MediaResolution.MEDIA_RESOLUTION_LOW,
+    response_modalities=["TEXT"],
     response_mime_type="application/json",
     thinking_config=types.ThinkingConfig(thinking_budget=2000),
     response_schema=ModifiedRawThreadList
@@ -48,6 +56,8 @@ config_addition_step1 = types.GenerateContentConfig(
 config_step2 = types.GenerateContentConfig(
     seed=42,
     temperature= 1.0,
+    media_resolution=types.MediaResolution.MEDIA_RESOLUTION_LOW,
+    response_modalities=["TEXT"],
     response_mime_type= "application/json",
     thinking_config=types.ThinkingConfig(thinking_budget=1000),
     response_schema=TechnicalTopics
@@ -55,6 +65,8 @@ config_step2 = types.GenerateContentConfig(
 solution_config = types.GenerateContentConfig(
     seed=42,
     temperature= 0.5,
+    media_resolution=types.MediaResolution.MEDIA_RESOLUTION_LOW,
+    response_modalities=["TEXT"],   
     response_mime_type= "application/json",
     thinking_config=types.ThinkingConfig(thinking_budget=2500),
     response_schema=ThreadList
@@ -63,6 +75,8 @@ solution_config = types.GenerateContentConfig(
 revision_config = types.GenerateContentConfig(
     seed=42,
     temperature= 1.0,
+    media_resolution=types.MediaResolution.MEDIA_RESOLUTION_LOW,
+    response_modalities=["TEXT"],
     response_mime_type= "application/json",
     thinking_config=types.ThinkingConfig(thinking_budget=2000),
     response_schema=RevisedList

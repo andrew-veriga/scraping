@@ -9,29 +9,33 @@ system_prompt: |
   Output the information in the list of JSON objects.
 
 prompt_gathering_logic: |
-  The first step is to analyze the CSV table with flat list of messages from the  Discord Channel 'Sui Blockchain Support'.
+  The first step is to analyze the raw json data with flat list of messages and attached images from the  Discord Channel 'Sui Blockchain Support'.
   Your task is group all messages into threads hierarchically following the Gathering Logic:
   a) The first message in a topic must contain a question (contains "?"), or a description of the problem or a request for a solution to the problem, and must have an empty "Referenced Message ID" field. This is the beginning of a new topic and is the root of a hierarchically structured thread, parent_id is empty;
   b) the field Referenced Message ID define the message as a reply to referenced message. The reply must continue the existing thread and be a child node in the hierarchical structure of the thread, parent_id is equal to 'Referenced Message ID';
   c) consider a subsequent message from the same author for relatively short time interval (less than 30 minutes) with empty field Referenced Message ID as a continuation of the conversation if they likely are the addition clarifications, details, or context to the original question or problem statement. parent_id of such message is equal to the Message ID of the previous message from the same author;
   d) if message from the same author repeating the same question consider the message as a reminder and a follow-up of the conversation, parent_id of such message is equal to the Message ID of the previous message from the same author;
-  e) if a message doesn't have"Referenced Message ID" field and doesn't have tag < # someone>, is meaningfully similar to a recent message(several minutes have passed), answers a question asked in that message, or reports the same issue as that message, consider this message part of the same conversation, assign parent_id of this message is equal to the Message ID of that recent message what is answered or elaborated;
-  f) if a message contains a tag, defined like '<@(\d+)>', where tagged an author by 'Author ID', that author asked the question in the conversation and this message seems to be an answer to the author's question, set parent_id of such message is equal to the Message ID of the most recent message from the tagged author and consider the message as a follow-up for the conversation;
+  e) if a message contains a tag, defined like '<@(\d+)>', where tagged an author by 'Author ID', that author asked the question in the conversation and this message seems to be an answer to the author's question, set parent_id of such message is equal to the Message ID of the most recent message from the tagged author and consider the message as a follow-up for the conversation;
+  f) if a message doesn't have "Referenced Message ID" field and doesn't have tag < # someone>, is meaningfully similar to a recent message(several minutes have passed), answers a question asked in recent message, or reports the same issue as recent message, consider this message part of the same conversation, assign parent_id of this message is equal to the Message ID of that recent message what is answered or elaborated;
+  g) if a message contains a link to an image, consider this message part of the same conversation, assign parent_id of this message is equal to the Message ID of the previous message from the same author, describe the image in the content of the message;
   Assign a unique identifier to each thread equal to the Message ID of the first message in this thread (topic) and all other messages in the thread must have parent_id equals to the Message ID of some message in the thread.
 
 prompt_addition_step1: |
+  Keep the Gathering Logic in mind and apply it to each new message from the raw JSON data.
   Also you already have gathered threads from previous days:
   {JSON_prev}
-  The previous threads was gathered early by using the same Gatheing Logic.
+  The previous threads was gathered in advance using the same Gathering Logic, but can be supplemented with new messages from the raw JSON data.
   Your next task is:
-  find new messages from csv that have 'Referenced Message ID' and non yet gathered in the new threads,
-  find corresponding Message ID in message lists of previous threads from JSON and add found messages in there as a continue of conversations;
-  Set actual_date of each thread as a datetime of the last message in the whole thread.
-  Find other messages that fit mentioned Gatheing Logic. Each message must belong to only one topic.
+  find new messages from raw json data that have non empty 'Referenced Message ID' pointed to the message in the threads from previous days,
+  and add found messages in there as a continue of conversations following point b) of the Gathering Logic;
+  Check other new messages from raw json data for belonging to the threads from previous days by following points c), d), e) of the Gathering Logic;
+  each message must belong to only one topic and be a child node in the hierarchical structure of the thread.
+  Set actual_date of each thread as a last datetime of messages in the whole thread.
+
   Finally prepare output:
-  Only threads fully gathered from CSV table could get status 'new'.
-  Only threads contained both previous messages from json data and new messages from CSV table could get status 'modified'.
-  threads contained only previous messages from json data should get status 'persisted'.
+  Only threads fully gathered from raw json data could get status 'new'.
+  Only threads contained both previous messages from gathered threads and new messages from raw json data could get status 'modified'.
+  Threads contained only messages from previous gathered threads should get status 'persisted'.
 
 prompt_step_2: |
   Now you are in the step 2. Your current task is to define a list of keywords and phrases that are typical for technical issues in the context of the Sui blockchain. The list should include but not limited to:

@@ -83,7 +83,7 @@ class DatabaseService:
                 connect_args={
                     'sslmode': db_config.get('ssl_mode', 'prefer'),
                     'connect_timeout': db_config.get('connect_timeout', 30),
-                    'application_name': 'discord-sui-analyzer'
+                    'application_name': 'scraping'
                 }
             )
             
@@ -254,7 +254,8 @@ class DatabaseService:
             author_id=message_data['author_id'],
             content=message_data['content'],
             datetime=message_data['datetime'],
-            referenced_message_id=message_data.get('referenced_message_id', '')
+            referenced_message_id=message_data.get('referenced_message_id', ''),
+            attachments=message_data.get('attachments')
         )
         session.add(message)
         return message
@@ -343,6 +344,7 @@ class DatabaseService:
                                 content=message_data['content'],
                                 datetime=message_data['datetime'],
                                 referenced_message_id=message_data.get('referenced_message_id'),
+                                attachments=message_data.get('attachments'),
                                 thread_id=message_data.get('thread_id')
                             )
                             session.add(message)

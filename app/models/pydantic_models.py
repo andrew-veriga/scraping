@@ -105,6 +105,7 @@ class IDValidationMixin:
 class MessageNode(BaseModel, IDValidationMixin):
     message_id: str = Field( description="Unique identifier for the message")
     parent_id: Optional[str] = Field( description="Identifier of the parent message, if any")
+    image_summary: Optional[str] = Field( description="Description of image, if any")  
     # content: str = Field( description="Content of the message")
 
 class RawThreadList(BaseModel):

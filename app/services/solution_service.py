@@ -17,6 +17,7 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
     next_solutions_filename - file name of saved new solutions
     next_technical_filename - file name of adding raw threads with ThreadStatus.NEW and ThreadStatus.MODIFIED status
     """
+    # TODO add somewhere solution_service.check_in_rag_and_save(solutions_dict, adding_solutions_dict)
     prompts.reload_prompts()
     with open(next_solutions_filename, 'r') as f:
         next_solutions_list = json.load(f)
@@ -182,6 +183,7 @@ def check_in_rag_and_save(solutions_dict, new_solutions_for_add):
     """
     Check new solutions against RAG and add to solutions_dict if approved
     """
+    # TODO make new label for solution: duplicate or merged
     if not new_solutions_for_add:
         logging.info("No new solutions to check in RAG")
         return

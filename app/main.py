@@ -553,16 +553,28 @@ def iterate_final_threads(thread_data, db_service):
             if db_messages:
                 for db_message in db_messages:
                     message_id = db_message.message_id
-
-                    message_content = db_message.illustrated_message or db_message.content or "N/A"
+                    if db_message.content=='nan' or db_message.content=='':
+                        message_content = ""
+                    else:
+                        message_content = db_message.illustrated_message or db_message.content or "N/A"
                     topic_id = thread.get('topic_id') or thread.get('Topic_ID', 'N/A')
                     answer_id = thread.get('answer_id')
+                    # Convert attachments to markdown if they exist
+                    attachment_markdown = ""
+                    if db_message.attachments and db_message.attachments.strip() and db_message.attachments != 'No attachments':
+
+                        from app.services.pictured_messages import convert_attachments_to_markdown
+                        attachment_markdown = convert_attachments_to_markdown(db_message.attachments)
+                        if attachment_markdown:
+                            attachment_markdown = f"\n\n*attached*\n\n{attachment_markdown}\n\n"
+                    
                     if message_id == topic_id:
                         messages.append(f"- ({message_id}) - **Topic started** :{message_content} ")
                     elif message_id == answer_id:
-                        messages.append(f"- ({message_id}) **Answer** : {message_content}")
+                        messages.append(f"- ({message_id}) **Answer** : {message_content}{attachment_markdown}")
                     else:
-                        messages.append(f"- ({message_id}) {message_content} ")
+                        messages.append(f"- ({message_id}) {message_content}{attachment_markdown}")
+
                 markdown_output += "\n".join(messages)
             else:
                 markdown_output += "\n  N/A"

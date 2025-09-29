@@ -1,7 +1,6 @@
-
 import json
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import os
 from typing import Optional
 import pandas as pd
@@ -13,7 +12,9 @@ from app.services.database import get_database_service
 from app.models.pydantic_models import ThreadStatus
 from app.models.db_models import Message
 from app.utils.file_utils import *
-
+from google.genai.types import Content
+import yaml 
+from app.utils.yaml_file_utils import load_yaml_genai_files, save_yaml_genai_files
 
 def _create_thread_object(session, thread_id, thread_messages):
     """
@@ -63,23 +64,37 @@ def _create_thread_object(session, thread_id, thread_messages):
     
     return 0
 
-def first_thread_gathering(logs_df, prefix, save_path): 
+from app.services.pictured_messages import make_dataframe_parts, make_text_part
+
+from google.genai import types
+from datetime import datetime
+
+def first_thread_gathering(logs_df: pd.DataFrame, prefix: str, global_config: dict)->tuple[str, object]: 
     """
     Group messages into threads using LLM from DataFrame provided flat message list
     """
     prompts.reload_prompts()
-    logs_csv = logs_df.to_csv(index=False)
-    valid_ids_set = set(logs_df['Message ID'].astype(str))
 
-    processing_tracker = get_processing_tracker()
-    db_service = get_database_service()
+    save_path = global_config[f'SAVE_PATH']
+    valid_ids_set = set(logs_df['Message ID'].astype(str))
+    # Load dict_uploaded_images with proper error handling
+
+    parts, image_genai_cache = make_dataframe_parts(logs_df, global_config=global_config)
     
+    # Save with types.File object tags
+    
+    parts.extend([make_text_part(prompts.system_prompt),make_text_part(prompts.prompt_gathering_logic)])
+        
+        # Save with safe_dump to avoid Python object tags
+     # processing_tracker = get_processing_tracker()
+    db_service = get_database_service()
+
+    if image_genai_cache:
+        gemini_service.config_step1.cached_content = image_genai_cache
     response = gemini_service.generate_content(
         contents=[
-            logs_csv,
-            prompts.system_prompt,
-            prompts.prompt_gathering_logic
-            ],
+        Content(parts=parts, role="user"),
+        ],
         config=gemini_service.config_step1,
         valid_ids_set=valid_ids_set,
         log_prefix="First thread gathering:"
@@ -103,7 +118,11 @@ def first_thread_gathering(logs_df, prefix, save_path):
                 # Create Thread object in database
                 try:
                     thread_messages = [str(msg.message_id) for msg in thread.whole_thread]
-                    threads_created += _create_thread_object(session, thread_id, thread_messages)
+                    threads_created += _create_thread_object(
+                        session, 
+                        thread_id, 
+                        thread_messages
+                        )
                         
                 except Exception as e:
                     logging.warning(f"Could not create Thread object for {thread_id}: {e}")
@@ -150,13 +169,13 @@ def first_thread_gathering(logs_df, prefix, save_path):
                         'new_parent_id': llm_parent_id
                     }
                     
-                    processing_tracker.record_processing_step(
-                        session=session,
-                        message_id=db_message.message_id,
-                        processing_step=processing_tracker.STEPS['THREAD_GROUPING'],
-                        result=result,
-                        metadata={'batch_prefix': prefix, 'processing_type': 'first_batch'}
-                    )
+                    # processing_tracker.record_processing_step(
+                    #     session=session,
+                    #     message_id=db_message.message_id,
+                    #     processing_step=processing_tracker.STEPS['THREAD_GROUPING'],
+                    #     result=result,
+                    #     metadata={'batch_prefix': prefix, 'processing_type': 'first_batch'}
+                    # )
             
             # # Recalculate hierarchy metadata after LLM updates
             # if parent_id_updates > 0:
@@ -181,9 +200,9 @@ def first_thread_gathering(logs_df, prefix, save_path):
         json.dump(threads_list_dict, f, indent=4, default=convert_datetime_to_str)
     logging.info(f"Start step 1. Processed {len(logs_df)} messages")
     logging.info(f"Successfully saved {len(response.threads)} grouped threads to {output_filename}")
-    return full_path
+    return full_path, image_genai_cache
 
-def filter_technical_threads(filename, prefix: str, save_path):
+def filter_technical_threads(filename: str, prefix: str, save_path: str):
     """
     Extract technical topics from JSON file using LLM with DataFrame logs provided full texts of messages
     return only technical threads
@@ -195,7 +214,7 @@ def filter_technical_threads(filename, prefix: str, save_path):
     db_service = get_database_service()
 
     processed_threads = illustrated_threads(threads_json_data, db_service)
-    processing_tracker = get_processing_tracker()
+    # processing_tracker = get_processing_tracker()
 
     response = gemini_service.generate_content(
         contents=[
@@ -216,14 +235,14 @@ def filter_technical_threads(filename, prefix: str, save_path):
             for thread in processed_threads:
                 thread_id = thread.get('topic_id') or thread.get('Topic_ID')
                 is_technical = thread_id in response.technical_topics
-                if is_technical:
-                    processing_tracker.annotate_message(
-                        session=session,
-                        message_id=thread_id,
-                        annotation_type=processing_tracker.ANNOTATION_TYPES['TECHNICAL'],
-                        annotation_value={'thread_id': thread_id, 'indicators': thread.get('technical_indicators', [])},
-                        annotated_by='gemini_ai'
-                    )
+                # if is_technical:
+                    # processing_tracker.annotate_message(
+                    #     session=session,
+                    #     message_id=thread_id,
+                    #     annotation_type=processing_tracker.ANNOTATION_TYPES['TECHNICAL'],
+                    #     annotation_value={'thread_id': thread_id, 'indicators': thread.get('technical_indicators', [])},
+                    #     annotated_by='gemini_ai'
+                    # )
                 # Update Thread object with technical classification
                 from app.models.db_models import Thread
                 db_thread = session.query(Thread).filter(Thread.topic_id == thread_id).first()
@@ -234,28 +253,28 @@ def filter_technical_threads(filename, prefix: str, save_path):
                         threads_updated += 1
                         logging.info(f"Updated Thread {thread_id}: is_technical = {is_technical}")
                 
-                whole_thread = (thread.get('whole_thread') or thread.get('whole_thread', []))
-                for msg in whole_thread:
-                    msg_id = str(msg['message_id'])
-                    db_message = session.query(Message).filter(
-                        Message.message_id == msg_id
-                    ).first()
+                # whole_thread = thread.get('whole_thread', [])
+                # for msg in whole_thread:
+                #     msg_id = str(msg['message_id'])
+                #     db_message = session.query(Message).filter(
+                #         Message.message_id == msg_id
+                #     ).first()
                     
-                    if db_message:
-                        result = {
-                            'is_technical': is_technical,
-                            'thread_id': thread_id,
-                            'technical_keywords_found': thread.get('technical_indicators', []),
-                            'filtering_method': 'llm_analysis'
-                        }
+                #     if db_message:
+                #         result = {
+                #             'is_technical': is_technical,
+                #             'thread_id': thread_id,
+                #             'technical_keywords_found': thread.get('technical_indicators', []),
+                #             'filtering_method': 'llm_analysis'
+                #         }
                         
-                        processing_tracker.record_processing_step(
-                            session=session,
-                            message_id=db_message.message_id,
-                            processing_step=processing_tracker.STEPS['TECHNICAL_FILTERING'],
-                            result=result,
-                            metadata={'batch_prefix': prefix}
-                        )
+                #         processing_tracker.record_processing_step(
+                #             session=session,
+                #             message_id=db_message.message_id,
+                #             processing_step=processing_tracker.STEPS['TECHNICAL_FILTERING'],
+                #             result=result,
+                #             metadata={'batch_prefix': prefix}
+                #         )
                         
             
             session.commit()
@@ -274,7 +293,7 @@ def filter_technical_threads(filename, prefix: str, save_path):
     logging.info(f"Successfully saved {len(technical_threads)} filtered threads to {output_filename}")
     return full_path
 
-def generalization_solution(filename,prefix: str, save_path):
+def generalization_solution(filename: str,prefix: str, save_path: str):
     """
     Generalize technical topics from JSON file using LLM
     Create "header" and "solution" fields
@@ -292,7 +311,7 @@ def generalization_solution(filename,prefix: str, save_path):
         valid_ids_set = valid_ids_set.union(set([msg['message_id'] for msg in whole_thread]))
         text_threads[key] = t['whole_thread']
 
-    processing_tracker = get_processing_tracker()
+    # processing_tracker = get_processing_tracker()
     db_service = get_database_service()
         
     response_solutions = gemini_service.generate_content( 
@@ -336,38 +355,38 @@ def generalization_solution(filename,prefix: str, save_path):
                     threads_updated += 1
                     
                     logging.info(f"Updated Thread {thread_id} with solution: {solution_thread.header[:50]}...")
-
-                for msg in whole_thread:
-                    msg_id = str(msg['message_id'])
-                    db_message = session.query(Message).filter(
-                        Message.message_id == msg_id
-                    ).first()
+                # for tracking
+                # for msg in whole_thread:
+                #     msg_id = str(msg['message_id'])
+                #     db_message = session.query(Message).filter(
+                #         Message.message_id == msg_id
+                #     ).first()
                     
-                    if db_message:
-                        result = {
-                            'solution_generated': True,
-                            'thread_id': thread_id,
-                            'solution_header': solution_thread.header,
-                            'solution_label': solution_thread.label,
-                            'extraction_method': 'llm_analysis'
-                        }
+                #     if db_message:
+                #         result = {
+                #             'solution_generated': True,
+                #             'thread_id': thread_id,
+                #             'solution_header': solution_thread.header,
+                #             'solution_label': solution_thread.label,
+                #             'extraction_method': 'llm_analysis'
+                #         }
                         
-                        processing_tracker.record_processing_step(
-                            session=session,
-                            message_id=db_message.message_id,
-                            processing_step=processing_tracker.STEPS['SOLUTION_EXTRACTION'],
-                            result=result,
-                            metadata={'batch_prefix': prefix, 'solution_id': thread_id}
-                        )
+                #         processing_tracker.record_processing_step(
+                #             session=session,
+                #             message_id=db_message.message_id,
+                #             processing_step=processing_tracker.STEPS['SOLUTION_EXTRACTION'],
+                #             result=result,
+                #             metadata={'batch_prefix': prefix, 'solution_id': thread_id}
+                #         )
                         
-                        if msg_id == solution_thread.answer_id:
-                            processing_tracker.annotate_message(
-                                session=session,
-                                message_id=db_message.message_id,
-                                annotation_type=processing_tracker.ANNOTATION_TYPES['SOLUTION'],
-                                annotation_value={'is_answer': True, 'thread_id': thread_id},
-                                annotated_by='gemini_ai'
-                            )
+                #         if msg_id == solution_thread.answer_id:
+                #             processing_tracker.annotate_message(
+                #                 session=session,
+                #                 message_id=db_message.message_id,
+                #                 annotation_type=processing_tracker.ANNOTATION_TYPES['SOLUTION'],
+                #                 annotation_value={'is_answer': True, 'thread_id': thread_id},
+                #                 annotated_by='gemini_ai'
+                #             )
             
             session.commit()
             logging.info(f"solution extraction completed:")
@@ -384,7 +403,7 @@ def generalization_solution(filename,prefix: str, save_path):
     logging.info(f"Successfully saved {len(solutions_list)} threads to {output_filename}")
     return full_path
 
-def next_thread_gathering(next_batch_df, lookback_date, str_interval, save_path, messages_df):
+def next_thread_gathering(next_batch_df: pd.DataFrame, lookback_date: pd.Timestamp, str_interval: str, save_path: str):
     """
     Gather next batch of messages into raw threads for processing
     """
@@ -395,14 +414,15 @@ def next_thread_gathering(next_batch_df, lookback_date, str_interval, save_path,
     illustrated_messages_dict = bulk_illustrated_messages(valid_ids_set, db_service)
     next_batch_df['Content'] = next_batch_df['Message ID'].map(illustrated_messages_dict)
      # Define the columns you want to keep
-    columns_to_keep =  ['Message ID', 'Content', 'Referenced Message ID']
+    columns_to_keep =  ['Message ID', 'Content', 'Referenced Message ID', 'DateTime', 'Author ID', 'Parent ID', 'Attachments']
     
     # Filter the DataFrame
     filtered_df = next_batch_df[columns_to_keep]
     
     # Export to CSV
+    # TODO: replace to make_dataframe_parts function
     next_batch_csv = filtered_df.to_csv(index=False)
-    previous_threads_text = []
+
     with db_service.get_session() as session:
         lookback_threads = db_service.get_latest_threads_from_actual_date(session, lookback_date)
         # Convert SQLAlchemy Thread objects to dictionaries
@@ -424,22 +444,6 @@ def next_thread_gathering(next_batch_df, lookback_date, str_interval, save_path,
             valid_ids_set.update([msg.message_id for msg in thread.messages])
 
         previous_threads = illustrated_threads(lookback_threads_dict, db_service)
-        # for thread in lookback_threads:
-        #     illustrated_thread = illustrated_threads(lookback_threads, db_service)
-        #     whole_thread = thread.messages
-        #     whole_thread_ids = [msg.message_id for msg in whole_thread]
-        #     messages = []
-        #     if whole_thread_ids:
-        #         valid_ids_set = valid_ids_set.union(set(whole_thread_ids))
-        #         for message_id in whole_thread_ids:
-        #             message_content = illustrated_message(message_id, db_service, session)
-        #             if message_id == thread.topic_id:
-        #                 messages.append(f"- ({message_id}) - **Topic started** :{message_content} ")
-        #             else:
-        #                 messages.append(f"- ({message_id}) {message_content} ")
-
-        #     previous_threads_text.append(f"Topic: {thread.topic_id} - {thread.actual_date} \n" + "\n".join(messages))
-
     
     text_previous_threads = [json.dumps(thread, indent=2) for thread in previous_threads]
     
@@ -465,7 +469,7 @@ def next_thread_gathering(next_batch_df, lookback_date, str_interval, save_path,
     logging.info(f"Added {cnt_new} new threads. Modified {cnt_modified} threads created before {str_interval}.")
 
     # Create/Update Thread objects in database
-    processing_tracker = get_processing_tracker()
+    # processing_tracker = get_processing_tracker()
     threads_created = 0
     threads_updated = 0
     
@@ -533,19 +537,19 @@ def next_thread_gathering(next_batch_df, lookback_date, str_interval, save_path,
                         parent_id_updates += 1
                         logging.info(f"Updated parent_id for {message_id_str}: {old_parent} -> {llm_parent_id}")
                         
-                    # Record processing step
-                    processing_tracker.record_processing_step(
-                        session=session,
-                        message_id=db_message.message_id,
-                        processing_step=processing_tracker.STEPS['THREAD_GROUPING'],
-                        result={
-                            'assigned_to_thread': thread_id,
-                            'thread_grouping_method': 'llm_incremental_analysis',
-                            'parent_id_updated': llm_parent_id != old_parent if 'old_parent' in locals() else False,
-                            'new_parent_id': llm_parent_id
-                        },
-                        metadata={'batch_prefix': str_interval, 'processing_type': 'incremental_batch'}
-                    )
+                    # Record processing step for tracking
+                    # processing_tracker.record_processing_step(
+                    #     session=session,
+                    #     message_id=db_message.message_id,
+                    #     processing_step=processing_tracker.STEPS['THREAD_GROUPING'],
+                    #     result={
+                    #         'assigned_to_thread': thread_id,
+                    #         'thread_grouping_method': 'llm_incremental_analysis',
+                    #         'parent_id_updated': llm_parent_id != old_parent if 'old_parent' in locals() else False,
+                    #         'new_parent_id': llm_parent_id
+                    #     },
+                    #     metadata={'batch_prefix': str_interval, 'processing_type': 'incremental_batch'}
+                    # )
             
             ### changes and additions to session are not saved here
             session.commit()

@@ -29,7 +29,7 @@ def load_and_preprocess_data(file_path: str) -> Tuple[pd.DataFrame, pd.DataFrame
             'Content': str
         }, 
         engine='openpyxl',  # Use openpyxl engine for better Unicode support
-        na_values=['', ' ', '\u200b', '\u200c', '\u200d'],  # Treat zero-width spaces as NaN
+        na_values=['', 'nan', ' ', '\u200b', '\u200c', '\u200d'],  # Treat zero-width spaces as NaN
         keep_default_na=True,   # Keep default NaN handling
     )
        # Clean zero-width spaces from all string columns
@@ -45,11 +45,11 @@ def load_and_preprocess_data(file_path: str) -> Tuple[pd.DataFrame, pd.DataFrame
     messages_df['Author ID'] = messages_df['Author ID'].astype(str)
     
     # Convert timestamps
-    messages_df['DateTime'] = pd.to_datetime(messages_df['Unix Timestamp'], unit='s', utc=True)
-    
-    # Remove Unix Timestamp column (no longer needed)
-    messages_df = messages_df.drop(columns=['Unix Timestamp'], errors='ignore')
-    
+    if 'Unix Timestamp' in messages_df.columns:
+        messages_df['DateTime'] = pd.to_datetime(messages_df['Unix Timestamp'], unit='s', utc=True)
+        # Remove Unix Timestamp column (no longer needed)
+        messages_df = messages_df.drop(columns=['Unix Timestamp'], errors='ignore')
+        # else DataTime already exists
     # Set Message ID as index for easy lookup
     messages_df.set_index('Message ID', inplace=True, drop=False)
     
@@ -92,6 +92,7 @@ def load_messages_to_database(messages_df: pd.DataFrame) -> Dict[str, int]:
                 'content': str(row['Content']),
                 'datetime': row['DateTime'],
                 'referenced_message_id': str(row['Referenced Message ID']) if pd.notna(row['Referenced Message ID']) and row['Referenced Message ID'] else None,
+                'attachments': str(row.get('Attachments', '')) if pd.notna(row.get('Attachments')) and row.get('Attachments') else None,
                 'thread_id': str(row['thread_id']) if pd.notna(row.get('thread_id')) and row.get('thread_id') else None
             }
             messages_data.append(message_data)

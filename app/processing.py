@@ -63,7 +63,7 @@ def initial_full_loading_raw_data(messages_file_path: str) -> Dict[str, Any]:
         
     except Exception as e:
         error_msg = f"Failed to load Discord data from {messages_file_path}: {e}"
-        logging.error(f"❌ {error_msg}")
+        logging.error(f"❌ {error_msg}", exc_info=True)
         result_stats['data_loading'] = {'status': 'failed', 'error': str(e)}
         return {
             'messages_df': None,
@@ -89,7 +89,7 @@ def initial_full_loading_raw_data(messages_file_path: str) -> Dict[str, Any]:
         
     except Exception as e:
         error_msg = f"Failed to load authors to database: {e}"
-        logging.error(f"❌ {error_msg}")
+        logging.error(f"❌ {error_msg}", exc_info=True)
         result_stats['database_operations'] = {'status': 'failed', 'error': str(e)}
         return {
             'messages_df': messages_df,
@@ -191,7 +191,7 @@ def process_first_batch(config: Dict[str, Any]) -> Dict[str, Any]:
             logging.info(f"✅ Database loading complete - {db_stats.get('new_messages_created', 0)} messages loaded")
             
         except Exception as e:
-            logging.error(f"❌ Failed to load messages to database: {e}")
+            logging.error(f"❌ Failed to load messages to database: {e}", exc_info=True)
             result_stats['database_operations'] = {'status': 'failed', 'error': str(e)}
             raise HTTPException(status_code=500, detail=f"Failed to load messages to database: {e}")
         
@@ -218,11 +218,11 @@ def process_first_batch(config: Dict[str, Any]) -> Dict[str, Any]:
         try:
             logging.info("🤖 Step 5: LLM Thread Gathering - Grouping messages into conversation threads...")
             str_interval = f"{start_date.date()}-{end_date.date()}"
-            step1_output_filename = thread_service.first_thread_gathering(first_batch_df, f"first_{str_interval}", SAVE_PATH)
+            step1_output_filename, image_genai_cache = thread_service.first_thread_gathering(first_batch_df, f"first_{str_interval}", config)
             logging.info(f"✅ LLM thread gathering completed")
-            
+            config['image_genai_cache'] = image_genai_cache
         except Exception as e:
-            logging.error(f"❌ Failed LLM thread gathering: {e}")
+            logging.error(f"❌ Failed LLM thread gathering: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Failed LLM thread gathering: {e}")
 
         # Step 6: Technical Topic Filtering
@@ -252,7 +252,7 @@ def process_first_batch(config: Dict[str, Any]) -> Dict[str, Any]:
         # Step 8: RAG Duplicate Checking and Database Update
         try:
             logging.info("🔍 Step 8: RAG duplicate checking and database storage...")
-            solutions_dict = solution_service.check_in_rag_and_save({}, first_solutions_dict)
+            solutions_dict = first_solutions_dict #solution_service.check_in_rag_and_save({}, first_solutions_dict)
             save_solutions_dict(solutions_dict, config)
             solution_service.update_database_with_solutions(solutions_dict)
             logging.info(f"✅ RAG processing completed - {len(solutions_dict)} unique solutions saved to database")
@@ -339,7 +339,7 @@ def process_batch(solutions_dict, lookback_date:pd.Timestamp, next_start_date: p
         batch_id = processing_batch.id
         logging.info(f"Created incremental processing batch record with ID: {batch_id}")
 
-    next_step1_output_filename = thread_service.next_thread_gathering(next_batch_df, lookback_date, str_interval, config['SAVE_PATH'], messages_df)
+    next_step1_output_filename = thread_service.next_thread_gathering(next_batch_df, lookback_date, str_interval, config['SAVE_PATH'])
     next_technical_filename = thread_service.filter_technical_threads(next_step1_output_filename, f"next_{str_interval}", config['SAVE_PATH'])
     next_solutions_filename = thread_service.generalization_solution(next_technical_filename, f"next_{str_interval}", config['SAVE_PATH'])
 
@@ -347,7 +347,7 @@ def process_batch(solutions_dict, lookback_date:pd.Timestamp, next_start_date: p
 
     initial_solution_count = len(solutions_dict)
     
-    solutions_dict = solution_service.check_in_rag_and_save(solutions_dict, adding_solutions_dict)
+    solutions_dict = adding_solutions_dict #solution_service.check_in_rag_and_save(solutions_dict, adding_solutions_dict)
     
     save_solutions_dict(solutions_dict, config)
     
