@@ -6,7 +6,7 @@ from app.services import prompts
 from app.services.rag_service import get_rag_service
 from app.services.database import get_database_service
 from app.models.pydantic_models import RevisedStatus, ThreadStatus, SolutionStatus
-from app.utils.file_utils import add_or_update_solution, create_dict_from_list, add_new_solutions_to_dict
+from app.utils.file_utils import add_or_update_solution, create_dict_from_list, add_new_solutions_to_dict, convert_str_to_Timestamp
 from app.services import gemini_service
 from app.models.db_models import Solution
 
