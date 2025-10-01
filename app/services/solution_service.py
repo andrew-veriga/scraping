@@ -20,7 +20,7 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
     # TODO add somewhere solution_service.check_in_rag_and_save(solutions_dict, adding_solutions_dict)
     prompts.reload_prompts()
     with open(next_solutions_filename, 'r') as f:
-        next_solutions_list = json.load(f)
+        next_solutions_list = json.load(f,object_hook=convert_str_to_Timestamp)
 
     prev_solution_dict = {}
     for topic_id, solution in solutions_dict.items():
@@ -30,7 +30,7 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
     new_solution_dict = create_dict_from_list(next_solutions_list)
 
     with open(next_technical_filename, 'r') as f:
-        adding_threads = json.load(f)
+        adding_threads = json.load(f,object_hook=convert_str_to_Timestamp)
 
     modified_threads = [t.get('topic_id') for t in adding_threads if t['status']==ThreadStatus.MODIFIED]
 
@@ -41,6 +41,7 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
         modified_pairs = {}
         for m in modified_threads:
             if m not in prev_solution_dict:
+                ######## here we can have a case when the topic is modified but not found in previous solutions ########
                 logging.warning(f"Topic {m} marked as modified but not found in previous solutions")
                 continue
             if m not in new_solution_dict:

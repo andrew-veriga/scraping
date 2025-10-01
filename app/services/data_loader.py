@@ -1,6 +1,7 @@
 import pandas as pd
 import logging
 from typing import Dict, Any, List, Tuple
+from datetime import timezone
 
 def is_admin(message_ID):
     if message_ID in [
@@ -21,7 +22,7 @@ def load_and_preprocess_data(file_path: str) -> Tuple[pd.DataFrame, pd.DataFrame
     
     # Load the Excel data with proper data types
     messages_df = pd.read_excel(
-        file_path, 
+        file_path,
         dtype={
             'Referenced Message ID': str, 
             'Message ID': str, 
@@ -49,7 +50,14 @@ def load_and_preprocess_data(file_path: str) -> Tuple[pd.DataFrame, pd.DataFrame
         messages_df['DateTime'] = pd.to_datetime(messages_df['Unix Timestamp'], unit='s', utc=True)
         # Remove Unix Timestamp column (no longer needed)
         messages_df = messages_df.drop(columns=['Unix Timestamp'], errors='ignore')
-        # else DataTime already exists
+    elif 'DateTime' in messages_df.columns:
+        # If DateTime column already exists, ensure it's timezone-aware
+        messages_df['DateTime'] = pd.to_datetime(messages_df['DateTime'])
+        if messages_df['DateTime'].dt.tz is None:
+            messages_df['DateTime'] = messages_df['DateTime'].dt.tz_localize('UTC')
+        else:
+            # If already timezone-aware, convert to UTC
+            messages_df['DateTime'] = messages_df['DateTime'].dt.tz_convert('UTC')
     # Set Message ID as index for easy lookup
     messages_df.set_index('Message ID', inplace=True, drop=False)
     

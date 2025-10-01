@@ -5,7 +5,7 @@ import os
 import requests
 import uuid
 from google.cloud import storage
-
+from datetime import timezone
 with open("configs/config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
 
@@ -74,8 +74,10 @@ def extract_pics():
             if len(saved_paths) > 0:
                 messages_df.loc[messages_df['Message ID'] == message['Message ID'], 'Attachments'] = ';'.join(saved_paths)
 
-    messages_df['DateTime'] = messages_df['DateTime'].dt.tz_localize(None)
-    messages_df.to_excel('.\\data\\discord_messages_names_gcs_pics.xlsx', index=False)
+    # Convert to timezone-naive for Excel compatibility, but keep original timezone-aware version
+    messages_df_excel = messages_df.copy()
+    messages_df_excel['DateTime'] = messages_df_excel['DateTime'].dt.tz_localize(timezone.utc)
+    messages_df_excel.to_excel('.\\data\\discord_messages_names_gcs_pics.xlsx', index=False)
 
 def delete_old_files(target_date_str = '2025-09-23 18:17'):
     import datetime
@@ -183,11 +185,12 @@ def convert_gs_to_public_urls_in_excel():
         print(f"Rows updated: {rows_updated}")
         
         try:
-            # Handle datetime columns if they exist
-            if 'DateTime' in messages_df.columns:
-                messages_df['DateTime'] = pd.to_datetime(messages_df['DateTime']).dt.tz_localize(None)
+            # Handle datetime columns if they exist - convert to timezone-naive for Excel compatibility
+            messages_df_excel = messages_df.copy()
+            if 'DateTime' in messages_df_excel.columns:
+                messages_df_excel['DateTime'] = pd.to_datetime(messages_df_excel['DateTime']).dt.tz_localize(timezone.utc)
             
-            messages_df.to_excel(excel_file_path, index=False)
+            messages_df_excel.to_excel(excel_file_path, index=False)
             print(f"Successfully saved updated file: {excel_file_path}")
             
         except Exception as e:
@@ -268,11 +271,12 @@ def convert_public_to_gs_urls_in_excel():
         print(f"Rows updated: {rows_updated}")
         
         try:
-            # Handle datetime columns if they exist
-            if 'DateTime' in messages_df.columns:
-                messages_df['DateTime'] = pd.to_datetime(messages_df['DateTime']).dt.tz_localize(None)
+            # Handle datetime columns if they exist - convert to timezone-naive for Excel compatibility
+            messages_df_excel = messages_df.copy()
+            if 'DateTime' in messages_df_excel.columns:
+                messages_df_excel['DateTime'] = pd.to_datetime(messages_df_excel['DateTime']).dt.tz_localize(None)
             
-            messages_df.to_excel(excel_file_path, index=False)
+            messages_df_excel.to_excel(excel_file_path, index=False)
             print(f"Successfully saved updated file: {excel_file_path}")
             
         except Exception as e:

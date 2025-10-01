@@ -11,6 +11,7 @@ from app.services.database import get_database_service
 from app.services import gemini_service
 from app.models.db_models import Thread, Message, ThreadMessage, LLMCache, Solution
 from app.models.pydantic_models import RawThreadList, TechnicalTopics, ThreadList
+from app.utils.file_utils import convert_Timestamp_to_str
 
 
 class LLMOptimizer:
@@ -110,7 +111,7 @@ class LLMOptimizer:
                                {'threads': threads_list_dict})
             
             # Save result
-            output_filename = f'{batch_type}_group_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.json'
+            output_filename = f'{batch_type}_group_{convert_Timestamp_to_str(datetime.now())}.json'
             full_path = self._save_result(threads_list_dict, save_path, output_filename)
             
             self.logger.info(f"Optimized thread gathering: processed {len(messages_df)} messages")
@@ -176,7 +177,7 @@ class LLMOptimizer:
                         technical_threads.append(thread_data)
             
             # Save result
-            output_filename = f'{batch_type}_technical_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.json'
+            output_filename = f'{batch_type}_technical_{convert_Timestamp_to_str(datetime.now())}.json'
             full_path = self._save_result(technical_threads, save_path, output_filename)
             
             self.logger.info(f"Optimized technical filtering: {len(response.technical_topics)} technical from {len(thread_ids)} threads")
@@ -236,7 +237,7 @@ class LLMOptimizer:
                 self.logger.info(f"Processed batch {i // self.batch_size + 1}/{(len(technical_threads) - 1) // self.batch_size + 1}")
             
             # Save all solutions
-            output_filename = f'{batch_type}_solutions_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}.json'
+            output_filename = f'{batch_type}_solutions_{convert_Timestamp_to_str(datetime.now())}.json'
             full_path = self._save_result(all_solutions, save_path, output_filename)
             
             self.logger.info(f"Optimized solution generation: {len(all_solutions)} solutions from {len(technical_threads)} threads")
@@ -282,23 +283,26 @@ class LLMOptimizer:
                                              response_data, self.cache_ttl_hours)
         except Exception as e:
             self.logger.error(f"Failed to cache response: {e}")
-    
+
+    def _convert_Timestamp_to_str(self, obj):
+        """Convert Timestamp to string."""
+        return convert_Timestamp_to_str(obj)
+   
     def _save_result(self, data: List[Dict[str, Any]], save_path: str, filename: str) -> str:
         """Save result to file."""
         import os
         import json
-        from app.utils.file_utils import convert_datetime_to_str
         
         full_path = os.path.join(save_path, filename)
         with open(full_path, 'w') as f:
-            json.dump(data, f, indent=2, default=convert_datetime_to_str)
+            json.dump(data, f, indent=2, default=convert_Timestamp_to_str)
         
         return full_path
     
     def _save_cached_result(self, cached_data: Dict[str, Any], save_path: str, 
                            operation_type: str) -> str:
         """Save cached result to file."""
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        timestamp = convert_Timestamp_to_str(datetime.now())
         filename = f"cached_{operation_type}_{timestamp}.json"
         
         # Extract the relevant data based on operation type

@@ -9,7 +9,10 @@ from app.utils.file_utils import (
     save_solutions_dict,
     create_dict_from_list,
     get_latest_normalized_date,
-    set_latest_solution_date
+    set_latest_solution_date,
+    convert_str_to_Timestamp, 
+    add_new_solutions_to_dict,
+    convert_Timestamp_to_str
     )
 from app.services.database import get_database_service
 from app.models.pydantic_models import SolutionStatus
@@ -136,7 +139,6 @@ def process_first_batch(config: Dict[str, Any]) -> Dict[str, Any]:
     """
     # Extract configuration
     INTERVAL_FIRST = config.get('INTERVAL_FIRST', 2)  # days for first batch
-    SOLUTIONS_DICT_FILENAME = config['SOLUTIONS_DICT_FILENAME']
     SAVE_PATH = config['SAVE_PATH']
     MESSAGES_FILE_PATH = config['MESSAGES_FILE_PATH']
 
@@ -241,7 +243,7 @@ def process_first_batch(config: Dict[str, Any]) -> Dict[str, Any]:
             first_solutions_filename = thread_service.generalization_solution(first_technical_filename, f"first_{str_interval}", SAVE_PATH)
             
             # Load solutions from file and convert to dict format
-            solutions_list = json.load(open(first_solutions_filename, 'r'))
+            solutions_list = json.load(open(first_solutions_filename, 'r'),object_hook=convert_str_to_Timestamp)
             first_solutions_dict = create_dict_from_list(solutions_list)
             logging.info(f"✅ Solution generalization completed - {len(first_solutions_dict)} solutions extracted")
             
@@ -339,32 +341,79 @@ def process_batch(solutions_dict, lookback_date:pd.Timestamp, next_start_date: p
         batch_id = processing_batch.id
         logging.info(f"Created incremental processing batch record with ID: {batch_id}")
 
-    next_step1_output_filename = thread_service.next_thread_gathering(next_batch_df, lookback_date, str_interval, config['SAVE_PATH'])
-    next_technical_filename = thread_service.filter_technical_threads(next_step1_output_filename, f"next_{str_interval}", config['SAVE_PATH'])
-    next_solutions_filename = thread_service.generalization_solution(next_technical_filename, f"next_{str_interval}", config['SAVE_PATH'])
+    next_step1_output_filename = thread_service.next_thread_gathering(
+        next_batch_df,
+        lookback_date,
+        str_interval,
+        config
+    )
+    next_technical_filename = thread_service.filter_technical_threads(
+        next_step1_output_filename, 
+        f"next_{str_interval}",
+        config['SAVE_PATH']
+    )
+    next_solutions_filename = thread_service.generalization_solution(
+        next_technical_filename,
+         f"next_{str_interval}", 
+         config['SAVE_PATH']
+    )
+    adding_solutions_dict = solution_service.new_solutions_revision_and_add(
+        next_solutions_filename, 
+        next_technical_filename, 
+        solutions_dict, 
+        lookback_date
+    )
+    # Process update of the solutions dictionary and database
+    process_solutions_update(
+        adding_solutions_dict,
+        solutions_dict, 
+        config, 
+        batch_id
+    )
+    
+    return True
 
-    adding_solutions_dict = solution_service.new_solutions_revision_and_add(next_solutions_filename, next_technical_filename, solutions_dict, lookback_date)
+
+def process_solutions_update(
+    adding_solutions_dict:dict,
+    solutions_dict: dict,
+    config: dict,
+    batch_id: int
+) -> None:
+    """
+    Process update of the solutions dictionary and database.
+    
+    Args:
+        adding_solutions_dict: Dictionary of new and modified solutions
+        solutions_dict: Current solutions dictionary (modified in-place)
+        config: Configuration dictionary
+        batch_id: Database batch ID for tracking
+    """
+    db_service = get_database_service()
+    
+    # Update database with new solutions
+    solution_service.update_database_with_solutions(adding_solutions_dict)    
 
     initial_solution_count = len(solutions_dict)
     
-    solutions_dict = adding_solutions_dict #solution_service.check_in_rag_and_save(solutions_dict, adding_solutions_dict)
+    add_new_solutions_to_dict(solutions_dict, adding_solutions_dict) #solution_service.check_in_rag_and_save(solutions_dict, adding_solutions_dict)
     
+    # Save updated solutions dictionary
     save_solutions_dict(solutions_dict, config)
+
     
-    solution_service.update_database_with_solutions(adding_solutions_dict)
-    
+    # Complete the processing batch
     with db_service.get_session() as session:
         new_solution_count = len(solutions_dict) - initial_solution_count
 
         batch_stats = {
-            'status': 'completed'
+            'status': 'completed',
+            'new_solutions_added': new_solution_count,
+            'total_solutions': len(solutions_dict)
         }
         db_service.complete_processing_batch(session, batch_id, batch_stats)
         session.commit()
         logging.info(f"Completed processing batch {batch_id} with stats: {batch_stats}")
-    
-    return True
-
 
 def process_next_batches(config):
     try:
@@ -387,7 +436,7 @@ def process_next_batches(config):
         else:
             messages_df, _ = data_loader.load_and_preprocess_data(MESSAGES_FILE_PATH)
 
-        solutions_dict = load_solutions_dict(SOLUTIONS_DICT_FILENAME, SAVE_PATH)
+        solutions_dict = load_solutions_dict(config)
         
         # Get latest solution date from database instead of file
 
@@ -398,13 +447,13 @@ def process_next_batches(config):
             next_end_date = messages_df['DateTime'].min().normalize() + pd.Timedelta(days=INTERVAL_FIRST)
 
         while True:
-            next_start_date = next_end_date
+            next_start_date = pd.Timestamp(next_end_date)#.tz_localize(timezone.utc)
             lookback_date = next_start_date - pd.Timedelta(days=INTERVAL_BACK)
             next_end_date = next_start_date + pd.Timedelta(days=INTERVAL_NEXT)
 
-            if next_start_date > messages_df['DateTime'].max():
+            if next_start_date > messages_df['DateTime'].max():#.tz_localize(timezone.utc):
                 break
-            logging.info("##" * 60)
+            print("##" * 60)
             logging.info(f"Processing batch. Lookback: {lookback_date}, Start: {next_start_date}, End: {next_end_date}")
             if not process_batch(solutions_dict, lookback_date, next_start_date, next_end_date, messages_df, config):
                 logging.info(f"No messages in the interval: {next_start_date} to {next_end_date}")

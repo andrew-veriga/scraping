@@ -22,7 +22,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.services.database import get_database_service
 from app.services.rag_service import get_rag_service
 from app.services.data_loader import load_and_preprocess_data
-from app.utils.file_utils import load_solutions_dict, convert_datetime_to_str
+from app.utils.file_utils import load_solutions_dict
 from app.models.db_models import Message, Thread, ThreadMessage, Solution, ProcessingBatch
 from app.models.pydantic_models import ThreadStatus, SolutionStatus
 
@@ -120,7 +120,7 @@ class DataMigrator:
             self.logger.info("Migrating solutions from JSON file...")
             
             # Load existing solutions
-            solutions_dict = load_solutions_dict('solutions_dict.json', self.save_path)
+            solutions_dict = load_solutions_dict(self.config)
             self.logger.info(f"Loaded {len(solutions_dict)} solutions from JSON")
             
             with self.db_service.get_session() as session:

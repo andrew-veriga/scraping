@@ -159,7 +159,7 @@ class ThreadList(BaseModel):
     class Thread(BaseModel, IDValidationMixin):
         header: str = Field( description="General description of the problem derived by the entire conversation")
         topic_id: str = Field( description="ID of the first message in the thread")
-        actual_date: datetime = Field( description="DateTime of the last message in the thread")
+        actual_date: datetime = Field( description="maximal datetime of messages in the thread")
         answer_id: Optional[str] = Field( description="ID of solution message")
         # whole_thread: List[str] = Field( description="List of Message IDs of this thread")
         label: SolutionStatus # str = Field(description="label indicating the resolution status: 'resolved', 'unresolved','suggestion' or 'outside'")

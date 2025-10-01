@@ -491,7 +491,7 @@ class DatabaseService:
         return batch.end_date if batch else None
     
     
-    def get_latest_threads_from_actual_date(self, session: Session, lookback_date: datetime) -> List[Thread]:
+    def get_lookback_threads(self, session: Session, lookback_date: datetime) -> List[Thread]:
         """Get all threads with actual_date >= lookback_date."""
         return session.query(Thread).filter(
             Thread.actual_date >= lookback_date

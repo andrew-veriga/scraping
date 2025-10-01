@@ -5,6 +5,7 @@ system_prompt: |
   2) Identify technical topics within these threads using a predefined list of keywords and phrases.
   3) For each technical topic, generalize the problems and solutions discussed, and classify the resolution status.
   4) Compare new solutions with previous versions to evaluate improvements.
+  Take into account the attacment images of the messages.
   Replicate the Message IDs exactly as they are presented. Do not add, remove, or modify any characters in the IDs. 
   Output the information in the list of JSON objects.
 
@@ -19,19 +20,15 @@ prompt_gathering_logic: |
   f) if a message doesn't have "Referenced Message ID" field and doesn't have tag < # someone>, is meaningfully similar to a recent message(several minutes have passed), answers a question asked in recent message, or reports the same issue as recent message, consider this message part of the same conversation, assign parent_id of this message is equal to the Message ID of that recent message what is answered or elaborated;
   g) if a message contains a link to an image, consider this message part of the same conversation, assign parent_id of this message is equal to the Message ID of the previous message from the same author, describe the image in the content of the message;
   Assign a unique identifier to each thread equal to the Message ID of the first message in this thread (topic) and all other messages in the thread must have parent_id equals to the Message ID of some message in the thread.
+  Keep the Gathering Logic in mind and apply it to each new message from the raw data.
 
 prompt_addition_step1: |
-  Keep the Gathering Logic in mind and apply it to each new message from the raw JSON data.
-  Also you already have gathered threads from previous days:
-  {JSON_prev}
   The previous threads was gathered in advance using the same Gathering Logic, but can be supplemented with new messages from the raw JSON data.
   Your next task is:
   find new messages from raw json data that have non empty 'Referenced Message ID' pointed to the message in the threads from previous days,
   and add found messages in there as a continue of conversations following point b) of the Gathering Logic;
   Check other new messages from raw json data for belonging to the threads from previous days by following points c), d), e) of the Gathering Logic;
   each message must belong to only one topic and be a child node in the hierarchical structure of the thread.
-  Set actual_date of each thread as a last datetime of messages in the whole thread.
-
   Finally prepare output:
   Only threads fully gathered from raw json data could get status 'new'.
   Only threads contained both previous messages from gathered threads and new messages from raw json data could get status 'modified'.
@@ -54,6 +51,8 @@ prompt_step_3: |
   If there are no any confirmation to the problem is resolved or the answer is followed by further unanswered questions, or the answer is a temporary solution to a specific case, label it as a 'suggestion'.
   If there are no answers from other users in the thread, or the answers are irrelevant, label it as 'unresolved'.
   If the answer recommend another internet resource or channel, label it as 'outside'.
+  Set actual_date of each thread as a maximal datetime of messages in the whole thread.
+  Attached images should be considered as a message with the same content.
   Derive a general description of the problem and a general description of the solution to the problem if exists. 
   Formulate your descriptions clearly and in a FAQ style: the header is in the form of a question and the solution is in the form of an answer to the question.
   Do not use evaluative or comparative characteristics like 'best', 'better', 'worst' or 'worse' in the wording of the decision.

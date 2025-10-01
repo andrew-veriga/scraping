@@ -1,7 +1,7 @@
 INTERVAL_BACK: 2
 INTERVAL_FIRST: 2
 INTERVAL_NEXT: 1
-LATEST_SOLUTION_DATE: '2025-07-20T20:42:21+00:00'
+LATEST_SOLUTION_DATE: '2025-07-23T17:03:39+00:00'
 MESSAGES_FILE_PATH: data\discord_messages_names_gcs_pics.xlsx
 NEXT_BATCH_FILE_PATH: data\discord_messages_names_gcs_pics.xlsx
 SAVE_PATH: .\results

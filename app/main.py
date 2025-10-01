@@ -4,7 +4,6 @@ load_dotenv()
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
-from app.processing import process_first_batch
 from app.utils.file_utils import load_solutions_dict
 from app.services.database import get_database_service
 from app.models.pydantic_models import SolutionStatus
@@ -235,7 +234,9 @@ def process_next_batches_endpoint():
 def get_solutions():
     """Retrieves the processed solutions dictionary."""
     try:
-        solutions_dict = load_solutions_dict(SOLUTIONS_DICT_FILENAME, SAVE_PATH)
+        with open("configs/config.yaml", 'r') as stream:
+            config = yaml.safe_load(stream)
+        solutions_dict = load_solutions_dict(config)
         return solutions_dict
     except FileNotFoundError:
         logging.warning(f"Solutions file not found on request to /solutions endpoint.")
@@ -251,7 +252,10 @@ def get_threads(limit: int = 10, offset: int = 0, status: str = None, technical:
     try:
         if source == "file":
             # Load from solutions_dict.json
-            solutions_dict = load_solutions_dict(SOLUTIONS_DICT_FILENAME, SAVE_PATH)
+            with open("configs/config.yaml", 'r') as stream:
+                config = yaml.safe_load(stream)
+
+            solutions_dict = load_solutions_dict(config)
             thread_data = []
             
             for topic_id, thread_info in solutions_dict.items():
@@ -540,13 +544,15 @@ def iterate_final_threads(thread_data, db_service):
     # Use a single database session for all message lookups to avoid connection pool exhaustion
     with db_service.get_session() as session:
         for i, thread in enumerate(thread_data):
+            is_technical = thread.get('is_technical',True)
+            if not is_technical:
+                continue
             actual_date = thread.get('actual_date')
             header = thread.get('header') 
             markdown_output = f"""## {i}. {actual_date} {header}
 
 #### Whole Thread Messages:
 """
-            whole_thread = thread.get('whole_thread', [])
             db_messages = db_service.get_thread_messages(session, thread.get('topic_id'))
  
             messages = []
@@ -594,7 +600,9 @@ def generate_markdown_report():
     It also saves the report to a file.
     """
     try:
-        solutions_dict = load_solutions_dict(SOLUTIONS_DICT_FILENAME, SAVE_PATH)
+        with open("configs/config.yaml", 'r') as stream:
+            config = yaml.safe_load(stream)
+        solutions_dict = load_solutions_dict(config)
         if not solutions_dict:
             raise HTTPException(status_code=404, detail="Solutions file not found or is empty. Please run a batch process first.")
 

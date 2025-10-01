@@ -8,7 +8,8 @@ from google.cloud import storage
 #load_dotenv(dotenv_path)
 from dotenv import load_dotenv
 import yaml
-
+import pandas as pd
+from datetime import datetime
 load_dotenv() # This loads variables from .env into the environment
 
 # these env vars are set in .env file for local dev
@@ -98,6 +99,28 @@ from google.genai.errors import ServerError
         f"Attempt #{retry_state.attempt_number}. Waiting {retry_state.next_action.sleep:.2f} seconds."
     )
 )
+
+def convert_datetime_to_timestamp(obj):
+    """
+    Recursively converts all datetime objects in a data structure to pd.Timestamp.
+    Works with nested objects, lists, and dictionaries.
+    """
+    if isinstance(obj, datetime):
+        return pd.Timestamp(obj)
+    elif isinstance(obj, dict):
+        return {key: convert_datetime_to_timestamp(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_datetime_to_timestamp(item) for item in obj]
+    elif hasattr(obj, '__dict__') and hasattr(obj, '__class__') and not isinstance(obj, type):
+        # For Pydantic models and other object instances (but not class types)
+        for attr_name in obj.__dict__:
+            if hasattr(obj, attr_name):
+                attr_value = getattr(obj, attr_name)
+                setattr(obj, attr_name, convert_datetime_to_timestamp(attr_value))
+        return obj
+    else:
+        return obj
+
 def generate_content(contents, config: types.GenerateContentConfig, valid_ids_set: Optional[Set[str]] = None, log_prefix: str = ""):
     """
     Generates content using the Gemini API with function calling for structured output.
@@ -115,6 +138,8 @@ def generate_content(contents, config: types.GenerateContentConfig, valid_ids_se
         if parsed_data is not None:
             # logging.info(f"{log_prefix}Model response parsed successfully with {config.response_schema} from {config.response_schema.__class__} content pieces.")
             # If a set of valid IDs is provided, perform validation and self-healing.
+            parsed_data = convert_datetime_to_timestamp(parsed_data)
+
             if  valid_ids_set and hasattr(parsed_data, 'validate_and_clean_threads'):
                 parsed_data.validate_and_clean_threads(valid_ids_set, log_prefix=log_prefix)
 

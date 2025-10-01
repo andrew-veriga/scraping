@@ -3,15 +3,15 @@ from google.cloud import storage
 import yaml
 import os
 from app.services import data_loader
-# from app.services import gemini_service
 from google.genai import errors
 from datetime import datetime, timezone, timedelta
+from app.utils.file_utils import convert_Timestamp_to_str
 import logging
 from fastapi import HTTPException
 from typing import Optional
 import pandas as pd
 load_dotenv()
-
+from app.services.database import get_database_service
 
 from google import genai
 from google.genai import types
@@ -142,10 +142,6 @@ def image_part_from_gs_url(
     _, blob_name = gs_url[5:].split('/', 1)
     blob = gcs_bucket.blob(blob_name)
     if blob.exists():
-        os.makedirs(os.path.join(tmp_image_path, blob.name.split('/')[-2]), exist_ok=True)
-        file_path=os.path.join(tmp_image_path, blob_name)
-        blob.download_to_filename(file_path)
-        mime_type = blob.content_type
         uploaded_name = get_uploaded_name(blob_name)
         file_id = dict_uploaded_images.get(uploaded_name,None)
         try:
@@ -157,19 +153,25 @@ def image_part_from_gs_url(
                 print(f"file: {uploaded_name} already exists  in gemini files and not expired")
                 # file is in gemini files, and is in dict_uploaded_images but expired
             else:
-                # file is not in gemini files, and is in dict_uploaded_images but expired
+                # file is not in gemini files, or is in dict_uploaded_images but expired
                 print(f"file: {uploaded_name} already exists  in gemini files but expired, uploading to gemini files")
                 file_id = gemini_client.files.get(name='files/'+uploaded_name) # robust to get file from gemini files
         except errors.ClientError:
+            os.makedirs(os.path.join(tmp_image_path, blob.name.split('/')[-2]), exist_ok=True)
+            file_path=os.path.join(tmp_image_path, blob_name)
+            blob.download_to_filename(file_path)
+            mime_type = blob.content_type
             file_id = gemini_client.files.upload(file=file_path, config=types.UploadFileConfig(name=uploaded_name, mime_type=mime_type))
         except Exception as e:
             logging.error(f"Error uploading file: {uploaded_name} to gemini files: {e}", exc_info=True)
             return None
         dict_uploaded_images[uploaded_name] = file_id
         image_part = Part.from_uri(
-            file_uri=file_id.uri,#"gs://discord_pics/attachments/0151caec_image.png",
-            mime_type=mime_type
+            # display_name =blob_name,
+            file_uri=file_id.uri, #"gs://discord_pics/attachments/0151caec_image.png",
+            mime_type=file_id.mime_type
         )
+        # image_part.file_data.display_name=blob_name
         return image_part
     else:
         logging.error(f"Error downloading image: {gs_url}", exc_info=True)
@@ -322,7 +324,7 @@ def _create_genai_cache_for_images(dict_uploaded_images, global_config, gemini_c
         json.dump(global_config, open('configs/config.yaml', 'w'), indent=2, default=str)
     return image_genai_cache
 
-def make_dataframe_parts(df: pd.DataFrame, global_config: dict)->(list[Part], object):
+def parts_from_dataframe(df: pd.DataFrame, global_config: dict)->(list[Part], object):
     """
     Make parts from dataframe with images
     args:
@@ -336,31 +338,41 @@ def make_dataframe_parts(df: pd.DataFrame, global_config: dict)->(list[Part], ob
     from app.utils.yaml_file_utils import save_yaml_genai_files, load_yaml_genai_files
 
     # tmp_image_path - path to save images
-    tmp_image_path=global_config[f'images']['base_path']
+    tmp_image_path=global_config['images']['base_path']
     # dict_uploaded_images - dictionary of images with their names and urls in gemini client files
     dict_uploaded_images = load_yaml_genai_files('configs/dict_uploaded_images.yaml')
     
     # remove expired images
+    expired_images = []
     for key, value in dict_uploaded_images.items():
         if isinstance(value, types.File):
             if value.expiration_time < datetime.now(tz=timezone.utc):
-                dict_uploaded_images.pop(key)
-                logging.info(f"Deleted expired image: {value.display_name}")
-
-    parts = []
+                expired_images.append(key)
+                logging.info(f"Expired image: {value.display_name}")
+    for key in expired_images:
+        dict_uploaded_images.pop(key)
+    if len(expired_images) > 0:
+        logging.info(f"Found {len(expired_images)} expired images")
+    
+    image_parts = []
     # i=0
     dict_df = df.to_dict(orient='index')
     for idx,row in dict_df.items():
-        row['DateTime'] = row['DateTime'].strftime('%Y-%m-%d %H:%M:%S')
-
-        if  is_valid_url(row['Attachments']):
-            if row['Content']=='nan' or row['Content']=='':
-                row['Content'] = row['Author Name'] + 'attached:'
+        attachments = row['Attachments']# or row['attachments']
+        _datetime = row['DateTime']# or row['datetime']
+        if isinstance(_datetime, pd.Timestamp):
+            row['DateTime'] = convert_Timestamp_to_str(_datetime)
+        author_name = row['Author Name']# or row['author']
+        content = row['Content']# or row['content']
+        if  is_valid_url(attachments):
+            if content=='nan' or content=='':
+                content = author_name + 'attached:'
             else:
-                row['Content'] = row['Content'] + ': ' + row['Author Name'] + 'attached:'
+                content = content + ': ' + author_name + 'attached:'
             
-            parts.append(make_json_part(row))
-            for attachment in row['Attachments'].split(';'):
+            # parts.append(make_json_part(row))
+            uploaded_urls = []
+            for attachment in attachments.split(';'):
                 # i += 1
                 # parts.append(make_text_part('Image ' + str(i)+':'))
                 image_part = image_part_from_gs_url(
@@ -371,11 +383,12 @@ def make_dataframe_parts(df: pd.DataFrame, global_config: dict)->(list[Part], ob
                     tmp_image_path,
                     )
                 if image_part:
-                    parts.append(image_part)
+                    image_parts.append(image_part)
+                    uploaded_urls.append(image_part.file_data.model_dump_json())
                 # if file_id:
                 #     dict_uploaded_images[attachment] = file_id.uri
-        else:
-            parts.append(make_json_part(row))
+            row['Attachments'] = ';'.join(uploaded_urls)
+    parts=[make_json_part(json.dumps(dict_df))] + image_parts
 
     save_yaml_genai_files(dict_uploaded_images, 'configs/dict_uploaded_images.yaml')
     # Create GenAI cache for images (temporarily removed for clear)
@@ -383,13 +396,12 @@ def make_dataframe_parts(df: pd.DataFrame, global_config: dict)->(list[Part], ob
 
     return parts, image_genai_cache
 
-def test_make_dataframe_parts_with_real_data_loader():
-    """Test make_dataframe_parts function using real data from data_loader.load_and_preprocess_data."""
+def test_parts_from_dataframe():
+    """Test parts_from_dataframe function using real data from data_loader.load_and_preprocess_data."""
     # Check if the file exists before trying to load it
     MESSAGES_FILE_PATH ='C:\\VSCode\\scraping\\data\\discord_messages_names_gcs_pics.xlsx'
     sample_messages_file_path = MESSAGES_FILE_PATH
 
-    from google.cloud import storage
     with open("configs/config.yaml", 'r') as stream:
         config = yaml.safe_load(stream)
 
@@ -405,9 +417,9 @@ def test_make_dataframe_parts_with_real_data_loader():
         assert len(df) > 0, "No data loaded from file"
         assert 'Attachments' in df.columns, "Attachments column not found in loaded data"
         
-        # Call make_dataframe_parts with the real loaded data
+        # Call parts_from_dataframe with the real loaded data
 
-        parts, image_genai_cache = make_dataframe_parts(df, global_config=config)
+        parts, image_genai_cache = parts_from_dataframe(df, global_config=config)
 
         # Save with safe_dump to avoid Python object tags
     
@@ -420,9 +432,59 @@ def test_make_dataframe_parts_with_real_data_loader():
         print(f"count of parts: {len(parts)}")
     except Exception as e:
         print(f"Error: {e}")
+from sqlalchemy.orm import Session
+def parts_from_db_messages(thread_id: str, global_config: dict, session: Session=None) -> tuple[list[Part], object]:
+    """
+    Extract parts from database messages for a specific thread.
+    
+    Args:
+        thread_id (str): The thread ID to get messages from
+        session (Session, optional): Database session. If None, creates a new session.
+        global_config (dict): Global configuration dictionary
+        
+    Returns:
+        tuple: (parts, image_genai_cache) where parts is a list of Part objects
+               and image_genai_cache is the GenAI cache object
+    """
+    def _messages_to_dict(messages) -> dict:
+        """Convert database messages to dictionary format for DataFrame creation."""
+        return {
+            msg.message_id: {
+                'Message ID': msg.message_id,
+                'Author ID': msg.author_id,
+                'Content': msg.content,
+                'DateTime': msg.datetime if msg.datetime else None,
+                'Referenced Message ID': msg.referenced_message_id,
+                'Attachments': msg.attachments,
+                'Author Name': msg.author.author_name,
+            } for msg in messages
+        }
+    
+    db_service = get_database_service()
+    if session is None:
+        with db_service.get_session() as session:
+            messages = db_service.get_thread_messages(session, thread_id)
+            messages_dict = _messages_to_dict(messages)
+            df = pd.DataFrame.from_dict(messages_dict, orient='index')
+            parts, image_genai_cache = parts_from_dataframe(df, global_config=global_config)
+    else:
+        messages = db_service.get_thread_messages(session, thread_id)
+        messages_dict = _messages_to_dict(messages)
+        df = pd.DataFrame.from_dict(messages_dict, orient='index')
+        parts, image_genai_cache = parts_from_dataframe(df, global_config=global_config)
+    
+    return parts, image_genai_cache
 
+def test_parts_from_db_messages():
+    """Test parts_from_dataframe function using data from database."""
+    with open("configs/config.yaml", 'r') as stream:
+        config = yaml.safe_load(stream)
+    
+    parts, image_genai_cache = parts_from_db_messages('1396582775515123968', config)
+    print(f"count of parts: {len(parts)}")
 
 if __name__ == "__main__":
-    test_make_dataframe_parts_with_real_data_loader()
+    test_parts_from_db_messages()
+    # test_parts_from_dataframe()
 
 
