@@ -259,7 +259,16 @@ class DatabaseService:
         )
         session.add(message)
         return message
-    
+    def get_messages_by_list(self, messages: List[str], session: Optional[Session] = None) -> List[Message]:
+        """Get messages by a list of message IDs."""
+        if session is not None:
+            # Use provided session (for use within existing transactions)
+            return session.query(Message).filter(Message.message_id.in_(messages)).all()
+        else:
+            # Create new session with retry logic
+            with self.get_session() as new_session:
+                return new_session.query(Message).filter(Message.message_id.in_(messages)).all()
+
     def get_message_by_message_id(self, message_id: str, session: Optional[Session] = None) -> Optional[Message]:
         """Get message by Discord message ID."""
         if session is not None:

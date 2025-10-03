@@ -77,7 +77,13 @@ def extract_pics():
     # Convert to timezone-naive for Excel compatibility, but keep original timezone-aware version
     messages_df_excel = messages_df.copy()
     messages_df_excel['DateTime'] = messages_df_excel['DateTime'].dt.tz_localize(timezone.utc)
-    messages_df_excel.to_excel('.\\data\\discord_messages_names_gcs_pics.xlsx', index=False)
+    id_columns = ['Author ID', 'Referenced Message ID', 'Parent ID', 'Thread ID']
+    for col in id_columns:
+        if col in messages_df_excel.columns:
+            messages_df_excel[col] = "'" + messages_df_excel[col].astype(str)
+    messages_df_excel['Message ID'] = "'" + messages_df_excel['Message ID'].astype(str)
+    
+    messages_df_excel.to_excel('.\\data\\discord_messages_with_gcs_pics.xlsx', engine='openpyxl', index=False)
 
 def delete_old_files(target_date_str = '2025-09-23 18:17'):
     import datetime
@@ -113,7 +119,7 @@ def convert_gs_to_public_urls_in_excel():
     """
     import pandas as pd
     
-    excel_file_path = '.\\data\\discord_messages_names_gcs_pics.xlsx'
+    excel_file_path = '.\\data\\discord_messages_with_gcs_pics.xlsx'
     
     print(f"Loading Excel file: {excel_file_path}")
     
@@ -213,7 +219,7 @@ def convert_public_to_gs_urls_in_excel():
     import pandas as pd
     from app.utils.url_converter import https_to_gs_url
     
-    excel_file_path = '.\\data\\discord_messages_names_gcs_pics.xlsx'
+    excel_file_path = '.\\data\\discord_messages_with_gcs_pics.xlsx'
     
     print(f"Loading Excel file: {excel_file_path}")
     
@@ -293,7 +299,7 @@ def test_url_accessibility():
     import requests
     import pandas as pd
     
-    excel_file_path = '.\\data\\discord_messages_names_gcs_pics.xlsx'
+    excel_file_path = '.\\data\\discord_messages_with_gcs_pics.xlsx'
     
     print("Testing URL accessibility...")
     

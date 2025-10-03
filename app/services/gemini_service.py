@@ -12,6 +12,8 @@ import pandas as pd
 from datetime import datetime
 load_dotenv() # This loads variables from .env into the environment
 
+from app.services.auth_service import auth_service
+
 # these env vars are set in .env file for local dev
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
 LOCATION = os.environ.get("GOOGLE_CLOUD_REGION")
@@ -23,17 +25,13 @@ LOCATION = os.environ.get("GOOGLE_CLOUD_REGION")
 #     raise EnvironmentError("GEMINI_API_KEY environment variable is not set.")
 
 
-gemini_client = genai.Client( 
-    # api_key=GEMINI_API_KEY,
-    project=PROJECT_ID,
-    location=LOCATION,
-    )
+gemini_client = auth_service.get_gemini_client()
 
 with open("configs/config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
 model_name = config['llm']['model_name']
 
-gcs_bucket = storage.Client().bucket(config['images']['gcs_bucket_name'])
+gcs_bucket = auth_service.get_storage_client().bucket(config['images']['gcs_bucket_name'])
 
 config_step1 = types.GenerateContentConfig( 
     seed=42,

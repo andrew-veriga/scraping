@@ -131,7 +131,7 @@ logging.basicConfig(
 app = FastAPI()
 app.include_router(monitoring.router, prefix="/monitoring")
 
-logging.info(f"Config loaded: {config}")
+logging.info(f"Config loaded: LATEST_SOLUTION_DATE: {config['LATEST_SOLUTION_DATE']}")
 MESSAGES_FILE_PATH = config['MESSAGES_FILE_PATH']
 SOLUTIONS_DICT_FILENAME = config['SOLUTIONS_DICT_FILENAME']
 
@@ -536,6 +536,7 @@ def generate_html_template(html_body: str) -> str:
 </html>
 """
 
+from app.services.pictured_messages import convert_attachments_to_markdown
 
 def iterate_final_threads(thread_data, db_service):
     """
@@ -549,38 +550,47 @@ def iterate_final_threads(thread_data, db_service):
                 continue
             actual_date = thread.get('actual_date')
             header = thread.get('header') 
-            markdown_output = f"""## {i}. {actual_date} {header}
-
-#### Whole Thread Messages:
-"""
-            db_messages = db_service.get_thread_messages(session, thread.get('topic_id'))
+            topic_id = thread.get('topic_id') or thread.get('Topic_ID', 'N/A')
+            answer_id = thread.get('answer_id')
+            # Convert attachments to markdown if they exist
+            markdown_output = f"<sub>{actual_date.strftime('%B %d %Y, %A')}</sub>\n\n" + f"## {i}.{header}\n\n#### Whole Thread Messages:\n\n"
+            db_messages = db_service.get_thread_messages(session, topic_id)
  
             messages = []
             if db_messages:
                 for db_message in db_messages:
                     message_id = db_message.message_id
-                    if db_message.content=='nan' or db_message.content=='':
-                        message_content = ""
+                    if message_id == topic_id:
+                        msg_markdown = f"\n\n<sub>**Topic started:** ({message_id}) </sub>"
+                    elif message_id == answer_id:
+                        msg_markdown = f"\n\n<sub>**Answer:** ({message_id}) </sub>"
                     else:
-                        message_content = db_message.illustrated_message or db_message.content or "N/A"
-                    topic_id = thread.get('topic_id') or thread.get('Topic_ID', 'N/A')
-                    answer_id = thread.get('answer_id')
-                    # Convert attachments to markdown if they exist
+                        msg_markdown = f"\n\n<sub>({message_id})</sub>"
+                    if db_message.content=='nan' or db_message.content=='':
+                        msg_markdown += "N/A"
+                    else:
+                        message_content = db_message.illustrated_message or db_message.content or "N/A"                    # Check if message starts with datetime and wrap it in <sup> tags
+                    if message_content and len(message_content) > 19:
+                        try:
+                            # Try to parse the first 25 characters as a timestamp
+                            timestamp_str = message_content[:19]
+                            message_time = pd.Timestamp(timestamp_str)
+                            # If successful, wrap the timestamp in <sup> tags and add line break
+                            message_content = f"<sub> {message_time.strftime('%B %d %H:%M')}</sub>\n - " + message_content[19:]
+                        except (ValueError, TypeError, pd.errors.ParserError):
+                            # Not a valid timestamp, leave as is
+                            pass
+                    msg_markdown += f"{message_content}"
+                    
                     attachment_markdown = ""
                     if db_message.attachments and db_message.attachments.strip() and db_message.attachments != 'No attachments':
-
-                        from app.services.pictured_messages import convert_attachments_to_markdown
                         attachment_markdown = convert_attachments_to_markdown(db_message.attachments)
                         if attachment_markdown:
                             attachment_markdown = f"\n\n*attached*\n\n{attachment_markdown}\n\n"
-                    
-                    if message_id == topic_id:
-                        messages.append(f"- ({message_id}) - **Topic started** :{message_content} ")
-                    elif message_id == answer_id:
-                        messages.append(f"- ({message_id}) **Answer** : {message_content}{attachment_markdown}")
-                    else:
-                        messages.append(f"- ({message_id}) {message_content}{attachment_markdown}")
+                    msg_markdown += attachment_markdown
 
+                    messages.append(msg_markdown)
+                    
                 markdown_output += "\n".join(messages)
             else:
                 markdown_output += "\n  N/A"

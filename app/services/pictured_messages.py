@@ -150,7 +150,7 @@ def image_part_from_gs_url(
                 # if cuccessfully got file from gemini files, and is not in dict_uploaded_images, add it to dict_uploaded_images
                 dict_uploaded_images[uploaded_name] = file_id
             elif file_id.expiration_time > datetime.now(tz=timezone.utc): # file  is in dict_uploaded_images and not expired
-                print(f"file: {uploaded_name} already exists  in gemini files and not expired")
+                print(f"file: {uploaded_name} already exists in gemini files and is still valid for {int((file_id.expiration_time-datetime.now(tz=timezone.utc)).total_seconds()/3600)} hours")
                 # file is in gemini files, and is in dict_uploaded_images but expired
             else:
                 # file is not in gemini files, or is in dict_uploaded_images but expired

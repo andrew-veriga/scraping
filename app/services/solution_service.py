@@ -13,28 +13,28 @@ from app.models.db_models import Solution
 def new_solutions_revision_and_add(next_solutions_filename,next_technical_filename, solutions_dict:dict, lookback_date)->dict:
     """
     Check improvement of solutions for topics file using LLM
-    args:
+    Arguments:
     next_solutions_filename - file name of saved new solutions
     next_technical_filename - file name of adding raw threads with ThreadStatus.NEW and ThreadStatus.MODIFIED status
+    solutions_dict - dictionary of previous solutions
+    lookback_date - date of looking back for previous solutions
+    Returns:
+    dictionary of new and modified solutions for adding to solutions dictionary and storing in database
     """
     # TODO add somewhere solution_service.check_in_rag_and_save(solutions_dict, adding_solutions_dict)
     prompts.reload_prompts()
     with open(next_solutions_filename, 'r') as f:
         next_solutions_list = json.load(f,object_hook=convert_str_to_Timestamp)
-
-    prev_solution_dict = {}
-    for topic_id, solution in solutions_dict.items():
-        actual_date = solution.get('actual_date')
-        if pd.Timestamp(actual_date).tz_convert(lookback_date.tzinfo) >= lookback_date:
-            prev_solution_dict[topic_id] = solution
+    
     new_solution_dict = create_dict_from_list(next_solutions_list)
+    prev_solution_dict = {key: value for key, value in solutions_dict.items() if value.get('actual_date') >= lookback_date}
 
     with open(next_technical_filename, 'r') as f:
         adding_threads = json.load(f,object_hook=convert_str_to_Timestamp)
 
     modified_threads = [t.get('topic_id') for t in adding_threads if t['status']==ThreadStatus.MODIFIED]
-
     new_threads = [t.get('topic_id') for t in adding_threads if t['status']==ThreadStatus.NEW]
+    
     if len(modified_threads) > 0:
 
         logging.info(f"{len(modified_threads)} comparising")
@@ -42,7 +42,8 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
         for m in modified_threads:
             if m not in prev_solution_dict:
                 ######## here we can have a case when the topic is modified but not found in previous solutions ########
-                logging.warning(f"Topic {m} marked as modified but not found in previous solutions")
+                logging.warning(f"Topic {m} is in {next_technical_filename} but not in previous solutions after {lookback_date}")
+                # logging.warning(f"Topic {m} marked as modified but not found in previous solutions")
                 continue
             if m not in new_solution_dict:
                 logging.warning(f"Topic {m} marked as modified but not found in new solutions")
@@ -55,7 +56,6 @@ def new_solutions_revision_and_add(next_solutions_filename,next_technical_filena
 
         for key, p in modified_pairs.items():
             pairs_in_text.append(f"""
-
 topic_id: {key}
 Previous version:
     statement: {p['prev']['header']} 
@@ -93,7 +93,7 @@ New version:
                 # Track new message assignments for database update
                 new_whole_thread = new_solution_dict[thread_id]['whole_thread']
                 for msg in new_whole_thread:
-                    message_thread_updates[str(msg['message_id'])] = thread_id
+                    message_thread_updates[msg['message_id']] = thread_id
                 
             elif s.label==RevisedStatus.MINORCHANGES:
                 old_messages = len(solutions_dict[thread_id]['whole_thread']) 
@@ -103,15 +103,18 @@ New version:
                 solutions_dict[thread_id]['whole_thread'] = new_solution_dict[thread_id]['whole_thread']
                 solutions_dict[thread_id]['actual_date'] = new_solution_dict[thread_id]['actual_date']
                 solutions_dict[thread_id]['answer_id'] = new_solution_dict[thread_id]['answer_id']
-                solutions_dict[thread_id]['label'] = new_solution_dict[thread_id]['label']
                 threads_with_changes.add(thread_id)
                 
                 # Track new message assignments for database update
                 new_whole_thread = new_solution_dict[thread_id]['whole_thread']
                 for msg in new_whole_thread:
-                    message_thread_updates[str(msg['message_id'])] = thread_id
+                    message_thread_updates[msg['message_id']] = thread_id
             else:
-
+                ################# here error: s.topic_id '1396463936290689064' not is in new_solution_dict ########
+                #### but 1396463936290689064 is in next_solutions_list, loaded from .\\results\\next_2025-07-21-2025-07-22_solutions.json
+                #### adding_threads loaded from next_2025-07-21-2025-07-22_technical.json
+                #### lookback_date is 2025-07-19 06:40:03+00:00
+                #### After LLM I got: Updated Thread '1396463936290689064 with solution: Why are funds sent through the Sui bridge delayed
                 changed_solution = new_solution_dict[s.topic_id]
                 rag_check_result = _check_solution_with_rag(changed_solution, exclude_solution_id=s.topic_id)
                 

@@ -104,6 +104,9 @@ class IDValidationMixin:
         return True
 class MessageNode(BaseModel, IDValidationMixin):
     message_id: str = Field( description="Unique identifier for the message")
+    message_datetime: datetime = Field( description="Datetime of the message")
+    content: str = Field( description="Content of the message")
+    author_name: str = Field( description="Name of the author of the message")
     parent_id: Optional[str] = Field( description="Identifier of the parent message, if any")
     image_summary: Optional[str] = Field( description="Description of image, if any")  
     # content: str = Field( description="Content of the message")

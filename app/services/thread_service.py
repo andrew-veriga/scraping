@@ -1,6 +1,7 @@
 import json
 import re
-from datetime import datetime, timedelta, timezone
+# import datetime
+from datetime import timezone
 import os
 from typing import Optional
 import pandas as pd
@@ -293,7 +294,7 @@ def filter_technical_threads(filename: str, prefix: str, save_path: str):
     with open(full_path, 'w') as f:
         f.write(json.dumps(processed_threads,  indent=2,default=convert_Timestamp_to_str))
 
-    logging.info(f"Successfully saved {len(processed_threads)} labelled as is technical =Yes/ threads to {full_path}")
+    logging.info(f"Successfully saved {len(processed_threads)} labelled as is technical =Yes/No threads to {full_path}")
     return full_path
 
 def generalization_solution(filename: str,prefix: str, save_path: str):
@@ -427,15 +428,20 @@ def next_thread_gathering(next_batch_df: pd.DataFrame, lookback_date: pd.Timesta
     valid_ids_set = set(next_batch_df['Message ID'].astype(str))
     db_service = get_database_service()
     # get new messages parts
-    new_messages_parts, image_genai_cache = parts_from_dataframe(next_batch_df, global_config=global_config)
+    new_raw_messages_parts, image_genai_cache = parts_from_dataframe(next_batch_df, global_config=global_config)
     
     # start creating parts: add prompt for LLM to parts
-    parts =new_messages_parts + [
+    parts = [
         make_text_part(prompts.system_prompt), 
+        new_raw_messages_parts,
         make_text_part(prompts.prompt_gathering_logic),
         make_text_part("Also you already have gathered threads from previous days:")
         ]
     # get previous threads
+    start_date = next_batch_df['DateTime'].min().normalize()
+    # Make timezone-aware to match database datetime format
+    if start_date.tzinfo is None:
+        start_date = start_date.replace(tzinfo=datetime.timezone.utc)
     with db_service.get_session() as session:
         lookback_threads = db_service.get_lookback_threads(session, lookback_date)
         for thread in lookback_threads:
@@ -459,7 +465,8 @@ def next_thread_gathering(next_batch_df: pd.DataFrame, lookback_date: pd.Timesta
             # add previous threads message ids to valid message ids set
             valid_ids_set.update([msg.message_id for msg in thread.messages])
         # add additional prompt for LLM to parts: describe task to recompile previous threads with new messages from next_batch_df
-        parts.append(make_text_part(prompts.prompt_addition_step1))
+        additional_prompt = make_text_part(prompts.prompt_addition_step1.format(start_date=start_date.isoformat()))
+        parts.append(additional_prompt)
     
     # generate response from LLM
 
@@ -474,12 +481,28 @@ def next_thread_gathering(next_batch_df: pd.DataFrame, lookback_date: pd.Timesta
         log_prefix="Next thread gathering:"
     )
     # get only new and modified threads from response
-    added_threads_pydantic = [t for t in response.threads if t.status != ThreadStatus.PERSISTED]
-    # count new and modified threads
-    cnt_modified = len([t for t in response.threads if t.status==ThreadStatus.MODIFIED])
-    cnt_new = len([t for t in response.threads if t.status==ThreadStatus.NEW])
-
-    logging.info(f"Added {cnt_new} new threads. Modified {cnt_modified} threads created before {str_interval}.")
+    added_threads_pydantic = []
+    cnt_modified = 0
+    cnt_new = 0
+    with db_service.get_session() as session:
+        for thread in response.threads:
+            messages = db_service.get_messages_by_list([m.message_id for m in thread.whole_thread], session=session)
+            min_datetime = min([me.datetime for me in messages])
+            max_datetime = max([me.datetime for me in messages])
+        
+            # thread.whole_thread = messages
+            if min_datetime < start_date and max_datetime > start_date:
+                thread.status = ThreadStatus.MODIFIED
+                added_threads_pydantic.append(thread)
+                cnt_modified += 1
+            elif min_datetime > start_date:
+                thread.status = ThreadStatus.NEW
+                added_threads_pydantic.append(thread)
+                cnt_new += 1
+            else:
+                thread.status = ThreadStatus.PERSISTED
+        
+    logging.info(f"Added {cnt_new} new threads. Modified {cnt_modified} threads created before {start_date}.")
 
     # Create/Update Thread objects in database
     # processing_tracker = get_processing_tracker()
